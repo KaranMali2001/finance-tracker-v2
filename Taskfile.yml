@@ -1,0 +1,105 @@
+version: "3"
+
+vars:
+  BACKEND_DIR: backend
+  FRONTEND_DIR: web
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  # Install dependencies for both frontend and backend
+  install:
+    desc: Install dependencies for both frontend and backend
+    cmds:
+      - task: install:backend
+      - task: install:frontend
+
+  install:backend:
+    desc: Install Go dependencies
+    dir: { { .BACKEND_DIR } }
+    cmds:
+      - go mod download
+      - echo "Backend dependencies installed"
+
+  install:frontend:
+    desc: Install frontend dependencies
+    dir: { { .FRONTEND_DIR } }
+    cmds:
+      - pnpm install
+      - echo "Frontend dependencies installed"
+
+  # Development mode - run both frontend and backend
+  dev:
+    desc: Run both frontend and backend in development mode
+    cmds:
+      - task: dev:backend
+      - task: dev:frontend
+
+  dev:backend:
+    desc: Run backend in development mode
+    dir: { { .BACKEND_DIR } }
+    cmds:
+      - ENV_FILE=.env.dev air
+    interrupt: true
+
+  dev:frontend:
+    desc: Run frontend in development mode
+    dir: { { .FRONTEND_DIR } }
+    cmds:
+      - pnpm dev
+    interrupt: true
+
+  # Production mode - run both frontend and backend
+  prod:
+    desc: Run both frontend and backend in production mode
+    cmds:
+      - task: prod:backend
+      - task: prod:frontend
+
+  prod:backend:
+    desc: Run backend in production mode
+    dir: { { .BACKEND_DIR } }
+    cmds:
+      - ENV_FILE=.env.prod go run ./cmd/backend/*.go
+    interrupt: true
+
+  prod:frontend:
+    desc: Run frontend in production mode (build + preview)
+    dir: { { .FRONTEND_DIR } }
+    cmds:
+      - pnpm build
+      - pnpm preview
+    interrupt: true
+
+  # Individual tasks for running separately
+  backend:dev:
+    desc: Run only backend in development mode
+    dir: { { .BACKEND_DIR } }
+    cmds:
+      - ENV_FILE=.env.dev air
+    interrupt: true
+
+  backend:prod:
+    desc: Run only backend in production mode
+    dir: { { .BACKEND_DIR } }
+    cmds:
+      - ENV_FILE=.env.prod go run ./cmd/backend/*.go
+    interrupt: true
+
+  frontend:dev:
+    desc: Run only frontend in development mode
+    dir: { { .FRONTEND_DIR } }
+    cmds:
+      - pnpm dev
+    interrupt: true
+
+  frontend:prod:
+    desc: Build and preview frontend for production
+    dir: { { .FRONTEND_DIR } }
+    cmds:
+      - pnpm build
+      - pnpm preview
+    interrupt: true

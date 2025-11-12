@@ -1,0 +1,13 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -o ./tmp/main ./cmd/backend/*.go"
+bin = "tmp/main"
+[log]
+time = true
+
+[env]
+# Set ENV_FILE to determine which .env file to load (.env.dev or .env.prod)
+# Default to .env.dev for development
+ENV_FILE = ".env.dev"
