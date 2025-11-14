@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/config"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/pkg/database"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/pkg/logger"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/logger"
 	"github.com/newrelic/go-agent/v3/integrations/nrredis-v9"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
@@ -56,9 +56,6 @@ func New(cfg *config.Config, logger *zerolog.Logger, loggerService *logger.Logge
 		DB:            db,
 		Redis:         redisClient,
 	}
-
-	// Start metrics collection
-	// Runtime metrics are automatically collected by New Relic Go agent
 
 	return server, nil
 }

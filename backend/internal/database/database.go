@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/config"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/pkg/logger"
-	loggerConfig "github.com/KaranMali2001/finance-tracker-v2-backend/pkg/logger"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/logger"
+	loggerConfig "github.com/KaranMali2001/finance-tracker-v2-backend/internal/logger"
 	pgxzero "github.com/jackc/pgx-zerolog"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"

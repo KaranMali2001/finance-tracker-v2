@@ -67,16 +67,12 @@ func LoadConfig() (*Config, error) {
 		envFile = ".env.dev" // default to dev
 	}
 
-	// Load .env file using godotenv (this sets environment variables)
-	// Ignore error if file doesn't exist - we'll fall back to environment variables
 	if err := godotenv.Load(envFile); err != nil {
 		logger.Debug().Str("env_file", envFile).Msg("env file not found, using environment variables only")
 	}
 
 	k := koanf.New(".")
 
-	// Now koanf's env provider will read from environment variables
-	// (which were set by godotenv if the file existed)
 	err := k.Load(env.Provider("BACKEND_", ".", func(s string) string {
 		return strings.ToLower(strings.TrimPrefix(s, "BACKEND_"))
 	}), nil)
