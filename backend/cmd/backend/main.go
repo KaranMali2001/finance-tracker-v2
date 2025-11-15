@@ -38,8 +38,8 @@ func main() {
 	loggerService := logger.NewLoggerService(cfg.Observability)
 	defer loggerService.Shutdown()
 	log := logger.NewLoggerWithService(cfg.Observability, loggerService)
-	if err := migrate.Migrate(&cfg.Database); err != nil {
-		panic("failed to migrate database")
+	if err := migrate.MigrateAndSeed(&cfg.Database); err != nil {
+		log.Fatal().Err(err).Msg("failed to migrate database")
 	}
 	server, err := server.New(cfg, &log, loggerService)
 	if err != nil {
@@ -49,7 +49,7 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create database")
 	}
-	log.Info().Msg("database created successfully")
+
 	defer db.Close()
 	systemModule := system.NewModule(system.Dependencies{Server: server})
 	authModule := auth.NewModule(auth.Dependencies{Server: server})
