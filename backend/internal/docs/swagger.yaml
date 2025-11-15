@@ -1,0 +1,50 @@
+definitions:
+  system.HealthCheckResult:
+    properties:
+      error:
+        example: connection refused
+        type: string
+      response_time:
+        example: 5ms
+        type: string
+      status:
+        example: healthy
+        type: string
+    type: object
+  system.HealthResponse:
+    properties:
+      checks:
+        additionalProperties:
+          $ref: '#/definitions/system.HealthCheckResult'
+        type: object
+      environment:
+        example: production
+        type: string
+      status:
+        example: healthy
+        type: string
+      timestamp:
+        example: "2025-01-02T15:04:05Z"
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /health:
+    get:
+      description: Returns health information about infrastructure dependencies.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/system.HealthResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/system.HealthResponse'
+      summary: Health status
+      tags:
+      - System
+swagger: "2.0"

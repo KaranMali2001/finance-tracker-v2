@@ -112,6 +112,7 @@ func NewLoggerWithService(cfg *config.ObservabilityConfig, loggerService *Logger
 	logger := zerolog.New(writer).
 		Level(logLevel).
 		With().
+		Caller().
 		Timestamp().
 		Str("service", cfg.ServiceName).
 		Str("environment", cfg.Environment).

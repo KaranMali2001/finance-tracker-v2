@@ -19,14 +19,14 @@ tasks:
 
   install:backend:
     desc: Install Go dependencies
-    dir: { { .BACKEND_DIR } }
+    dir: "{{.BACKEND_DIR}}"
     cmds:
       - go mod download
       - echo "Backend dependencies installed"
 
   install:frontend:
     desc: Install frontend dependencies
-    dir: { { .FRONTEND_DIR } }
+    dir: "{{.FRONTEND_DIR}}"
     cmds:
       - pnpm install
       - echo "Frontend dependencies installed"
@@ -35,19 +35,19 @@ tasks:
   dev:
     desc: Run both frontend and backend in development mode
     cmds:
-      - task: dev:backend
-      - task: dev:frontend
+      - task services:up
+      - task --parallel dev:backend dev:frontend
 
   dev:backend:
     desc: Run backend in development mode
-    dir: { { .BACKEND_DIR } }
+    dir: "{{.BACKEND_DIR}}"
     cmds:
       - ENV_FILE=.env.dev air
     interrupt: true
 
   dev:frontend:
     desc: Run frontend in development mode
-    dir: { { .FRONTEND_DIR } }
+    dir: "{{.FRONTEND_DIR}}"
     cmds:
       - pnpm dev
     interrupt: true
@@ -61,14 +61,14 @@ tasks:
 
   prod:backend:
     desc: Run backend in production mode
-    dir: { { .BACKEND_DIR } }
+    dir: "{{.BACKEND_DIR}}"
     cmds:
       - ENV_FILE=.env.prod go run ./cmd/backend/*.go
     interrupt: true
 
   prod:frontend:
     desc: Run frontend in production mode (build + preview)
-    dir: { { .FRONTEND_DIR } }
+    dir: "{{.FRONTEND_DIR}}"
     cmds:
       - pnpm build
       - pnpm preview
@@ -77,29 +77,56 @@ tasks:
   # Individual tasks for running separately
   backend:dev:
     desc: Run only backend in development mode
-    dir: { { .BACKEND_DIR } }
+    dir: "{{.BACKEND_DIR}}"
     cmds:
       - ENV_FILE=.env.dev air
     interrupt: true
 
   backend:prod:
     desc: Run only backend in production mode
-    dir: { { .BACKEND_DIR } }
+    dir: "{{.BACKEND_DIR}}"
     cmds:
       - ENV_FILE=.env.prod go run ./cmd/backend/*.go
     interrupt: true
 
   frontend:dev:
     desc: Run only frontend in development mode
-    dir: { { .FRONTEND_DIR } }
+    dir: "{{.FRONTEND_DIR}}"
     cmds:
       - pnpm dev
     interrupt: true
 
   frontend:prod:
     desc: Build and preview frontend for production
-    dir: { { .FRONTEND_DIR } }
+    dir: "{{.FRONTEND_DIR}}"
     cmds:
       - pnpm build
       - pnpm preview
     interrupt: true
+
+  services:up:
+    desc: Ensure local infrastructure containers are running
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - |
+        set -euo pipefail
+
+        ensure_container() {
+          local name="$1"
+          local service="$2"
+
+          if docker ps -a --format '{{.Names}}' | grep -w "$name" >/dev/null 2>&1; then
+            if docker ps --filter "name=$name" --filter "status=running" --format '{{.Names}}' | grep -w "$name" >/dev/null 2>&1; then
+              echo "Container $name already running"
+            else
+              echo "Starting existing container $name"
+              docker start "$name" >/dev/null
+            fi
+          else
+            echo "Creating container $name using docker compose service $service"
+            docker compose -f dev.docker-compose.yml up -d "$service"
+          fi
+        }
+
+        ensure_container "finance-tracker-postgres" "postgres"
+        ensure_container "finance-tracker-redis" "redis"
