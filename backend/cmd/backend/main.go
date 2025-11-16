@@ -11,6 +11,7 @@ import (
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/config"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/migrate"
 	docs "github.com/KaranMali2001/finance-tracker-v2-backend/internal/docs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/auth"
@@ -28,13 +29,6 @@ func main() {
 		panic("failed to load config")
 	}
 
-	docs.SwaggerInfo.Title = "Finance Tracker API"
-	docs.SwaggerInfo.Description = "API documentation for Finance Tracker services."
-	docs.SwaggerInfo.Version = "1.0.0"
-	docs.SwaggerInfo.Host = fmt.Sprintf("localhost:%s", cfg.Server.Port)
-	docs.SwaggerInfo.BasePath = ""
-	docs.SwaggerInfo.Schemes = []string{"http"}
-
 	loggerService := logger.NewLoggerService(cfg.Observability)
 	defer loggerService.Shutdown()
 	log := logger.NewLoggerWithService(cfg.Observability, loggerService)
@@ -51,9 +45,22 @@ func main() {
 	}
 
 	defer db.Close()
+	//starting db connection
+
+	//registerting all the modules
+	queries := generated.New(server.DB.Pool)
 	systemModule := system.NewModule(system.Dependencies{Server: server})
-	authModule := auth.NewModule(auth.Dependencies{Server: server})
+	authModule := auth.NewModule(auth.Dependencies{
+		Server:  server,
+		Queries: queries,
+	})
 	r := router.NewRouter(server, systemModule, authModule)
+	docs.SwaggerInfo.Title = "Finance Tracker API"
+	docs.SwaggerInfo.Description = "API documentation for Finance Tracker services."
+	docs.SwaggerInfo.Version = "1.0.0"
+	docs.SwaggerInfo.Host = fmt.Sprintf("localhost:%s", cfg.Server.Port)
+	docs.SwaggerInfo.BasePath = ""
+	docs.SwaggerInfo.Schemes = []string{"http"}
 	log.Info().
 		Str("swagger_ui", fmt.Sprintf("http://localhost:%s/swagger/index.html", cfg.Server.Port)).
 		Str("swagger_json", fmt.Sprintf("http://localhost:%s/swagger/doc.json", cfg.Server.Port)).
