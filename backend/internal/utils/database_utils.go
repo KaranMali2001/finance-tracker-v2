@@ -162,3 +162,23 @@ func DateToTime(d pgtype.Date) time.Time {
 	}
 	return d.Time
 }
+func StringPtrToText(s *string) pgtype.Text {
+	if s == nil {
+		return pgtype.Text{Valid: false}
+	}
+	return pgtype.Text{String: *s, Valid: true}
+}
+func BoolPtrToBool(b *bool) pgtype.Bool {
+	if b == nil {
+		return pgtype.Bool{Valid: false}
+	}
+	return pgtype.Bool{Bool: *b, Valid: true}
+}
+func Float64PtrToNum(f *float64) pgtype.Numeric {
+	if f == nil {
+		return pgtype.Numeric{Valid: false}
+	}
+	var n pgtype.Numeric
+	_ = n.Scan(*f)
+	return n
+}

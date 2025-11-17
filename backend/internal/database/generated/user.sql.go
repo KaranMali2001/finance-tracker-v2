@@ -7,6 +7,8 @@ package generated
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const getAuthUser = `-- name: GetAuthUser :one
@@ -45,6 +47,48 @@ type InsertUserParams struct {
 
 func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, error) {
 	row := q.db.QueryRow(ctx, insertUser, arg.Email, arg.ClerkID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.ClerkID,
+		&i.Email,
+		&i.DatabaseUrl,
+		&i.LifetimeIncome,
+		&i.LifetimeExpense,
+		&i.UseLlmParsing,
+		&i.LlmParseCredits,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users SET 
+  use_llm_parsing=COALESCE($1, use_llm_parsing),
+  database_url=COALESCE($2, database_url),
+  lifetime_income=COALESCE($3, lifetime_income),
+  lifetime_expense=COALESCE($4, lifetime_expense)
+WHERE clerk_id=$5 RETURNING id, clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at
+`
+
+type UpdateUserParams struct {
+	UseLlmParsing   pgtype.Bool
+	DatabaseUrl     pgtype.Text
+	LifetimeIncome  pgtype.Numeric
+	LifetimeExpense pgtype.Numeric
+	ClerkID         string
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, updateUser,
+		arg.UseLlmParsing,
+		arg.DatabaseUrl,
+		arg.LifetimeIncome,
+		arg.LifetimeExpense,
+		arg.ClerkID,
+	)
 	var i User
 	err := row.Scan(
 		&i.ID,

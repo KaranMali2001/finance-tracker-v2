@@ -1,0 +1,31 @@
+package user
+
+import (
+	"time"
+
+	"github.com/go-playground/validator/v10"
+)
+
+type UpdateUserReq struct {
+	UseLlmParsing   *bool    `json:"use_llm_parsing,omitempty" `
+	DatabaseUrl     *string  `json:"database_url,omitempty"`
+	LifetimeExpense *float64 `json:"lifetime_expense,omitempty"`
+	LifetimeIncome  *float64 `json:"lifetime_income,omitempty"`
+}
+
+func (u *UpdateUserReq) Validate() error {
+	return validator.New().Struct(u)
+}
+
+type User struct {
+	Id              string    `json:"id,omitempty"`
+	Email           string    `json:"email,omitempty"`
+	IsActive        bool      `json:"is_active,omitempty"`
+	ClerkId         string    `json:"clerk_id,omitempty"`
+	CreatedAt       time.Time `json:"created_at,omitempty"`
+	UpdatedAt       time.Time `json:"updated_at,omitempty"`
+	LifetimeExpense float64   `json:"lifetime_expense,omitempty"`
+	LifetimeIncome  float64   `json:"lifetime_income,omitempty"`
+	UseLlmParsing   bool      `json:"user_llm_parsing,omitempty"`
+	DatabaseUrl     string    `json:"database_url,omitempty"`
+}
