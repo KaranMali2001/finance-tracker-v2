@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/labstack/echo/v4"
 )
@@ -28,6 +29,8 @@ func NewModule(deps Dependencies) *Module {
 
 // RegisterRoutes attaches the auth endpoints.
 func (m *Module) RegisterRoutes(e *echo.Echo) {
-	e.POST("api/v1/webhook/clerk", m.handler.CreateUser)
+	authMiddleware := middleware.NewAuthMiddleware(m.handler.server)
+	e.POST("/api/v1/webhook/clerk", m.handler.CreateUser)
+	e.GET("/api/v1/auth/user", m.handler.GetAuthUser, authMiddleware.RequireAuth)
 
 }

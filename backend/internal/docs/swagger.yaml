@@ -1,5 +1,38 @@
 definitions:
-  system.HealthCheckResult:
+  internal_domain_auth.GetAuthUserResponse:
+    properties:
+      created_at:
+        example: "2025-01-02T15:04:05Z"
+        type: string
+      database_url:
+        example: postgresql://user:pass@localhost/db
+        type: string
+      email:
+        example: user@example.com
+        type: string
+      id:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      lifetime_expense:
+        example: 30000
+        type: number
+      lifetime_income:
+        example: 50000
+        type: number
+      llm_parse_credits:
+        example: 100
+        type: integer
+      updated_at:
+        example: "2025-01-02T15:04:05Z"
+        type: string
+      use_llm_parsing:
+        example: true
+        type: boolean
+    type: object
+  internal_domain_system.HealthCheckResult:
     properties:
       error:
         example: connection refused
@@ -11,11 +44,11 @@ definitions:
         example: healthy
         type: string
     type: object
-  system.HealthResponse:
+  internal_domain_system.HealthResponse:
     properties:
       checks:
         additionalProperties:
-          $ref: '#/definitions/system.HealthCheckResult'
+          $ref: '#/definitions/internal_domain_system.HealthCheckResult'
         type: object
       environment:
         example: production
@@ -30,6 +63,25 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/v1/auth/user:
+    get:
+      description: Returns the current authenticated user's information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_auth.GetAuthUserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get authenticated user
+      tags:
+      - Auth
   /health:
     get:
       description: Returns health information about infrastructure dependencies.
@@ -39,11 +91,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/system.HealthResponse'
+            $ref: '#/definitions/internal_domain_system.HealthResponse'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/system.HealthResponse'
+            $ref: '#/definitions/internal_domain_system.HealthResponse'
       summary: Health status
       tags:
       - System

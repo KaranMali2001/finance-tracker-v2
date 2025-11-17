@@ -2,7 +2,7 @@ version: "3"
 
 vars:
   BACKEND_DIR: backend
-  FRONTEND_DIR: web
+  FRONTEND_DIR: finance-tracker-web
 
 tasks:
   default:
@@ -46,10 +46,10 @@ tasks:
     interrupt: true
 
   dev:frontend:
-    desc: Run frontend in development mode
+    desc: Run Angular development server
     dir: "{{.FRONTEND_DIR}}"
     cmds:
-      - pnpm dev
+      - pnpm start
     interrupt: true
 
   # Production mode - run both frontend and backend
@@ -90,10 +90,10 @@ tasks:
     interrupt: true
 
   frontend:dev:
-    desc: Run only frontend in development mode
+    desc: Run only Angular development server
     dir: "{{.FRONTEND_DIR}}"
     cmds:
-      - pnpm dev
+      - pnpm start
     interrupt: true
 
   frontend:prod:
@@ -130,3 +130,23 @@ tasks:
 
         ensure_container "finance-tracker-postgres" "postgres"
         ensure_container "finance-tracker-redis" "redis"
+
+  docs:generate:
+    desc: Generate Swagger documentation and update frontend API types
+    cmds:
+      - task: docs:generate:backend
+      - task: docs:generate:frontend
+
+  docs:generate:backend:
+    desc: Generate Swagger documentation from annotations
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - swag init -g cmd/backend/main.go -o internal/docs --parseDependency --parseInternal
+      - echo "Swagger docs generated successfully"
+
+  docs:generate:frontend:
+    desc: Generate TypeScript API types from Swagger docs
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - pnpm run generate:api
+      - echo "Frontend API types generated successfully"

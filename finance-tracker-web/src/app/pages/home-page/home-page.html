@@ -1,0 +1,49 @@
+<nav class="bg-white border-b border-gray-200 py-4 shadow-sm">
+  <div class="max-w-7xl mx-auto px-8 flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-800">Finance Tracker</h1>
+    <ul class="flex list-none gap-8 m-0 p-0">
+      <li>
+        <a
+          routerLink="/"
+          routerLinkActive="text-blue-600 bg-blue-50"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="no-underline text-gray-600 font-medium px-4 py-2 rounded-md transition-all hover:text-gray-800 hover:bg-gray-100"
+        >
+          Home
+        </a>
+      </li>
+      <li>
+        <a
+          routerLink="/user"
+          routerLinkActive="text-blue-600 bg-blue-50"
+          class="no-underline text-gray-600 font-medium px-4 py-2 rounded-md transition-all hover:text-gray-800 hover:bg-gray-100"
+        >
+          User Profile
+        </a>
+      </li>
+      <li>
+        <a
+          routerLink="/sign-in"
+          routerLinkActive="text-blue-600 bg-blue-50"
+          class="no-underline text-gray-600 font-medium px-4 py-2 rounded-md transition-all hover:text-gray-800 hover:bg-gray-100"
+        >
+          Sign In
+        </a>
+      </li>
+      <li>
+        <a
+          routerLink="/sign-up"
+          routerLinkActive="text-blue-600 bg-blue-50"
+          class="no-underline text-gray-600 font-medium px-4 py-2 rounded-md transition-all hover:text-gray-800 hover:bg-gray-100"
+        >
+          Sign Up
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="max-w-7xl mx-auto mt-16 px-8 text-center">
+  <h2 class="text-4xl font-bold text-gray-800 mb-4">Welcome to Finance Tracker</h2>
+  <p class="text-lg text-gray-600">Navigate using the menu above to explore the application.</p>
+</div>

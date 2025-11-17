@@ -9,6 +9,29 @@ import (
 	"context"
 )
 
+const getAuthUser = `-- name: GetAuthUser :one
+SELECT id, clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at FROM users WHERE clerk_id=$1
+`
+
+func (q *Queries) GetAuthUser(ctx context.Context, clerkID string) (User, error) {
+	row := q.db.QueryRow(ctx, getAuthUser, clerkID)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.ClerkID,
+		&i.Email,
+		&i.DatabaseUrl,
+		&i.LifetimeIncome,
+		&i.LifetimeExpense,
+		&i.UseLlmParsing,
+		&i.LlmParseCredits,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const insertUser = `-- name: InsertUser :one
 INSERT INTO users (email, clerk_id)
 VALUES ($1, $2)

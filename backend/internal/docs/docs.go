@@ -15,6 +15,35 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/auth/user": {
+            "get": {
+                "description": "Returns the current authenticated user's information",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Get authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_auth.GetAuthUserResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Returns health information about infrastructure dependencies.",
@@ -29,13 +58,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/system.HealthResponse"
+                            "$ref": "#/definitions/internal_domain_system.HealthResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/system.HealthResponse"
+                            "$ref": "#/definitions/internal_domain_system.HealthResponse"
                         }
                     }
                 }
@@ -43,7 +72,52 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "system.HealthCheckResult": {
+        "internal_domain_auth.GetAuthUserResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-01-02T15:04:05Z"
+                },
+                "database_url": {
+                    "type": "string",
+                    "example": "postgresql://user:pass@localhost/db"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "lifetime_expense": {
+                    "type": "number",
+                    "example": 30000
+                },
+                "lifetime_income": {
+                    "type": "number",
+                    "example": 50000
+                },
+                "llm_parse_credits": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-01-02T15:04:05Z"
+                },
+                "use_llm_parsing": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_domain_system.HealthCheckResult": {
             "type": "object",
             "properties": {
                 "error": {
@@ -60,13 +134,13 @@ const docTemplate = `{
                 }
             }
         },
-        "system.HealthResponse": {
+        "internal_domain_system.HealthResponse": {
             "type": "object",
             "properties": {
                 "checks": {
                     "type": "object",
                     "additionalProperties": {
-                        "$ref": "#/definitions/system.HealthCheckResult"
+                        "$ref": "#/definitions/internal_domain_system.HealthCheckResult"
                     }
                 },
                 "environment": {

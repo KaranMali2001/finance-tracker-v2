@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/handler"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/labstack/echo/v4"
 )
@@ -74,4 +75,19 @@ func (h *AuthHandler) CreateUser(c echo.Context) error {
 		http.StatusCreated,
 		&UserCreateRequest{},
 	)(c)
+}
+
+// GetAuthUser godoc
+// @Summary Get authenticated user
+// @Description Returns the current authenticated user's information
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} GetAuthUserResponse
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Router /api/v1/auth/user [get]
+func (h *AuthHandler) GetAuthUser(c echo.Context) error {
+	return handler.Handle(h.base, func(c echo.Context, payload *GetAuthUserRequest) (*GetAuthUserResponse, error) {
+		clerkId := middleware.GetUserID(c)
+		return h.service.GetAuthUser(c, clerkId)
+	}, http.StatusOK, &GetAuthUserRequest{})(c)
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/logger"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/router"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
+	"github.com/clerk/clerk-sdk-go/v2"
 )
 
 const DefaultContextTimeout = 30
@@ -32,6 +33,11 @@ func main() {
 	loggerService := logger.NewLoggerService(cfg.Observability)
 	defer loggerService.Shutdown()
 	log := logger.NewLoggerWithService(cfg.Observability, loggerService)
+
+	// Initialize Clerk SDK with secret key for token validation
+	clerk.SetKey(cfg.Auth.SecretKey)
+	log.Info().Msg("Clerk SDK initialized")
+
 	if err := migrate.MigrateAndSeed(&cfg.Database); err != nil {
 		log.Fatal().Err(err).Msg("failed to migrate database")
 	}
@@ -54,6 +60,9 @@ func main() {
 		Server:  server,
 		Queries: queries,
 	})
+	log.Info().
+		Strs("cors_origins", cfg.Server.CORSAllowedOrigins).
+		Msg("CORS configuration loaded")
 	r := router.NewRouter(server, systemModule, authModule)
 	docs.SwaggerInfo.Title = "Finance Tracker API"
 	docs.SwaggerInfo.Description = "API documentation for Finance Tracker services."

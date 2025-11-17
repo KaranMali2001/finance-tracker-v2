@@ -5,6 +5,7 @@ import (
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
 )
 
 type AuthRepository struct {
@@ -29,11 +30,29 @@ func (r *AuthRepository) CreateUser(c context.Context, user *UserCreateRequest) 
 	// r.server.Queue.Client.Enqueue()
 
 	return &UserResponse{
-		Id:        userData.ID.String(),
+		Id:        utils.UUIDToString(userData.ID),
 		Email:     userData.Email,
-		IsActive:  userData.IsActive.Bool,
+		IsActive:  utils.BoolToBool(userData.IsActive),
 		ClerkId:   userData.ClerkID,
-		CreatedAt: userData.CreatedAt.Time,
-		UpdatedAt: userData.CreatedAt.Time,
+		CreatedAt: utils.TimestampToTime(userData.CreatedAt),
+		UpdatedAt: utils.TimestampToTime(userData.UpdatedAt),
+	}, nil
+}
+func (r *AuthRepository) GetAuthUser(c context.Context, clerkId string) (*GetAuthUserResponse, error) {
+	user, err := r.queries.GetAuthUser(c, clerkId)
+	if err != nil {
+		return nil, err
+	}
+	return &GetAuthUserResponse{
+		Id:              utils.UUIDToString(user.ID),
+		Email:           user.Email,
+		LifetimeIncome:  utils.NumericToFloat64Ptr(user.LifetimeIncome),
+		LifetimeExpense: utils.NumericToFloat64Ptr(user.LifetimeExpense),
+		UseLlmParsing:   utils.BoolToBoolPtr(user.UseLlmParsing),
+		LlmParseCredits: utils.Int4ToIntPtr(user.LlmParseCredits),
+		IsActive:        utils.BoolToBoolPtr(user.IsActive),
+		DatabaseUrl:     utils.TextToStringPtr(user.DatabaseUrl),
+		CreatedAt:       utils.TimestampToTime(user.CreatedAt),
+		UpdatedAt:       utils.TimestampToTime(user.UpdatedAt),
 	}, nil
 }

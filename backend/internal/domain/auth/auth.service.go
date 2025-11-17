@@ -30,3 +30,6 @@ func (s *AuthService) CreateUser(c echo.Context, user *UserCreateRequest) (*User
 	//here call the queue to send the welcome email to the user
 	return userData, nil
 }
+func (s *AuthService) GetAuthUser(c echo.Context, clerkId string) (*GetAuthUserResponse, error) {
+	return s.repository.GetAuthUser(c.Request().Context(), clerkId)
+}
