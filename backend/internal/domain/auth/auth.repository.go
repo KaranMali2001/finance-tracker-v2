@@ -30,7 +30,7 @@ func (r *AuthRepository) CreateUser(c context.Context, user *UserCreateRequest) 
 	// r.server.Queue.Client.Enqueue()
 
 	return &UserResponse{
-		Id:        utils.UUIDToString(userData.ID),
+
 		Email:     userData.Email,
 		IsActive:  utils.BoolToBool(userData.IsActive),
 		ClerkId:   userData.ClerkID,
@@ -44,7 +44,7 @@ func (r *AuthRepository) GetAuthUser(c context.Context, clerkId string) (*GetAut
 		return nil, err
 	}
 	return &GetAuthUserResponse{
-		Id:              utils.UUIDToString(user.ID),
+
 		Email:           user.Email,
 		LifetimeIncome:  utils.NumericToFloat64Ptr(user.LifetimeIncome),
 		LifetimeExpense: utils.NumericToFloat64Ptr(user.LifetimeExpense),

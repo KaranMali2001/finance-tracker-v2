@@ -8,7 +8,10 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "generate:api": "openapi --input ../backend/internal/docs/swagger.json --output ./src/api",
-    "generate:api:remote": "openapi --input http://localhost:8080/swagger/doc.json --output ./src/api"
+    "generate:api:remote": "openapi --input http://localhost:8080/swagger/doc.json --output ./src/api",
+    "format": "prettier --write \"src/**/*.{ts,html,scss,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,html,scss,json}\"",
+    "prepare": "husky"
   },
   "prettier": {
     "printWidth": 100,
@@ -50,9 +53,17 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11",
     "openapi-typescript-codegen": "^0.29.0",
     "postcss": "^8.5.6",
+    "prettier": "^3.4.2",
     "tailwindcss": "^4.1.17",
     "typescript": "~5.9.2"
+  },
+  "lint-staged": {
+    "*.{ts,html,scss,json}": [
+      "prettier --write"
+    ]
   }
 }

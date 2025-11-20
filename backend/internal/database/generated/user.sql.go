@@ -12,14 +12,13 @@ import (
 )
 
 const getAuthUser = `-- name: GetAuthUser :one
-SELECT id, clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at FROM users WHERE clerk_id=$1
+SELECT clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at FROM users WHERE clerk_id=$1
 `
 
 func (q *Queries) GetAuthUser(ctx context.Context, clerkID string) (User, error) {
 	row := q.db.QueryRow(ctx, getAuthUser, clerkID)
 	var i User
 	err := row.Scan(
-		&i.ID,
 		&i.ClerkID,
 		&i.Email,
 		&i.DatabaseUrl,
@@ -37,7 +36,7 @@ func (q *Queries) GetAuthUser(ctx context.Context, clerkID string) (User, error)
 const insertUser = `-- name: InsertUser :one
 INSERT INTO users (email, clerk_id)
 VALUES ($1, $2)
-RETURNING id, clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at
+RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at
 `
 
 type InsertUserParams struct {
@@ -49,7 +48,6 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, e
 	row := q.db.QueryRow(ctx, insertUser, arg.Email, arg.ClerkID)
 	var i User
 	err := row.Scan(
-		&i.ID,
 		&i.ClerkID,
 		&i.Email,
 		&i.DatabaseUrl,
@@ -70,7 +68,7 @@ UPDATE users SET
   database_url=COALESCE($2, database_url),
   lifetime_income=COALESCE($3, lifetime_income),
   lifetime_expense=COALESCE($4, lifetime_expense)
-WHERE clerk_id=$5 RETURNING id, clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at
+WHERE clerk_id=$5 RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at
 `
 
 type UpdateUserParams struct {
@@ -91,7 +89,6 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 	)
 	var i User
 	err := row.Scan(
-		&i.ID,
 		&i.ClerkID,
 		&i.Email,
 		&i.DatabaseUrl,

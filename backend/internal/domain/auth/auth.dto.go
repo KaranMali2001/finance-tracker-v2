@@ -38,7 +38,6 @@ type GetAuthUserRequest struct{}
 
 // GetAuthUserResponse represents the authenticated user's information
 type GetAuthUserResponse struct {
-	Id              string    `json:"id,omitempty" example:"123e4567-e89b-12d3-a456-426614174000"`
 	Email           string    `json:"email,omitempty" example:"user@example.com"`
 	LifetimeIncome  *float64  `json:"lifetime_income,omitempty" example:"50000.00"`
 	LifetimeExpense *float64  `json:"lifetime_expense,omitempty" example:"30000.00"`

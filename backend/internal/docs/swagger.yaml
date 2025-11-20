@@ -1,4 +1,73 @@
 definitions:
+  internal_domain_account.Account:
+    properties:
+      account_name:
+        type: string
+      account_number:
+        type: string
+      account_type:
+        type: string
+      bank:
+        $ref: '#/definitions/internal_domain_account.Bank'
+      bank_id:
+        type: string
+      current_balence:
+        type: number
+      id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  internal_domain_account.Bank:
+    properties:
+      code:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  internal_domain_account.CreateAccountReq:
+    properties:
+      account_name:
+        type: string
+      account_number:
+        type: integer
+      account_type:
+        type: string
+      bank_id:
+        type: string
+    required:
+    - account_name
+    - account_number
+    - account_type
+    - bank_id
+    type: object
+  internal_domain_account.UpdateAccountReq:
+    properties:
+      account_id:
+        type: string
+      account_name:
+        type: string
+      account_number:
+        type: string
+      account_type:
+        type: string
+      bank_id:
+        type: string
+      current_balence:
+        type: number
+      is_primary:
+        type: boolean
+    required:
+    - account_id
+    type: object
   internal_domain_auth.GetAuthUserResponse:
     properties:
       created_at:
@@ -9,9 +78,6 @@ definitions:
         type: string
       email:
         example: user@example.com
-        type: string
-      id:
-        example: 123e4567-e89b-12d3-a456-426614174000
         type: string
       is_active:
         example: true
@@ -63,6 +129,162 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/v1/account:
+    get:
+      description: Retrieves all accounts associated with the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_domain_account.Account'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all accounts for authenticated user
+      tags:
+      - Account
+    post:
+      consumes:
+      - application/json
+      description: Creates a new financial account for the authenticated user
+      parameters:
+      - description: Account creation request
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_account.CreateAccountReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_domain_account.Account'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new account
+      tags:
+      - Account
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing account's information for the authenticated
+        user
+      parameters:
+      - description: Account update request
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_account.UpdateAccountReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_account.Account'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update an existing account
+      tags:
+      - Account
+  /api/v1/account/{account_id}:
+    get:
+      description: Retrieves a specific account by its ID for the authenticated user
+      parameters:
+      - description: Account ID
+        format: uuid
+        in: path
+        name: account_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_account.Account'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get account by ID
+      tags:
+      - Account
   /api/v1/auth/user:
     get:
       description: Returns the current authenticated user's information

@@ -18,7 +18,6 @@ func (u *UpdateUserReq) Validate() error {
 }
 
 type User struct {
-	Id              string    `json:"id,omitempty"`
 	Email           string    `json:"email,omitempty"`
 	IsActive        bool      `json:"is_active,omitempty"`
 	ClerkId         string    `json:"clerk_id,omitempty"`

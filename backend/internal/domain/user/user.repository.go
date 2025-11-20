@@ -32,7 +32,7 @@ func (r *UserRepository) UpdateUser(c context.Context, updateUser *UpdateUserReq
 	}
 
 	return &User{
-		Id:              utils.UUIDToString(u.ID),
+
 		Email:           u.Email,
 		IsActive:        utils.BoolToBool(u.IsActive),
 		ClerkId:         u.ClerkID,

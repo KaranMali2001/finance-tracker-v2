@@ -100,7 +100,7 @@ func (ns NullJobType) Value() (driver.Value, error) {
 
 type Account struct {
 	ID             pgtype.UUID
-	UserID         pgtype.UUID
+	UserID         string
 	BankID         pgtype.UUID
 	AccountNumber  string
 	AccountType    string
@@ -115,7 +115,7 @@ type Account struct {
 
 type ActivityLog struct {
 	ID         pgtype.UUID
-	UserID     pgtype.UUID
+	UserID     pgtype.Text
 	Action     string
 	EntityType pgtype.Text
 	EntityID   pgtype.UUID
@@ -137,7 +137,7 @@ type Bank struct {
 
 type BankStatementUpload struct {
 	ID                     pgtype.UUID
-	UserID                 pgtype.UUID
+	UserID                 string
 	AccountID              pgtype.UUID
 	FileName               string
 	FileUrl                pgtype.Text
@@ -160,7 +160,7 @@ type BankStatementUpload struct {
 type Category struct {
 	ID               pgtype.UUID
 	Name             string
-	UserID           pgtype.UUID
+	UserID           pgtype.Text
 	ParentCategoryID pgtype.UUID
 	Icon             pgtype.Text
 	Color            pgtype.Text
@@ -172,7 +172,7 @@ type Category struct {
 
 type Goal struct {
 	ID            pgtype.UUID
-	UserID        pgtype.UUID
+	UserID        string
 	Name          string
 	TargetAmount  pgtype.Numeric
 	CurrentAmount pgtype.Numeric
@@ -212,8 +212,8 @@ type GoalTransaction struct {
 
 type Job struct {
 	ID             pgtype.UUID
-	UserID         pgtype.UUID
-	JobType        pgtype.Text
+	UserID         pgtype.Text
+	JobType        NullJobType
 	JobID          pgtype.UUID
 	Status         NullJobStatus
 	Payload        []byte
@@ -245,7 +245,7 @@ type Merchant struct {
 
 type MonthlyBudget struct {
 	ID           pgtype.UUID
-	UserID       pgtype.UUID
+	UserID       string
 	CategoryID   pgtype.UUID
 	AllocationID pgtype.UUID
 	MonthYear    pgtype.Date
@@ -257,7 +257,7 @@ type MonthlyBudget struct {
 
 type MonthlyExpenseAllocation struct {
 	ID                   pgtype.UUID
-	UserID               pgtype.UUID
+	UserID               string
 	Name                 string
 	CategoryID           pgtype.UUID
 	AllocatedAmount      pgtype.Numeric
@@ -271,7 +271,7 @@ type MonthlyExpenseAllocation struct {
 
 type NotificationPreference struct {
 	ID               pgtype.UUID
-	UserID           pgtype.UUID
+	UserID           string
 	NotificationType string
 	EmailEnabled     pgtype.Bool
 	ThresholdAmount  pgtype.Numeric
@@ -282,7 +282,7 @@ type NotificationPreference struct {
 
 type RecurringTransaction struct {
 	ID                    pgtype.UUID
-	UserID                pgtype.UUID
+	UserID                string
 	AccountID             pgtype.UUID
 	CategoryID            pgtype.UUID
 	MerchantID            pgtype.UUID
@@ -305,7 +305,7 @@ type RecurringTransaction struct {
 
 type SmsLog struct {
 	ID                pgtype.UUID
-	UserID            pgtype.UUID
+	UserID            string
 	Sender            string
 	RawMessage        string
 	ReceivedAt        pgtype.Timestamp
@@ -322,7 +322,7 @@ type SmsLog struct {
 
 type SpendingLimit struct {
 	ID             pgtype.UUID
-	UserID         pgtype.UUID
+	UserID         string
 	CategoryID     pgtype.UUID
 	LimitType      string
 	LimitAmount    pgtype.Numeric
@@ -353,7 +353,7 @@ type StatementTransaction struct {
 
 type Transaction struct {
 	ID              pgtype.UUID
-	UserID          pgtype.UUID
+	UserID          string
 	AccountID       pgtype.UUID
 	ToAccountID     pgtype.UUID
 	CategoryID      pgtype.UUID
@@ -371,7 +371,7 @@ type Transaction struct {
 	IsExcluded      pgtype.Bool
 	IsCash          pgtype.Bool
 	DeletedAt       pgtype.Timestamp
-	DeletedBy       pgtype.UUID
+	DeletedBy       pgtype.Text
 	CreatedAt       pgtype.Timestamp
 	UpdatedAt       pgtype.Timestamp
 }
@@ -387,7 +387,7 @@ type TransactionAttachment struct {
 	LlmParsed         pgtype.Bool
 	LlmParseAttempted pgtype.Bool
 	LlmExtractedData  []byte
-	UploadedBy        pgtype.UUID
+	UploadedBy        string
 	CreatedAt         pgtype.Timestamp
 	UpdatedAt         pgtype.Timestamp
 }
@@ -409,7 +409,6 @@ type TransactionReconciliation struct {
 }
 
 type User struct {
-	ID              pgtype.UUID
 	ClerkID         string
 	Email           string
 	DatabaseUrl     pgtype.Text
@@ -424,7 +423,7 @@ type User struct {
 
 type UserNotification struct {
 	ID               pgtype.UUID
-	UserID           pgtype.UUID
+	UserID           string
 	NotificationType string
 	Title            string
 	Message          string

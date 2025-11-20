@@ -14,6 +14,7 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/migrate"
 	docs "github.com/KaranMali2001/finance-tracker-v2-backend/internal/docs"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/account"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/auth"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/system"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/user"
@@ -65,10 +66,14 @@ func main() {
 		Server:  server,
 		Queries: queries,
 	})
+	accountModule := account.NewAccountModule(account.Deps{
+		Server:  server,
+		Queries: queries,
+	})
 	log.Info().
 		Strs("cors_origins", cfg.Server.CORSAllowedOrigins).
 		Msg("CORS configuration loaded")
-	r := router.NewRouter(server, systemModule, authModule, userModule)
+	r := router.NewRouter(server, systemModule, authModule, userModule, accountModule)
 	docs.SwaggerInfo.Title = "Finance Tracker API"
 	docs.SwaggerInfo.Description = "API documentation for Finance Tracker services."
 	docs.SwaggerInfo.Version = "1.0.0"

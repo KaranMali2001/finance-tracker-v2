@@ -182,3 +182,20 @@ func Float64PtrToNum(f *float64) pgtype.Numeric {
 	_ = n.Scan(*f)
 	return n
 }
+func UUIDToPgtype(id uuid.UUID) pgtype.UUID {
+	return pgtype.UUID{
+		Bytes: id,
+		Valid: true,
+	}
+}
+func StringToPgtypeText(s string) pgtype.Text {
+	if s == "" {
+		return pgtype.Text{
+			Valid: false,
+		}
+	}
+	return pgtype.Text{
+		String: s,
+		Valid:  true,
+	}
+}

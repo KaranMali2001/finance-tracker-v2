@@ -6,7 +6,6 @@ export type internal_domain_auth_GetAuthUserResponse = {
     created_at?: string;
     database_url?: string;
     email?: string;
-    id?: string;
     is_active?: boolean;
     lifetime_expense?: number;
     lifetime_income?: number;
