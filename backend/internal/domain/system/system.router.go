@@ -20,9 +20,9 @@ func NewModule(deps Dependencies) *Module {
 	return &Module{handler: handler}
 }
 
-func (m *Module) RegisterRoutes(e *echo.Echo) {
-	e.GET("/health", m.handler.CheckHealth)
+func (m *Module) RegisterRoutes(g *echo.Group) {
+	g.GET("/health", m.handler.CheckHealth)
 
-	e.GET("/swagger/*", echoSwagger.WrapHandler)
-	e.Static("/static", "static")
+	g.GET("/swagger/*", echoSwagger.WrapHandler)
+	g.Static("/static", "static")
 }

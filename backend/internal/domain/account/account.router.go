@@ -24,11 +24,11 @@ func NewAccountModule(deps Deps) *Module {
 		handler: handler,
 	}
 }
-func (m *Module) RegisterRoutes(e *echo.Echo) {
+func (m *Module) RegisterRoutes(g *echo.Group) {
 
 	authMiddleware := middleware.NewAuthMiddleware(m.handler.server).RequireAuth
-	e.POST("/api/v1/account", m.handler.CreateAccount, authMiddleware)
-	e.GET("/api/v1/account/:account_id", m.handler.GetAccountById, authMiddleware)
-	e.GET("/api/v1/account", m.handler.GetAccountByUserId, authMiddleware)
-	e.PUT("/api/v1/account", m.handler.UpdateAccount, authMiddleware)
+	g.POST("/account", m.handler.CreateAccount, authMiddleware)
+	g.GET("/account/:account_id", m.handler.GetAccountById, authMiddleware)
+	g.GET("/account", m.handler.GetAccountByUserId, authMiddleware)
+	g.PUT("/account", m.handler.UpdateAccount, authMiddleware)
 }

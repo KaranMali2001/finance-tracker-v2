@@ -73,7 +73,10 @@ func main() {
 	log.Info().
 		Strs("cors_origins", cfg.Server.CORSAllowedOrigins).
 		Msg("CORS configuration loaded")
-	r := router.NewRouter(server, systemModule, authModule, userModule, accountModule)
+	r := router.NewRouter(server,
+		[]router.RouteRegistrar{systemModule},
+		[]router.RouteRegistrar{authModule, userModule, accountModule},
+	)
 	docs.SwaggerInfo.Title = "Finance Tracker API"
 	docs.SwaggerInfo.Description = "API documentation for Finance Tracker services."
 	docs.SwaggerInfo.Version = "1.0.0"

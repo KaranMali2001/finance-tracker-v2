@@ -28,9 +28,9 @@ func NewModule(deps Dependencies) *Module {
 }
 
 // RegisterRoutes attaches the auth endpoints.
-func (m *Module) RegisterRoutes(e *echo.Echo) {
+func (m *Module) RegisterRoutes(g *echo.Group) {
 	authMiddleware := middleware.NewAuthMiddleware(m.handler.server)
-	e.POST("/api/v1/webhook/clerk", m.handler.CreateUser)
-	e.GET("/api/v1/auth/user", m.handler.GetAuthUser, authMiddleware.RequireAuth)
+	g.POST("/webhook/clerk", m.handler.CreateUser)
+	g.GET("/auth/user", m.handler.GetAuthUser, authMiddleware.RequireAuth)
 
 }

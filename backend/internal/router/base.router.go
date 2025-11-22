@@ -12,10 +12,10 @@ import (
 )
 
 type RouteRegistrar interface {
-	RegisterRoutes(e *echo.Echo)
+	RegisterRoutes(g *echo.Group)
 }
 
-func NewRouter(s *server.Server, registrars ...RouteRegistrar) *echo.Echo {
+func NewRouter(s *server.Server, rootRegistrars []RouteRegistrar, apiRegistrars []RouteRegistrar) *echo.Echo {
 	middlewares := middleware.NewMiddlewares(s)
 
 	router := echo.New()
@@ -52,8 +52,15 @@ func NewRouter(s *server.Server, registrars ...RouteRegistrar) *echo.Echo {
 		middlewares.Global.RequestLogger(),
 		middlewares.Global.Recover(),
 	)
-	for _, registrar := range registrars {
-		registrar.RegisterRoutes(router)
+
+	rootGroup := router.Group("")
+	for _, registrar := range rootRegistrars {
+		registrar.RegisterRoutes(rootGroup)
+	}
+
+	apiGroup := router.Group("/api/v1")
+	for _, registrar := range apiRegistrars {
+		registrar.RegisterRoutes(apiGroup)
 	}
 
 	return router

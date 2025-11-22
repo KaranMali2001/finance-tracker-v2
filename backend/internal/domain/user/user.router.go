@@ -23,7 +23,7 @@ func NewModule(deps Deps) *Module {
 		handler: handler,
 	}
 }
-func (m *Module) RegisterRoutes(e *echo.Echo) {
+func (m *Module) RegisterRoutes(g *echo.Group) {
 	authMiddleware := middleware.NewAuthMiddleware(m.handler.server).RequireAuth
-	e.PUT("/api/v1/user", m.handler.UpdateUser, authMiddleware)
+	g.PUT("/user", m.handler.UpdateUser, authMiddleware)
 }
