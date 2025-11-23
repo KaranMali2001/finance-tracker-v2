@@ -126,6 +126,38 @@ definitions:
         example: "2025-01-02T15:04:05Z"
         type: string
     type: object
+  internal_domain_user.UpdateUserReq:
+    properties:
+      database_url:
+        type: string
+      lifetime_expense:
+        type: number
+      lifetime_income:
+        type: number
+      use_llm_parsing:
+        type: boolean
+    type: object
+  internal_domain_user.User:
+    properties:
+      clerk_id:
+        type: string
+      created_at:
+        type: string
+      database_url:
+        type: string
+      email:
+        type: string
+      is_active:
+        type: boolean
+      lifetime_expense:
+        type: number
+      lifetime_income:
+        type: number
+      updated_at:
+        type: string
+      user_llm_parsing:
+        type: boolean
+    type: object
 info:
   contact: {}
 paths:
@@ -304,6 +336,46 @@ paths:
       summary: Get authenticated user
       tags:
       - Auth
+  /api/v1/user:
+    put:
+      consumes:
+      - application/json
+      description: Updates the authenticated user's information
+      parameters:
+      - description: User update request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_user.UpdateUserReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_user.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update user
+      tags:
+      - User
   /health:
     get:
       description: Returns health information about infrastructure dependencies.

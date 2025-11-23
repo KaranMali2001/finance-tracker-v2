@@ -278,6 +278,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/user": {
+            "put": {
+                "description": "Updates the authenticated user's information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update user",
+                "parameters": [
+                    {
+                        "description": "User update request",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_user.UpdateUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_user.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Returns health information about infrastructure dependencies.",
@@ -488,6 +549,55 @@ const docTemplate = `{
                 "timestamp": {
                     "type": "string",
                     "example": "2025-01-02T15:04:05Z"
+                }
+            }
+        },
+        "internal_domain_user.UpdateUserReq": {
+            "type": "object",
+            "properties": {
+                "database_url": {
+                    "type": "string"
+                },
+                "lifetime_expense": {
+                    "type": "number"
+                },
+                "lifetime_income": {
+                    "type": "number"
+                },
+                "use_llm_parsing": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "internal_domain_user.User": {
+            "type": "object",
+            "properties": {
+                "clerk_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "database_url": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "lifetime_expense": {
+                    "type": "number"
+                },
+                "lifetime_income": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_llm_parsing": {
+                    "type": "boolean"
                 }
             }
         }

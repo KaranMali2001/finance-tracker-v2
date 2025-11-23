@@ -14,7 +14,10 @@ export type { internal_domain_account_UpdateAccountReq } from './models/internal
 export type { internal_domain_auth_GetAuthUserResponse } from './models/internal_domain_auth_GetAuthUserResponse';
 export type { internal_domain_system_HealthCheckResult } from './models/internal_domain_system_HealthCheckResult';
 export type { internal_domain_system_HealthResponse } from './models/internal_domain_system_HealthResponse';
+export type { internal_domain_user_UpdateUserReq } from './models/internal_domain_user_UpdateUserReq';
+export type { internal_domain_user_User } from './models/internal_domain_user_User';
 
 export { AccountService } from './services/AccountService';
 export { AuthService } from './services/AuthService';
 export { SystemService } from './services/SystemService';
+export { UserService } from './services/UserService';

@@ -23,9 +23,8 @@ WORKDIR /app
 # Copy the binary from builder
 COPY --from=builder /app/main .
 
-# Build argument to specify which env file to use
-ARG ENV_FILE=.env.dev
-COPY ${ENV_FILE} .env
+# Copy migrations directory
+COPY --from=builder /app/internal/database/migrate/migrations ./internal/database/migrate/migrations
 
 EXPOSE 8080
 
