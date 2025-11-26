@@ -34,7 +34,7 @@ func NewAccountHandler(s *server.Server, service *AccService) *AccHandler {
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /api/v1/account [post]
+// @Router /account [post]
 func (h *AccHandler) CreateAccount(c echo.Context) error {
 	return handler.Handle(
 		h.base,
@@ -56,7 +56,7 @@ func (h *AccHandler) CreateAccount(c echo.Context) error {
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 404 {object} map[string]string "Not Found"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /api/v1/account/{account_id} [get]
+// @Router /account/{account_id} [get]
 func (h *AccHandler) GetAccountById(c echo.Context) error {
 	return handler.Handle(h.base, func(c echo.Context, payload *GetAccountReq) (*Account, error) {
 		clerkId := middleware.GetUserID(c)
@@ -72,7 +72,7 @@ func (h *AccHandler) GetAccountById(c echo.Context) error {
 // @Success 200 {array} Account
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /api/v1/account [get]
+// @Router /account [get]
 func (h *AccHandler) GetAccountByUserId(c echo.Context) error {
 	return handler.Handle(
 		h.base,
@@ -96,7 +96,7 @@ func (h *AccHandler) GetAccountByUserId(c echo.Context) error {
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 404 {object} map[string]string "Not Found"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /api/v1/account [put]
+// @Router /account [put]
 func (h *AccHandler) UpdateAccount(c echo.Context) error {
 	return handler.Handle(
 		h.base,

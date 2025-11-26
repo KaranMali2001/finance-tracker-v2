@@ -6,6 +6,4 @@ import { Component } from '@angular/core';
   templateUrl: './unsaved-changes-footer.html',
   styles: ``,
 })
-export class UnsavedChangesFooter {
-
-}
+export class UnsavedChangesFooter {}

@@ -34,7 +34,7 @@ func NewUserHandler(s *server.Server, userService *UserService) *UserHandler {
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /api/v1/user [put]
+// @Router /user [put]
 func (h *UserHandler) UpdateUser(c echo.Context) error {
 	return handler.Handle(h.base, func(c echo.Context, payload *UpdateUserReq) (*User, error) {
 		clerkId := middleware.GetUserID(c)

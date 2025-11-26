@@ -13,10 +13,10 @@ export class AuthService {
      * @returns internal_domain_auth_GetAuthUserResponse OK
      * @throws ApiError
      */
-    public static getApiV1AuthUser(): CancelablePromise<internal_domain_auth_GetAuthUserResponse> {
+    public static getAuthUser(): CancelablePromise<internal_domain_auth_GetAuthUserResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/auth/user',
+            url: '/auth/user',
             errors: {
                 401: `Unauthorized`,
             },

@@ -15,12 +15,12 @@ export class UserService {
      * @returns internal_domain_user_User OK
      * @throws ApiError
      */
-    public static putApiV1User(
+    public static putUser(
         user: internal_domain_user_UpdateUserReq,
     ): CancelablePromise<internal_domain_user_User> {
         return __request(OpenAPI, {
             method: 'PUT',
-            url: '/api/v1/user',
+            url: '/user',
             body: user,
             errors: {
                 400: `Bad Request`,

@@ -1,3 +1,4 @@
+basePath: /api/v1
 definitions:
   internal_domain_account.Account:
     properties:
@@ -158,10 +159,14 @@ definitions:
       user_llm_parsing:
         type: boolean
     type: object
+host: localhost:8080
 info:
   contact: {}
+  description: API documentation for Finance Tracker services.
+  title: Finance Tracker API
+  version: 1.0.0
 paths:
-  /api/v1/account:
+  /account:
     get:
       description: Retrieves all accounts associated with the authenticated user
       produces:
@@ -273,7 +278,7 @@ paths:
       summary: Update an existing account
       tags:
       - Account
-  /api/v1/account/{account_id}:
+  /account/{account_id}:
     get:
       description: Retrieves a specific account by its ID for the authenticated user
       parameters:
@@ -317,7 +322,7 @@ paths:
       summary: Get account by ID
       tags:
       - Account
-  /api/v1/auth/user:
+  /auth/user:
     get:
       description: Returns the current authenticated user's information
       produces:
@@ -336,7 +341,24 @@ paths:
       summary: Get authenticated user
       tags:
       - Auth
-  /api/v1/user:
+  /health:
+    get:
+      description: Returns health information about infrastructure dependencies.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_system.HealthResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/internal_domain_system.HealthResponse'
+      summary: Health status
+      tags:
+      - System
+  /user:
     put:
       consumes:
       - application/json
@@ -376,21 +398,10 @@ paths:
       summary: Update user
       tags:
       - User
-  /health:
-    get:
-      description: Returns health information about infrastructure dependencies.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/internal_domain_system.HealthResponse'
-        "503":
-          description: Service Unavailable
-          schema:
-            $ref: '#/definitions/internal_domain_system.HealthResponse'
-      summary: Health status
-      tags:
-      - System
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token from Clerk.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

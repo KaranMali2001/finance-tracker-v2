@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/account": {
+        "/account": {
             "get": {
                 "description": "Retrieves all accounts associated with the authenticated user",
                 "produces": [
@@ -183,7 +183,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/account/{account_id}": {
+        "/account/{account_id}": {
             "get": {
                 "description": "Retrieves a specific account by its ID for the authenticated user",
                 "produces": [
@@ -249,7 +249,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/user": {
+        "/auth/user": {
             "get": {
                 "description": "Returns the current authenticated user's information",
                 "produces": [
@@ -278,7 +278,33 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/user": {
+        "/health": {
+            "get": {
+                "description": "Returns health information about infrastructure dependencies.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Health status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_system.HealthResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_system.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user": {
             "put": {
                 "description": "Updates the authenticated user's information",
                 "consumes": [
@@ -334,32 +360,6 @@ const docTemplate = `{
                             "additionalProperties": {
                                 "type": "string"
                             }
-                        }
-                    }
-                }
-            }
-        },
-        "/health": {
-            "get": {
-                "description": "Returns health information about infrastructure dependencies.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "System"
-                ],
-                "summary": "Health status",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/internal_domain_system.HealthResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/internal_domain_system.HealthResponse"
                         }
                     }
                 }
@@ -601,17 +601,25 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and JWT token from Clerk.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0.0",
+	Host:             "localhost:8080",
+	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Finance Tracker API",
+	Description:      "API documentation for Finance Tracker services.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

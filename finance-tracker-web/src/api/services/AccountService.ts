@@ -15,10 +15,10 @@ export class AccountService {
      * @returns internal_domain_account_Account OK
      * @throws ApiError
      */
-    public static getApiV1Account(): CancelablePromise<Array<internal_domain_account_Account>> {
+    public static getAccount(): CancelablePromise<Array<internal_domain_account_Account>> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/account',
+            url: '/account',
             errors: {
                 401: `Unauthorized`,
                 500: `Internal Server Error`,
@@ -32,12 +32,12 @@ export class AccountService {
      * @returns internal_domain_account_Account OK
      * @throws ApiError
      */
-    public static putApiV1Account(
+    public static putAccount(
         account: internal_domain_account_UpdateAccountReq,
     ): CancelablePromise<internal_domain_account_Account> {
         return __request(OpenAPI, {
             method: 'PUT',
-            url: '/api/v1/account',
+            url: '/account',
             body: account,
             errors: {
                 400: `Bad Request`,
@@ -54,12 +54,12 @@ export class AccountService {
      * @returns internal_domain_account_Account Created
      * @throws ApiError
      */
-    public static postApiV1Account(
+    public static postAccount(
         account: internal_domain_account_CreateAccountReq,
     ): CancelablePromise<internal_domain_account_Account> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/account',
+            url: '/account',
             body: account,
             errors: {
                 400: `Bad Request`,
@@ -75,12 +75,12 @@ export class AccountService {
      * @returns internal_domain_account_Account OK
      * @throws ApiError
      */
-    public static getApiV1Account1(
+    public static getAccount1(
         accountId: string,
     ): CancelablePromise<internal_domain_account_Account> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/account/{account_id}',
+            url: '/account/{account_id}',
             path: {
                 'account_id': accountId,
             },

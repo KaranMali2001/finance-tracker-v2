@@ -1,0 +1,7 @@
+<!-- finance-tracker-web/src/app/components/loading-spinner/loading-spinner.component.html -->
+<div class="flex flex-col items-center justify-center p-8 gap-4">
+  <mat-spinner [diameter]="size()"></mat-spinner>
+  @if (message()) {
+    <p class="text-gray-600 m-0 text-center">{{ message() }}</p>
+  }
+</div>

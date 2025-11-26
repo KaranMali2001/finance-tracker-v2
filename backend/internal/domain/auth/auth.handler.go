@@ -84,7 +84,7 @@ func (h *AuthHandler) CreateUser(c echo.Context) error {
 // @Produce json
 // @Success 200 {object} GetAuthUserResponse
 // @Failure 401 {object} map[string]string "Unauthorized"
-// @Router /api/v1/auth/user [get]
+// @Router /auth/user [get]
 func (h *AuthHandler) GetAuthUser(c echo.Context) error {
 	return handler.Handle(h.base, func(c echo.Context, payload *GetAuthUserRequest) (*GetAuthUserResponse, error) {
 		clerkId := middleware.GetUserID(c)

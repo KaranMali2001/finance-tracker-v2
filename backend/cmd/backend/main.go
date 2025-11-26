@@ -1,3 +1,15 @@
+// @title           Finance Tracker API
+// @version         1.0.0
+// @description     API documentation for Finance Tracker services.
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT token from Clerk.
+
+// @host      localhost:8080
+// @BasePath  /api/v1
+
 package main
 
 import (
@@ -81,7 +93,7 @@ func main() {
 	docs.SwaggerInfo.Description = "API documentation for Finance Tracker services."
 	docs.SwaggerInfo.Version = "1.0.0"
 	docs.SwaggerInfo.Host = fmt.Sprintf("localhost:%s", cfg.Server.Port)
-	docs.SwaggerInfo.BasePath = ""
+	docs.SwaggerInfo.BasePath = "/api/v1"
 	docs.SwaggerInfo.Schemes = []string{"http"}
 	log.Info().
 		Str("swagger_ui", fmt.Sprintf("http://localhost:%s/swagger/index.html", cfg.Server.Port)).
