@@ -27,7 +27,15 @@ func (s *AuthService) CreateUser(c echo.Context, user *UserCreateRequest) (*User
 	}
 
 	logger.Info().Str("event", "user_created").Str("user_id", userData.Id).Msg("User created successfully")
-	//here call the queue to send the welcome email to the user
+	task, err := s.server.TaskService.NewWelcomeEmailTask(userData.Email)
+	if err != nil {
+		logger.Error().Err(err).Msg("failed to create new email task")
+	}
+	info, err := s.server.Queue.Client.EnqueueContext(c.Request().Context(), task)
+	if err != nil {
+		logger.Error().Err(err).Msg("failed to Enqueue the Welcome Email Job")
+	}
+	logger.Info().Str("SuccessFully Enqueued Welcome Email Job %s", info.ID)
 	return userData, nil
 }
 func (s *AuthService) GetAuthUser(c echo.Context, clerkId string) (*GetAuthUserResponse, error) {

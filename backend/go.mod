@@ -23,7 +23,9 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pressly/goose/v3 v3.26.0
 	github.com/redis/go-redis/v9 v9.16.0
+	github.com/resend/resend-go/v2 v2.28.0
 	github.com/rs/zerolog v1.34.0
+	github.com/svix/svix-webhooks v1.81.0
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.6
 	golang.org/x/text v0.31.0
@@ -63,7 +65,6 @@ require (
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
-	github.com/svix/svix-webhooks v1.81.0 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect

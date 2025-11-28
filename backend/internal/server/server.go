@@ -11,6 +11,8 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/logger"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/queue"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/services"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
 	"github.com/newrelic/go-agent/v3/integrations/nrredis-v9"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
@@ -24,6 +26,7 @@ type Server struct {
 	Redis         *redis.Client
 	Queue         *queue.JobService
 	httpServer    *http.Server
+	TaskService   *tasks.TaskService // Add this
 }
 
 func New(cfg *config.Config, logger *zerolog.Logger, loggerService *logger.LoggerService) (*Server, error) {
@@ -36,9 +39,10 @@ func New(cfg *config.Config, logger *zerolog.Logger, loggerService *logger.Logge
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: cfg.Redis.Address,
 	})
-
+	services := services.NewServices(cfg, logger)
+	taskService := tasks.NewTaskService(services)
 	//create new job service
-	q := queue.NewJobService(logger, cfg)
+	q := queue.NewJobService(logger, cfg, taskService)
 
 	if err := q.Start(); err != nil {
 		return nil, fmt.Errorf("failed to start job service: %w", err)
@@ -64,6 +68,7 @@ func New(cfg *config.Config, logger *zerolog.Logger, loggerService *logger.Logge
 		DB:            db,
 		Redis:         redisClient,
 		Queue:         q,
+		TaskService:   taskService,
 	}
 
 	return server, nil
@@ -100,6 +105,6 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	if err := s.DB.Close(); err != nil {
 		return fmt.Errorf("failed to close database connection: %w", err)
 	}
-
+	s.Queue.Stop()
 	return nil
 }
