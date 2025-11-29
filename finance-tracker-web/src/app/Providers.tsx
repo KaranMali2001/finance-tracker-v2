@@ -34,21 +34,28 @@ export function Providers({ children }: { children: React.ReactNode }) {
 }
 
 function ApiClientConfig() {
-  const { getToken, isLoaded } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
+    // Wait for Clerk to fully load before configuring API client
     if (!isLoaded) {
       return;
     }
 
+    // Only configure API client when Clerk is loaded
+    // Token provider will return null if not signed in, which is fine
     configureApiClient(async () => {
-      return await getToken();
+      if (!isSignedIn) {
+        return null;
+      }
+      const token = await getToken();
+      return token || null;
     });
 
     return () => {
       resetApiClient();
     };
-  }, [getToken, isLoaded]);
+  }, [getToken, isLoaded, isSignedIn]);
 
   return null;
 }

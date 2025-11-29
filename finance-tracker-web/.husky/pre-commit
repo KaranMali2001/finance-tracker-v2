@@ -1,10 +1,31 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
-# Change to the repo root directory (where git is initialized)
-cd "$(dirname -- "$0")/../.." || exit
+echo "🔧 Running pre-commit formatting..."
 
-# Run lint-staged from finance-tracker-web directory
-cd finance-tracker-web || exit
+# Format Go backend code
+echo "📝 Formatting Go files..."
+
+cd ../backend
+
+if command -v gofmt >/dev/null 2>&1; then
+  gofmt -w .
+  echo "✓ Go files formatted with gofmt"
+else
+  echo "⚠️  gofmt not found, skipping Go formatting"
+fi
+
+if command -v goimports >/dev/null 2>&1; then
+  goimports -w .
+  echo "✓ Go imports organized with goimports"
+else
+  echo "⚠️  goimports not found, install with: go install golang.org/x/tools/cmd/goimports@latest"
+fi
+
+# Format Next.js/TypeScript files using lint-staged
+cd ../finance-tracker-web
+
+echo "📝 Formatting Next.js/TypeScript files..."
+
 npx lint-staged
 
+echo "✅ Pre-commit formatting complete!"

@@ -11,7 +11,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml,css,scss}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml,css,scss}\"",
     "type-check": "tsc --noEmit",
-    "prepare": "husky install .husky",
+    "prepare": "husky",
     "generate:api": "npx openapi-typescript-codegen --input ../backend/internal/docs/swagger.json --output ./src/generated/api --client axios"
   },
   "dependencies": {
@@ -44,6 +44,7 @@
     "react-hook-form": "^7.67.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
+    "yup": "^1.7.1",
     "zod": "^4.1.13"
   },
   "devDependencies": {
@@ -55,6 +56,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "baseline-browser-mapping": "^2.8.32",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.0",
     "openapi-typescript-codegen": "^0.29.0",
@@ -65,7 +67,7 @@
   },
   "lint-staged": {
     "**/*.{ts,tsx,js,jsx,json,md,yml,yaml,css,scss}": [
-      "prettier --write"
+      "npx prettier --write"
     ],
     "../backend/**/*.go": [
       "bash -c 'cd .. && gofmt -w \"$@\" && goimports -w \"$@\"' --"

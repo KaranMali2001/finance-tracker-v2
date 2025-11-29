@@ -1,13 +1,7 @@
-import { AuthService } from '@/generated/api';
-import { initServerApiClient } from '@/lib/api-client-server';
+'use client';
+import { useAuthUser } from '@/components/shared';
 
-export default async function ProfilePage() {
-  // Initialize API client for this specific request (per-request, not singleton)
-  // This ensures each request has its own isolated token provider
-  await initServerApiClient();
-
-  // Now API calls will include the token for this specific request
-  const userData = await AuthService.getAuthUser();
-
-  return <div>{userData.email}</div>;
+export default function ProfilePage() {
+  const { data: userData, isLoading } = useAuthUser();
+  return <div>{isLoading ? <div>Loading...</div> : userData?.email}</div>;
 }
