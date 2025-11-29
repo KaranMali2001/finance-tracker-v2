@@ -29,6 +29,7 @@ func NewAccountHandler(s *server.Server, service *AccService) *AccHandler {
 // @Tags Account
 // @Accept json
 // @Produce json
+// @Name CreateAccount
 // @Param account body CreateAccountReq true "Account creation request"
 // @Success 201 {object} Account
 // @Failure 400 {object} map[string]string "Bad Request"
@@ -50,6 +51,7 @@ func (h *AccHandler) CreateAccount(c echo.Context) error {
 // @Description Retrieves a specific account by its ID for the authenticated user
 // @Tags Account
 // @Produce json
+// @Name GetAccountById
 // @Param account_id path string true "Account ID" format(uuid)
 // @Success 200 {object} Account
 // @Failure 400 {object} map[string]string "Bad Request"
@@ -69,15 +71,16 @@ func (h *AccHandler) GetAccountById(c echo.Context) error {
 // @Description Retrieves all accounts associated with the authenticated user
 // @Tags Account
 // @Produce json
+// @Name GetAccountListForUser
 // @Success 200 {array} Account
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /account [get]
-func (h *AccHandler) GetAccountByUserId(c echo.Context) error {
+func (h *AccHandler) GetAccountsByUserId(c echo.Context) error {
 	return handler.Handle(
 		h.base,
 		func(c echo.Context, payload *GetAccountByUserId) ([]Account, error) {
-			return h.service.GetAccountByUserId(c, middleware.GetUserID(c))
+			return h.service.GetAccountsByUserId(c, middleware.GetUserID(c))
 		},
 		http.StatusOK,
 		&GetAccountByUserId{},
@@ -90,6 +93,7 @@ func (h *AccHandler) GetAccountByUserId(c echo.Context) error {
 // @Tags Account
 // @Accept json
 // @Produce json
+// @Name UpdateAccount
 // @Param account body UpdateAccountReq true "Account update request"
 // @Success 200 {object} Account
 // @Failure 400 {object} map[string]string "Bad Request"

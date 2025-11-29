@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/config"
 	"github.com/rs/zerolog"
 )
@@ -9,12 +11,16 @@ type Services struct {
 	EmailService *EmailService
 }
 
-func NewServices(cfg *config.Config, logger *zerolog.Logger) *Services {
+func NewServices(cfg *config.Config, logger *zerolog.Logger) (*Services, error) {
 	fromEmail := cfg.Integration.ResendEmail
 	if fromEmail == "" {
 		fromEmail = "onboarding@resend.dev" // Default fallback to Resend's default email
 	}
-	return &Services{
-		EmailService: NewEmailService(&cfg.Integration, logger, fromEmail),
+	emailService, err := NewEmailService(&cfg.Integration, logger, fromEmail)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create email service: %w", err)
 	}
+	return &Services{
+		EmailService: emailService,
+	}, nil
 }

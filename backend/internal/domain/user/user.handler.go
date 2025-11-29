@@ -23,7 +23,7 @@ func NewUserHandler(s *server.Server, userService *UserService) *UserHandler {
 	}
 }
 
-// UpdateUser godoc
+// UpdateUserByIdKaranMali2001 godoc
 // @Summary Update user
 // @Description Updates the authenticated user's information
 // @Tags User

@@ -1,71 +1,58 @@
 {
   "name": "finance-tracker-web",
-  "version": "0.0.0",
-  "scripts": {
-    "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "generate:api": "openapi --input ../backend/internal/docs/swagger.json --output ./src/api",
-    "generate:api:remote": "openapi --input http://localhost:8080/swagger/doc.json --output ./src/api",
-    "format": "prettier --write \"src/**/*.{ts,html,scss,json}\" --ignore-path .prettierignore",
-    "format:check": "prettier --check \"src/**/*.{ts,html,scss,json}\" --ignore-path .prettierignore",
-    "prepare": "husky"
-  },
-  "prettier": {
-    "printWidth": 100,
-    "singleQuote": true,
-    "overrides": [
-      {
-        "files": "*.html",
-        "options": {
-          "parser": "angular"
-        }
-      }
-    ]
-  },
+  "version": "0.1.0",
   "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "format": "biome format --write",
+    "type-check": "tsc --noEmit",
+    "prepare": "cd .. && husky install finance-tracker-web/.husky",
+    "generate:api": "npx openapi-typescript-codegen --input ../backend/internal/docs/swagger.json --output ./src/generated/api --client axios"
+  },
   "dependencies": {
-    "@angular/animations": "^21.0.0",
-    "@angular/cdk": "20.2.13",
-    "@angular/common": "^20.3.0",
-    "@angular/compiler": "^20.3.0",
-    "@angular/core": "^20.3.0",
-    "@angular/forms": "^20.3.0",
-    "@angular/material": "20.2.13",
-    "@angular/platform-browser": "^20.3.0",
-    "@angular/router": "^20.3.0",
-    "ngx-clerk": "^0.2.0",
-    "ngx-toastr": "^19.1.0",
-    "rxjs": "~7.8.0",
-    "tslib": "^2.3.0",
-    "zone.js": "~0.15.0"
+    "@clerk/nextjs": "^6.35.5",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@tanstack/react-query": "^5.90.11",
+    "axios": "^1.13.2",
+    "class-variance-authority": "^0.7.1",
+    "form-data": "^4.0.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.23.24",
+    "input-otp": "^1.4.2",
+    "lucide-react": "^0.555.0",
+    "next": "16.0.5",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
-    "@angular/build": "^20.3.10",
-    "@angular/cli": "^20.3.10",
-    "@angular/compiler-cli": "^20.3.0",
-    "@tailwindcss/postcss": "^4.1.17",
-    "@types/jasmine": "~5.1.0",
-    "autoprefixer": "^10.4.22",
-    "husky": "^9.1.7",
-    "jasmine-core": "~5.9.0",
-    "karma": "~6.4.0",
-    "karma-chrome-launcher": "~3.2.0",
-    "karma-coverage": "~2.2.0",
-    "karma-jasmine": "~5.1.0",
-    "karma-jasmine-html-reporter": "~2.1.0",
-    "lint-staged": "^15.2.11",
+    "@biomejs/biome": "2.2.0",
+    "@clerk/types": "^4.101.3",
+    "@tailwindcss/postcss": "^4",
+    "@tanstack/react-query-devtools": "^5.91.1",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.0",
     "openapi-typescript-codegen": "^0.29.0",
-    "postcss": "^8.5.6",
-    "prettier": "^3.4.2",
-    "tailwindcss": "^4.1.17",
-    "typescript": "~5.9.2"
+    "tailwindcss": "^4",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "^5"
   },
   "lint-staged": {
-    "src/**/*.{ts,html,scss,json}": [
-      "prettier --write --ignore-path .prettierignore"
+    "*.{ts,tsx,js,jsx}": [
+      "biome check --write",
+      "biome format --write"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "biome format --write"
     ]
   }
 }

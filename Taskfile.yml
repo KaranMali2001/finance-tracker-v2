@@ -46,10 +46,10 @@ tasks:
     interrupt: true
 
   dev:frontend:
-    desc: Run Angular development server
+    desc: Run Next.js development server
     dir: "{{.FRONTEND_DIR}}"
     cmds:
-      - pnpm start
+      - pnpm dev
     interrupt: true
 
   # Production mode - run both frontend and backend
@@ -67,11 +67,11 @@ tasks:
     interrupt: true
 
   prod:frontend:
-    desc: Run frontend in production mode (build + preview)
+    desc: Run frontend in production mode (build + start)
     dir: "{{.FRONTEND_DIR}}"
     cmds:
       - pnpm build
-      - pnpm preview
+      - pnpm start
     interrupt: true
 
   # Individual tasks for running separately
@@ -90,19 +90,39 @@ tasks:
     interrupt: true
 
   frontend:dev:
-    desc: Run only Angular development server
+    desc: Run only Next.js development server
     dir: "{{.FRONTEND_DIR}}"
     cmds:
-      - pnpm start
+      - pnpm dev
     interrupt: true
 
   frontend:prod:
-    desc: Build and preview frontend for production
+    desc: Build and start frontend for production
     dir: "{{.FRONTEND_DIR}}"
     cmds:
       - pnpm build
-      - pnpm preview
+      - pnpm start
     interrupt: true
+
+  frontend:build:
+    desc: Build Next.js application for production
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - pnpm build
+      - echo "Next.js build completed successfully"
+
+  frontend:lint:
+    desc: Lint Next.js application using Biome
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - pnpm lint
+
+  frontend:format:
+    desc: Format Next.js code using Biome
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - pnpm format
+      - echo "Code formatted successfully"
 
   services:up:
     desc: Ensure local infrastructure containers are running
@@ -141,7 +161,7 @@ tasks:
     desc: Generate Swagger documentation from annotations
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - swag init -g cmd/backend/main.go -o internal/docs --parseDependency --parseInternal
+      - swag init -g cmd/backend/main.go -o internal/docs --parseDependency --parseInternal --parseDepth 2
       - echo "Swagger docs generated successfully"
 
   docs:generate:frontend:
@@ -150,3 +170,72 @@ tasks:
     cmds:
       - pnpm run generate:api
       - echo "Frontend API types generated successfully"
+
+  # Next.js specific tasks
+  frontend:type-check:
+    desc: Type check Next.js TypeScript files
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - pnpm exec tsc --noEmit
+      - echo "Type check passed successfully"
+
+  frontend:clean:
+    desc: Clean Next.js build artifacts and cache
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - rm -rf .next
+      - rm -rf node_modules/.cache
+      - echo "Next.js cache cleaned successfully"
+
+  # Combined tasks
+  lint:
+    desc: Lint both backend and frontend
+    cmds:
+      - task: frontend:lint
+      - echo "Linting completed"
+
+  format:
+    desc: Format both backend and frontend code
+    cmds:
+      - task: frontend:format
+      - echo "Formatting completed"
+
+  type-check:
+    desc: Type check frontend and verify backend
+    cmds:
+      - task: frontend:type-check
+      - echo "Type checking completed"
+
+  clean:
+    desc: Clean build artifacts for both frontend and backend
+    cmds:
+      - task: frontend:clean
+      - echo "Cleanup completed"
+
+  # Husky and Git hooks
+  husky:install:
+    desc: Install and setup Husky git hooks
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - pnpm install
+      - pnpm prepare
+      - echo "Husky installed and configured successfully"
+
+  husky:test:
+    desc: Test Husky hooks without committing
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - echo "Testing pre-commit hook..."
+      - pnpm lint-staged
+      - echo "Pre-commit hook test passed!"
+
+  git:commit:
+    desc: Helper to show what Husky will check before commit
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - echo "Husky will run on commit:"
+      - echo "  - lint-staged (Biome lint & format)"
+      - echo ""
+      - echo "Husky will run on push:"
+      - echo "  - Type checking"
+      - echo "  - Linting"

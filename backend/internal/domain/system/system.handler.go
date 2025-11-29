@@ -44,6 +44,7 @@ func NewSystemHandler(s *server.Server) *SystemHandler {
 // @Description Returns health information about infrastructure dependencies.
 // @Tags System
 // @Produce json
+// @Name CheckHealth
 // @Success 200 {object} HealthResponse
 // @Failure 503 {object} HealthResponse
 // @Router /health [get]

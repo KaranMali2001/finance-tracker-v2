@@ -29,6 +29,6 @@ func (m *Module) RegisterRoutes(g *echo.Group) {
 	authMiddleware := middleware.NewAuthMiddleware(m.handler.server).RequireAuth
 	g.POST("/account", m.handler.CreateAccount, authMiddleware)
 	g.GET("/account/:account_id", m.handler.GetAccountById, authMiddleware)
-	g.GET("/account", m.handler.GetAccountByUserId, authMiddleware)
+	g.GET("/account", m.handler.GetAccountsByUserId, authMiddleware)
 	g.PUT("/account", m.handler.UpdateAccount, authMiddleware)
 }

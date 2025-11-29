@@ -66,7 +66,7 @@ func (r *AccRepo) GetAccountById(c context.Context, payload *GetAccountReq, cler
 		},
 	}, nil
 }
-func (r *AccRepo) GetAccountByUserId(c context.Context, clerkId string) ([]Account, error) {
+func (r *AccRepo) GetAccountsByUserId(c context.Context, clerkId string) ([]Account, error) {
 	dbAccounts, err := r.q.GetAccountsByUserId(c, clerkId)
 	if err != nil {
 		return nil, err

@@ -39,8 +39,11 @@ func New(cfg *config.Config, logger *zerolog.Logger, loggerService *logger.Logge
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: cfg.Redis.Address,
 	})
-	services := services.NewServices(cfg, logger)
-	taskService := tasks.NewTaskService(services)
+	svcs, err := services.NewServices(cfg, logger)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize services: %w", err)
+	}
+	taskService := tasks.NewTaskService(svcs)
 	//create new job service
 	q := queue.NewJobService(logger, cfg, taskService)
 

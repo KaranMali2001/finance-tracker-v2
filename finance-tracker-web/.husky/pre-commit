@@ -1,26 +1,28 @@
 #!/usr/bin/env sh
-echo "🔧 Running pre-commit formatting..."
+. "$(dirname -- "$0")/_/husky.sh"
 
-# Format Go backend code
-echo "📝 Formatting Go files..."
-cd ../backend
-if command -v gofmt >/dev/null 2>&1; then
-  gofmt -w .
-  echo "✓ Go files formatted with gofmt"
-else
-  echo "⚠️  gofmt not found, skipping Go formatting"
-fi
+# Get directories
+# Husky is in finance-tracker-web/.husky, so:
+# - FRONTEND_DIR is one level up (finance-tracker-web)
+# - PROJECT_ROOT is two levels up (root)
+# - BACKEND_DIR is PROJECT_ROOT/backend
+FRONTEND_DIR="$(cd "$(dirname -- "$0")/.." && pwd)"
+PROJECT_ROOT="$(cd "$FRONTEND_DIR/.." && pwd)"
+BACKEND_DIR="$PROJECT_ROOT/backend"
 
-if command -v goimports >/dev/null 2>&1; then
-  goimports -w .
-  echo "✓ Go imports organized with goimports"
-else
-  echo "⚠️  goimports not found, install with: go install golang.org/x/tools/cmd/goimports@latest"
-fi
+# Format frontend code using Biome (via lint-staged)
+cd "$FRONTEND_DIR" || exit
+pnpm lint-staged
 
-# Format Angular/TypeScript files using lint-staged
-cd ../finance-tracker-web
-echo "📝 Formatting Angular/TypeScript files..."
-npx lint-staged
+# Format backend Go code using gofmt
+cd "$PROJECT_ROOT" || exit
 
-echo "✅ Pre-commit formatting complete!"
+# Format all staged .go files in backend
+git diff --cached --name-only --diff-filter=ACM | grep '^backend/.*\.go$' | while read -r file; do
+  if [ -f "$PROJECT_ROOT/$file" ]; then
+    # Format the file
+    gofmt -w "$PROJECT_ROOT/$file"
+    # Add the formatted file back to staging
+    git add "$file"
+  fi
+done

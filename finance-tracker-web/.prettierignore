@@ -1,8 +1,0 @@
-# Generated API files
-src/api/
-
-# Build outputs
-dist/
-node_modules/
-.angular/
-

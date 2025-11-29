@@ -25,8 +25,8 @@ func (s *AccService) CreateAccount(c echo.Context, payload *CreateAccountReq, cl
 func (s *AccService) GetAccountById(c echo.Context, payload *GetAccountReq, clerkId string) (*Account, error) {
 	return s.r.GetAccountById(c.Request().Context(), payload, clerkId)
 }
-func (s *AccService) GetAccountByUserId(c echo.Context, clerkId string) ([]Account, error) {
-	return s.r.GetAccountByUserId(c.Request().Context(), clerkId)
+func (s *AccService) GetAccountsByUserId(c echo.Context, clerkId string) ([]Account, error) {
+	return s.r.GetAccountsByUserId(c.Request().Context(), clerkId)
 }
 func (s *AccService) UpdateAccount(c echo.Context, payload *UpdateAccountReq, clerkId string) (*Account, error) {
 	return s.r.UpdateAccount(c.Request().Context(), payload, clerkId)
