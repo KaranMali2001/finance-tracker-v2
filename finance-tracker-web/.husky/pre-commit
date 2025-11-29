@@ -1,28 +1,10 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Get directories
-# Husky is in finance-tracker-web/.husky, so:
-# - FRONTEND_DIR is one level up (finance-tracker-web)
-# - PROJECT_ROOT is two levels up (root)
-# - BACKEND_DIR is PROJECT_ROOT/backend
-FRONTEND_DIR="$(cd "$(dirname -- "$0")/.." && pwd)"
-PROJECT_ROOT="$(cd "$FRONTEND_DIR/.." && pwd)"
-BACKEND_DIR="$PROJECT_ROOT/backend"
+# Change to the repo root directory (where git is initialized)
+cd "$(dirname -- "$0")/../.." || exit
 
-# Format frontend code using Biome (via lint-staged)
-cd "$FRONTEND_DIR" || exit
-pnpm lint-staged
+# Run lint-staged from finance-tracker-web directory
+cd finance-tracker-web || exit
+npx lint-staged
 
-# Format backend Go code using gofmt
-cd "$PROJECT_ROOT" || exit
-
-# Format all staged .go files in backend
-git diff --cached --name-only --diff-filter=ACM | grep '^backend/.*\.go$' | while read -r file; do
-  if [ -f "$PROJECT_ROOT/$file" ]; then
-    # Format the file
-    gofmt -w "$PROJECT_ROOT/$file"
-    # Add the formatted file back to staging
-    git add "$file"
-  fi
-done
