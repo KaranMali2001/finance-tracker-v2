@@ -31,3 +31,9 @@ func (s *AccService) GetAccountsByUserId(c echo.Context, clerkId string) ([]Acco
 func (s *AccService) UpdateAccount(c echo.Context, payload *UpdateAccountReq, clerkId string) (*Account, error) {
 	return s.r.UpdateAccount(c.Request().Context(), payload, clerkId)
 }
+
+func (s *AccService) DeleteAccount(c echo.Context, payload *DeleteAccountReq, clerkId string) (*Account, error) {
+	log := middleware.GetLogger(c)
+	log.Info().Msgf("Deleting Account %v for User %v", payload.AccountId, clerkId)
+	return s.r.DeleteAccount(c.Request().Context(), payload, clerkId)
+}

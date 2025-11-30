@@ -8,12 +8,16 @@ import (
 )
 
 type CreateAccountReq struct {
-	AccountNumber uint8     `json:"account_number" validate:"required"`
+	AccountNumber string    `json:"account_number" validate:"required"`
 	AccountName   string    `json:"account_name" validate:"required"`
 	AccountType   string    `json:"account_type" validate:"required"`
+	IsPrimary     *bool     `json:"is_primary" validate:"required"`
 	BankId        uuid.UUID `json:"bank_id" validate:"required"`
 }
 type GetAccountReq struct {
+	AccountId uuid.UUID `param:"account_id" validate:"required"`
+}
+type DeleteAccountReq struct {
 	AccountId uuid.UUID `param:"account_id" validate:"required"`
 }
 type GetAccountByUserId struct{}
@@ -35,14 +39,18 @@ type Bank struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 }
 type Account struct {
-	Id             string  `json:"id,omitempty"`
-	AccountNumber  string  `json:"account_number,omitempty"`
-	AccountName    string  `json:"account_name,omitempty"`
-	AccountType    string  `json:"account_type,omitempty"`
-	BankId         string  `json:"bank_id,omitempty"`
-	UserId         string  `json:"user_id,omitempty"`
-	CurrentBalence float64 `json:"current_balence,omitempty"`
-	Bank           *Bank   `json:"bank,omitempty"`
+	Id             string    `json:"id,omitempty"`
+	AccountNumber  string    `json:"account_number,omitempty"`
+	AccountName    string    `json:"account_name,omitempty"`
+	AccountType    string    `json:"account_type,omitempty"`
+	IsPrimary      bool      `json:"is_primary,omitempty"`
+	IsActive       bool      `json:"is_active,omitempty"`
+	BankId         string    `json:"bank_id,omitempty"`
+	UserId         string    `json:"user_id,omitempty"`
+	CurrentBalence float64   `json:"current_balence"`
+	Bank           *Bank     `json:"bank,omitempty"`
+	CreatedAt      time.Time `json:"created_at,omitempty"`
+	UpdatedAt      time.Time `json:"updated_at,omitempty"`
 }
 
 func (c *CreateAccountReq) Validate() error {
@@ -55,5 +63,8 @@ func (u *GetAccountByUserId) Validate() error {
 	return nil
 }
 func (u *UpdateAccountReq) Validate() error {
+	return validator.New().Struct(u)
+}
+func (u *DeleteAccountReq) Validate() error {
 	return validator.New().Struct(u)
 }

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -179,7 +180,13 @@ func Float64PtrToNum(f *float64) pgtype.Numeric {
 		return pgtype.Numeric{Valid: false}
 	}
 	var n pgtype.Numeric
-	_ = n.Scan(*f)
+	// Convert float64 to string and scan - Numeric.Scan works better with string representation
+	str := fmt.Sprintf("%.2f", *f)
+	if err := n.Scan(str); err != nil {
+		return pgtype.Numeric{Valid: false}
+	}
+	// Explicitly set Valid to true - Scan should set it, but ensure it's set
+	n.Valid = true
 	return n
 }
 func UUIDToPgtype(id uuid.UUID) pgtype.UUID {
@@ -197,5 +204,25 @@ func StringToPgtypeText(s string) pgtype.Text {
 	return pgtype.Text{
 		String: s,
 		Valid:  true,
+	}
+}
+
+func ToPgBool(v *bool) pgtype.Bool {
+	if v == nil {
+		return pgtype.Bool{Valid: false} // uses DB default
+	}
+	return pgtype.Bool{
+		Bool:  *v,
+		Valid: true,
+	}
+}
+
+func UUIDPtrToPgtype(id *uuid.UUID) pgtype.UUID {
+	if id == nil {
+		return pgtype.UUID{Valid: false}
+	}
+	return pgtype.UUID{
+		Bytes: *id,
+		Valid: true,
 	}
 }

@@ -111,3 +111,25 @@ func (h *AccHandler) UpdateAccount(c echo.Context) error {
 		&UpdateAccountReq{},
 	)(c)
 }
+
+// DeleteAccount godoc
+// @Summary Delete an existing account
+// @Description Deletes an existing account for the authenticated user
+// @Tags Account
+// @Produce json
+// @Name DeleteAccount
+// @Param account_id path string true "Account ID" format(uuid)
+// @Success 200 {object} map[string]string "Success"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 404 {object} map[string]string "Not Found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /account/{account_id} [delete]
+func (h *AccHandler) DeleteAccount(c echo.Context) error {
+	return handler.Handle(h.base, func(c echo.Context, payload *DeleteAccountReq) (*Account, error) {
+		return h.service.DeleteAccount(c, payload, middleware.GetUserID(c))
+	},
+		http.StatusOK,
+		&DeleteAccountReq{},
+	)(c)
+}

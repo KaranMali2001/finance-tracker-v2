@@ -1,4 +1,5 @@
-import type * as Yup from 'yup';
+import type { Control, FieldPath, FieldValues, UseFormReturn } from 'react-hook-form';
+import type { z } from 'zod';
 
 /**
  * Transform function type for form data transformation
@@ -16,13 +17,13 @@ export type FormSubmitHandler<TInput, TOutput> = (data: TOutput) => Promise<void
 export type FormErrorHandler = (error: unknown) => void;
 
 /**
- * Base form props for TanStack Form wrapper
+ * Base form props for react-hook-form wrapper
  */
-export interface BaseFormProps<TInput, TOutput = TInput> {
+export interface BaseFormProps<TInput extends FieldValues, TOutput = TInput> {
   /**
-   * Yup validation schema
+   * Zod validation schema
    */
-  schema: Yup.ObjectSchema<TInput & Yup.AnyObject>;
+  schema: z.ZodSchema<TInput>;
 
   /**
    * Default form values
@@ -62,7 +63,9 @@ export interface BaseFormProps<TInput, TOutput = TInput> {
   /**
    * Form children - can be ReactNode or render function
    */
-  children: React.ReactNode | ((props: { form: any; isSubmitting: boolean }) => React.ReactNode);
+  children:
+    | React.ReactNode
+    | ((props: { form: UseFormReturn<TInput>; isSubmitting: boolean }) => React.ReactNode);
 
   /**
    * Additional form props
@@ -78,4 +81,29 @@ export interface FormFieldProps {
   description?: string;
   required?: boolean;
   className?: string;
+}
+
+/**
+ * Base props that all form field components will share
+ */
+export interface BaseFormFieldProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+> {
+  control: Control<TFieldValues>;
+  name: TName;
+  label?: string;
+  description?: string;
+  required?: boolean;
+  disabled?: boolean;
+  className?: string;
+}
+
+/**
+ * Common option type for selects, radio groups, etc.
+ */
+export interface FormOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
 }

@@ -1,53 +1,58 @@
 'use client';
 
-import React from 'react';
-import { useSharedFormContext } from './Form';
-import { FormItem, FormLabel, FormDescription, FormMessage, useFormItem } from './FormField';
 import { Checkbox } from '@/components/ui/checkbox';
-import type { FormFieldProps } from '../types/form';
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { FieldPath, FieldValues } from 'react-hook-form';
+import { BaseFormFieldProps } from '../types/form';
 
-interface FormCheckboxProps<TData extends Record<string, unknown>>
-  extends
-    Omit<React.ComponentProps<typeof Checkbox>, 'name' | 'checked' | 'onCheckedChange'>,
-    FormFieldProps {
-  name: keyof TData & string;
+interface FormCheckboxProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+> extends BaseFormFieldProps<TFieldValues, TName> {
+  checkboxLabel?: string;
 }
 
-export function FormCheckbox<TData extends Record<string, unknown>>({
+function FormCheckbox<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+>({
+  control,
   name,
   label,
   description,
+  required,
+  checkboxLabel,
+  disabled,
   className,
-  ...checkboxProps
-}: FormCheckboxProps<TData>) {
-  const form = useSharedFormContext<TData>();
-  const { id } = useFormItem();
-  const field = form.useField({
-    name,
-    defaultValue: false as any,
-  });
-
+}: FormCheckboxProps<TFieldValues, TName>) {
   return (
-    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-      <Checkbox
-        {...checkboxProps}
-        id={`${id}-form-item`}
-        name={field.name}
-        checked={field.state.value as boolean}
-        onCheckedChange={(checked) => field.handleChange(checked as any)}
-        onBlur={field.handleBlur}
-        aria-invalid={field.state.meta.errors.length > 0}
-        className={className}
-      />
-      <div className="space-y-1 leading-none">
-        {label && (
-          <FormLabel htmlFor={`${id}-form-item`} className="cursor-pointer">
-            {label}
-          </FormLabel>
-        )}
-        {description && <FormDescription>{description}</FormDescription>}
-        <FormMessage error={field.state.meta.errors[0]} />
-      </div>
-    </FormItem>
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className={`flex flex-row items-start space-y-0 space-x-3 ${className}`}>
+          <FormControl>
+            <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={disabled} />
+          </FormControl>
+          <div className="space-y-1 leading-none">
+            <FormLabel>
+              {checkboxLabel || label}
+              {required && <span className="ml-1 text-red-500">*</span>}
+            </FormLabel>
+            {description && <FormDescription>{description}</FormDescription>}
+          </div>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
   );
 }
+
+export { FormCheckbox };

@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface PageShellProps {
-  title?: string;
+  title?: string | React.ReactNode;
   description?: string;
   actions?: React.ReactNode;
   children: React.ReactNode;

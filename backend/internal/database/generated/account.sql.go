@@ -12,8 +12,15 @@ import (
 )
 
 const createAccount = `-- name: CreateAccount :one
-INSERT INTO accounts (account_number,account_type,account_name,bank_id,user_id)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO accounts (
+    account_number,
+    account_type,
+    account_name,
+    bank_id,
+    user_id,
+    is_primary
+)
+VALUES ($1, $2, $3, $4, $5,$6)
 RETURNING id, user_id, bank_id, account_number, account_type, account_name, current_balance, is_primary, is_active, created_at, updated_at, deleted_at
 `
 
@@ -23,6 +30,7 @@ type CreateAccountParams struct {
 	AccountName   pgtype.Text
 	BankID        pgtype.UUID
 	UserID        string
+	IsPrimary     pgtype.Bool
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
@@ -32,6 +40,7 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 		arg.AccountName,
 		arg.BankID,
 		arg.UserID,
+		arg.IsPrimary,
 	)
 	var i Account
 	err := row.Scan(
@@ -49,6 +58,20 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (A
 		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const deleteAccount = `-- name: DeleteAccount :exec
+DELETE FROM accounts WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL
+`
+
+type DeleteAccountParams struct {
+	ID     pgtype.UUID
+	UserID string
+}
+
+func (q *Queries) DeleteAccount(ctx context.Context, arg DeleteAccountParams) error {
+	_, err := q.db.Exec(ctx, deleteAccount, arg.ID, arg.UserID)
+	return err
 }
 
 const getAccountById = `-- name: GetAccountById :one
@@ -172,29 +195,36 @@ func (q *Queries) GetAccountsByUserId(ctx context.Context, userID string) ([]Get
 }
 
 const updateAccount = `-- name: UpdateAccount :one
-UPDATE accounts a SET
-  account_number=COALESCE($1, a.account_number),
-  account_type=COALESCE($2, a.account_type),
-  account_name=COALESCE($3, a.account_name),
-  current_balance=COALESCE($4, a.current_balance),
-  is_primary=COALESCE($5, a.is_primary),
-  bank_id=COALESCE($6, a.bank_id),
-  deleted_at=COALESCE($7, a.deleted_at)
+UPDATE accounts a 
+SET
+  account_number = COALESCE($1, a.account_number),
+  account_type = COALESCE($2, a.account_type),
+  account_name = COALESCE($3, a.account_name),
+  current_balance = COALESCE($4, a.current_balance),
+  is_primary = COALESCE($5, a.is_primary),
+  bank_id = COALESCE($6, a.bank_id),
+  updated_at = NOW()
 FROM banks b
-WHERE a.id=$8 AND a.user_id=$9 AND a.deleted_at IS NULL AND a.bank_id = b.id
-RETURNING a.id, a.user_id, a.bank_id, a.account_number, a.account_type, a.account_name, a.current_balance, a.is_primary, a.is_active, a.created_at, a.updated_at, a.deleted_at, b.id AS bank_id, b.name AS bank_name, b.code AS bank_code, 
-          b.is_active AS bank_is_active, b.created_at AS bank_created_at, 
+WHERE a.id = $7 
+  AND a.user_id = $8
+  AND a.deleted_at IS NULL 
+  AND a.bank_id = b.id
+RETURNING a.id, a.user_id, a.bank_id, a.account_number, a.account_type, a.account_name, a.current_balance, a.is_primary, a.is_active, a.created_at, a.updated_at, a.deleted_at, 
+          b.id AS bank_id, 
+          b.name AS bank_name, 
+          b.code AS bank_code, 
+          b.is_active AS bank_is_active, 
+          b.created_at AS bank_created_at, 
           b.updated_at AS bank_updated_at
 `
 
 type UpdateAccountParams struct {
-	AccountNumber  string
-	AccountType    string
+	AccountNumber  pgtype.Text
+	AccountType    pgtype.Text
 	AccountName    pgtype.Text
 	CurrentBalance pgtype.Numeric
 	IsPrimary      pgtype.Bool
 	BankID         pgtype.UUID
-	DeletedAt      pgtype.Timestamp
 	ID             pgtype.UUID
 	UserID         string
 }
@@ -228,7 +258,6 @@ func (q *Queries) UpdateAccount(ctx context.Context, arg UpdateAccountParams) (U
 		arg.CurrentBalance,
 		arg.IsPrimary,
 		arg.BankID,
-		arg.DeletedAt,
 		arg.ID,
 		arg.UserID,
 	)

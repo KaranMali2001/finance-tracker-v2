@@ -2,6 +2,7 @@ package account
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
@@ -22,11 +23,13 @@ func NewAccRepo(s *server.Server, q *generated.Queries) *AccRepo {
 func (r *AccRepo) CreateAccount(c context.Context, payload *CreateAccountReq, clerkId string) (*Account, error) {
 	acc := generated.CreateAccountParams{
 		BankID:        utils.UUIDToPgtype(payload.BankId),
-		AccountNumber: payload.AccountName,
+		AccountNumber: payload.AccountNumber,
 		AccountType:   payload.AccountType,
 		AccountName:   utils.StringToPgtypeText(payload.AccountName),
+		IsPrimary:     utils.ToPgBool(payload.IsPrimary),
 		UserID:        clerkId,
 	}
+
 	account, err := r.q.CreateAccount(c, acc)
 	if err != nil {
 
@@ -37,8 +40,11 @@ func (r *AccRepo) CreateAccount(c context.Context, payload *CreateAccountReq, cl
 		AccountNumber:  account.AccountNumber,
 		AccountName:    utils.TextToString(account.AccountName),
 		AccountType:    account.AccountType,
+		IsPrimary:      utils.BoolToBool(account.IsPrimary),
 		UserId:         account.UserID,
 		CurrentBalence: utils.NumericToFloat64(account.CurrentBalance),
+		CreatedAt:      utils.TimestampToTime(account.CreatedAt),
+		UpdatedAt:      utils.TimestampToTime(account.UpdatedAt),
 	}, nil
 }
 
@@ -50,6 +56,7 @@ func (r *AccRepo) GetAccountById(c context.Context, payload *GetAccountReq, cler
 	if err != nil {
 		return nil, err
 	}
+
 	return &Account{
 		Id:             utils.UUIDToString(account.ID),
 		AccountNumber:  account.AccountNumber,
@@ -57,6 +64,10 @@ func (r *AccRepo) GetAccountById(c context.Context, payload *GetAccountReq, cler
 		AccountType:    account.AccountType,
 		UserId:         account.UserID,
 		CurrentBalence: utils.NumericToFloat64(account.CurrentBalance),
+		IsPrimary:      utils.BoolToBool(account.IsPrimary),
+		IsActive:       utils.BoolToBool(account.IsActive),
+		CreatedAt:      utils.TimestampToTime(account.CreatedAt),
+		UpdatedAt:      utils.TimestampToTime(account.UpdatedAt),
 		Bank: &Bank{
 			Name:      utils.TextToString(account.Name),
 			Code:      utils.TextToString(account.Code),
@@ -80,6 +91,10 @@ func (r *AccRepo) GetAccountsByUserId(c context.Context, clerkId string) ([]Acco
 			AccountType:    account.AccountType,
 			UserId:         account.UserID,
 			CurrentBalence: utils.NumericToFloat64(account.CurrentBalance),
+			IsPrimary:      utils.BoolToBool(account.IsPrimary),
+			IsActive:       utils.BoolToBool(account.IsActive),
+			CreatedAt:      utils.TimestampToTime(account.CreatedAt),
+			UpdatedAt:      utils.TimestampToTime(account.UpdatedAt),
 			Bank: &Bank{
 				Name:      utils.TextToString(account.Name),
 				Code:      utils.TextToString(account.Code),
@@ -92,15 +107,15 @@ func (r *AccRepo) GetAccountsByUserId(c context.Context, clerkId string) ([]Acco
 	return accounts, nil
 }
 func (r *AccRepo) UpdateAccount(c context.Context, payload *UpdateAccountReq, clerkId string) (*Account, error) {
+	fmt.Println("payload recevied in update account", payload)
 	account, err := r.q.UpdateAccount(c, generated.UpdateAccountParams{
 		ID:             utils.UUIDToPgtype(payload.AccountId),
 		UserID:         clerkId,
-		AccountNumber:  *payload.AccountName,
+		AccountNumber:  utils.StringPtrToText(payload.AccountNumber),
 		AccountName:    utils.StringPtrToText(payload.AccountName),
-		AccountType:    *payload.AccountType,
 		CurrentBalance: utils.Float64PtrToNum(payload.CurrentBalence),
 		IsPrimary:      utils.BoolPtrToBool(payload.IsPrimary),
-		BankID:         utils.UUIDToPgtype(*payload.BankId),
+		BankID:         utils.UUIDPtrToPgtype(payload.BankId),
 	})
 	if err != nil {
 		return nil, err
@@ -120,4 +135,14 @@ func (r *AccRepo) UpdateAccount(c context.Context, payload *UpdateAccountReq, cl
 			UpdatedAt: utils.TimestampToTime(account.BankUpdatedAt),
 		},
 	}, nil
+}
+func (r *AccRepo) DeleteAccount(c context.Context, payload *DeleteAccountReq, clerkId string) (*Account, error) {
+	err := r.q.DeleteAccount(c, generated.DeleteAccountParams{
+		ID:     utils.UUIDToPgtype(payload.AccountId),
+		UserID: clerkId,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &Account{}, err
 }

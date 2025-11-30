@@ -1,29 +1,17 @@
 'use client';
 
-import { useForm } from '@tanstack/react-form';
+import { Form as ShadcnForm } from '@/components/ui/form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
-import * as Yup from 'yup';
+import { useForm, type FieldValues, type UseFormReturn } from 'react-hook-form';
 import { toast } from '../feedback/Toast';
 import type { BaseFormProps } from '../types/form';
 import { parseApiError } from '../utils';
 
 /**
- * Form context to provide form instance to children
+ * Enhanced Form wrapper using react-hook-form with Zod validation
  */
-const FormContext = React.createContext<any>(null);
-
-export function useSharedFormContext<TData>(): any {
-  const context = React.useContext(FormContext);
-  if (!context) {
-    throw new Error('useSharedFormContext must be used within <Form>');
-  }
-  return context;
-}
-
-/**
- * Enhanced Form wrapper using TanStack Form with Yup validation
- */
-export function Form<TInput extends Record<string, unknown>, TOutput = TInput>({
+export function Form<TInput extends FieldValues, TOutput = TInput>({
   schema,
   defaultValues,
   onSubmit,
@@ -37,16 +25,19 @@ export function Form<TInput extends Record<string, unknown>, TOutput = TInput>({
 }: BaseFormProps<TInput, TOutput>) {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const form = useForm({
-    defaultValues: (defaultValues || {}) as TInput,
-    onSubmit: async ({ value }: { value: TInput }) => {
+  const form = useForm<TInput, unknown, TInput>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schema as any),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    defaultValues: (defaultValues || {}) as any,
+  });
+
+  const handleSubmit = form.handleSubmit(
+    async (data: TInput) => {
       setIsSubmitting(true);
       try {
-        // Validate with Yup schema
-        await schema.validate(value, { abortEarly: false });
-
         // Transform data if transform function provided
-        const transformedValue = transform ? transform(value) : (value as unknown as TOutput);
+        const transformedValue = transform ? transform(data) : (data as unknown as TOutput);
 
         // Submit
         await onSubmit(transformedValue);
@@ -56,14 +47,6 @@ export function Form<TInput extends Record<string, unknown>, TOutput = TInput>({
           toast.success(successMessage || 'Operation completed successfully');
         }
       } catch (error) {
-        // Handle Yup validation errors
-        if (error instanceof Yup.ValidationError) {
-          if (showToastOnError) {
-            toast.error(error.message || 'Validation failed');
-          }
-          return; // Don't call onError for validation errors
-        }
-
         // Handle API errors
         const apiError = parseApiError(error);
 
@@ -77,23 +60,26 @@ export function Form<TInput extends Record<string, unknown>, TOutput = TInput>({
         setIsSubmitting(false);
       }
     },
-  });
+    (errors) => {
+      // Handle validation errors
+      if (showToastOnError) {
+        const firstError = Object.values(errors)[0];
+        const errorMessage =
+          firstError && typeof firstError === 'object' && 'message' in firstError
+            ? String(firstError.message)
+            : 'Please fix the form errors';
+        toast.error(errorMessage);
+      }
+    }
+  );
 
   return (
-    <FormContext.Provider value={form}>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const formSubmit = (form as any).handleSubmit;
-          if (typeof formSubmit === 'function') {
-            formSubmit();
-          }
-        }}
-        className={`space-y-6 ${className || ''}`}
-      >
-        {typeof children === 'function' ? children({ form, isSubmitting }) : children}
+    <ShadcnForm {...form}>
+      <form onSubmit={handleSubmit} className={`space-y-6 ${className || ''}`}>
+        {typeof children === 'function'
+          ? children({ form: form as unknown as UseFormReturn<TInput>, isSubmitting })
+          : children}
       </form>
-    </FormContext.Provider>
+    </ShadcnForm>
   );
 }

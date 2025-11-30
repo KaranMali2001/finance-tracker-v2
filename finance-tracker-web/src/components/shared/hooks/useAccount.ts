@@ -1,15 +1,15 @@
 'use client';
 
-import { useAuth } from '@clerk/nextjs';
-import { useQueryClient } from '@tanstack/react-query';
-import { AccountService } from '@/generated/api';
 import type {
   internal_domain_account_Account,
   internal_domain_account_CreateAccountReq,
   internal_domain_account_UpdateAccountReq,
 } from '@/generated/api';
-import { useApiQuery } from './useApiQuery';
+import { AccountService } from '@/generated/api';
+import { useAuth } from '@clerk/nextjs';
+import { useQueryClient } from '@tanstack/react-query';
 import { useApiMutation } from './useApiMutation';
+import { useApiQuery } from './useApiQuery';
 
 /**
  * Get all accounts hook
@@ -98,4 +98,22 @@ export function useUpdateAccount() {
       showToastOnError: true,
     }
   );
+}
+
+/**
+ * Delete account hook
+ * Deletes an existing account for the authenticated user
+ */
+export function useDeleteAccount() {
+  const queryClient = useQueryClient();
+
+  return useApiMutation<any, string>((accountId) => AccountService.deleteAccount(accountId), {
+    onSuccess: () => {
+      // Invalidate and refetch accounts list
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
+    },
+    showToastOnSuccess: true,
+    successMessage: 'Account deleted successfully',
+    showToastOnError: true,
+  });
 }

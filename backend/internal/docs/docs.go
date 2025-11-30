@@ -247,6 +247,73 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "Deletes an existing account for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Delete an existing account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Account ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/auth/user": {
@@ -299,6 +366,129 @@ const docTemplate = `{
                         "description": "Service Unavailable",
                         "schema": {
                             "$ref": "#/definitions/internal_domain_system.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/static/bank": {
+            "get": {
+                "description": "Retrieves a list of all available banks",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Static"
+                ],
+                "summary": "Get all banks",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_domain_static.Bank"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/static/categories": {
+            "get": {
+                "description": "Retrieves a list of all available transaction categories",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Static"
+                ],
+                "summary": "Get all categories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_domain_static.Categories"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/static/merchants": {
+            "get": {
+                "description": "Retrieves a list of all available merchants",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Static"
+                ],
+                "summary": "Get all merchants",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_domain_static.Merchants"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -385,10 +575,22 @@ const docTemplate = `{
                 "bank_id": {
                     "type": "string"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "current_balence": {
                     "type": "number"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "updated_at": {
                     "type": "string"
                 },
                 "user_id": {
@@ -425,20 +627,24 @@ const docTemplate = `{
                 "account_name",
                 "account_number",
                 "account_type",
-                "bank_id"
+                "bank_id",
+                "is_primary"
             ],
             "properties": {
                 "account_name": {
                     "type": "string"
                 },
                 "account_number": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "account_type": {
                     "type": "string"
                 },
                 "bank_id": {
                     "type": "string"
+                },
+                "is_primary": {
+                    "type": "boolean"
                 }
             }
         },
@@ -509,6 +715,45 @@ const docTemplate = `{
                 "use_llm_parsing": {
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "internal_domain_static.Bank": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_static.Categories": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_static.Merchants": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },

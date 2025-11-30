@@ -31,4 +31,5 @@ func (m *Module) RegisterRoutes(g *echo.Group) {
 	g.GET("/account/:account_id", m.handler.GetAccountById, authMiddleware)
 	g.GET("/account", m.handler.GetAccountsByUserId, authMiddleware)
 	g.PUT("/account", m.handler.UpdateAccount, authMiddleware)
+	g.DELETE("/account/:account_id", m.handler.DeleteAccount, authMiddleware)
 }

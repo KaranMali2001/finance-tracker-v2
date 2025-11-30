@@ -1,71 +1,88 @@
 'use client';
 
-import React from 'react';
-import { useSharedFormContext } from './Form';
-import { FormItem, FormLabel, FormDescription, FormMessage, useFormItem } from './FormField';
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import type { FormFieldProps } from '../types/form';
-import * as Yup from 'yup';
-import { createYupFieldValidator } from './yupValidator';
+import { FieldPath, FieldValues } from 'react-hook-form';
+import { BaseFormFieldProps } from '../types/form';
 
-interface FormInputProps<TData extends Record<string, unknown>>
-  extends Omit<React.ComponentProps<typeof Input>, 'name' | 'value' | 'onChange'>, FormFieldProps {
-  name: keyof TData & string;
-  schema?: Yup.Schema<unknown>;
+interface FormInputProps<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+>
+  extends
+    Omit<React.ComponentProps<typeof Input>, 'name' | 'value' | 'onChange'>,
+    BaseFormFieldProps<TFieldValues, TName> {
+  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
+  placeholder?: string;
+  step?: string | number;
+  min?: string | number;
+  max?: string | number;
 }
 
-export function FormInput<TData extends Record<string, unknown>>({
+function FormInput<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+>({
+  control,
   name,
   label,
   description,
   required,
+  type = 'text',
+  placeholder,
+  step,
+  min,
+  max,
+  disabled,
   className,
-  schema,
-  ...inputProps
-}: FormInputProps<TData>) {
-  const form = useSharedFormContext<TData>();
-  const { id } = useFormItem();
-  const field = form.useField({
-    name,
-    validators: {
-      onChange: schema
-        ? createYupFieldValidator(schema)
-        : ({ value }: { value: unknown }) => {
-            if (required && (!value || (typeof value === 'string' && !value.trim()))) {
-              return 'This field is required';
-            }
-            return undefined;
-          },
-    },
-  });
-
+}: FormInputProps<TFieldValues, TName>) {
   return (
-    <FormItem>
-      {label && (
-        <FormLabel htmlFor={`${id}-form-item`} required={required}>
-          {label}
-        </FormLabel>
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className={className}>
+          {label && (
+            <FormLabel>
+              {label}
+              {required && <span className="ml-1 text-red-500">*</span>}
+            </FormLabel>
+          )}
+          <FormControl>
+            <Input
+              type={type}
+              placeholder={placeholder}
+              step={step}
+              min={min}
+              max={max}
+              disabled={disabled}
+              value={field.value ?? ''}
+              onChange={(e) => {
+                if (type === 'number') {
+                  const value = e.target.value;
+                  field.onChange(value === '' ? undefined : parseFloat(value));
+                } else {
+                  field.onChange(e.target.value);
+                }
+              }}
+              onBlur={field.onBlur}
+              name={field.name}
+              ref={field.ref}
+            />
+          </FormControl>
+          {description && <FormDescription>{description}</FormDescription>}
+          <FormMessage />
+        </FormItem>
       )}
-      <Input
-        {...inputProps}
-        id={`${id}-form-item`}
-        name={field.name}
-        value={(field.state.value as string) || ''}
-        onChange={(e) => field.handleChange(e.target.value)}
-        onBlur={field.handleBlur}
-        aria-invalid={field.state.meta.errors.length > 0}
-        aria-describedby={
-          description
-            ? `${id}-form-item-description`
-            : field.state.meta.errors.length > 0
-              ? `${id}-form-item-message`
-              : undefined
-        }
-        className={className}
-        required={required}
-      />
-      {description && <FormDescription>{description}</FormDescription>}
-      <FormMessage error={field.state.meta.errors[0]} />
-    </FormItem>
+    />
   );
 }
+
+export { FormInput };

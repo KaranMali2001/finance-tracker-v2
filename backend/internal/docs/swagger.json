@@ -1,607 +1,800 @@
 {
-    "swagger": "2.0",
-    "info": {
-        "description": "API documentation for Finance Tracker services.",
-        "title": "Finance Tracker API",
-        "contact": {},
-        "version": "1.0.0"
-    },
-    "host": "localhost:8080",
-    "basePath": "/api/v1",
-    "paths": {
-        "/account": {
-            "get": {
-                "description": "Retrieves all accounts associated with the authenticated user",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Account"
-                ],
-                "summary": "Get all accounts for authenticated user",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/internal_domain_account.Account"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Updates an existing account's information for the authenticated user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Account"
-                ],
-                "summary": "Update an existing account",
-                "parameters": [
-                    {
-                        "description": "Account update request",
-                        "name": "account",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/internal_domain_account.UpdateAccountReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/internal_domain_account.Account"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Creates a new financial account for the authenticated user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Account"
-                ],
-                "summary": "Create a new account",
-                "parameters": [
-                    {
-                        "description": "Account creation request",
-                        "name": "account",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/internal_domain_account.CreateAccountReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/internal_domain_account.Account"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
+  "swagger": "2.0",
+  "info": {
+    "description": "API documentation for Finance Tracker services.",
+    "title": "Finance Tracker API",
+    "contact": {},
+    "version": "1.0.0"
+  },
+  "host": "localhost:8080",
+  "basePath": "/api/v1",
+  "paths": {
+    "/account": {
+      "get": {
+        "description": "Retrieves all accounts associated with the authenticated user",
+        "produces": ["application/json"],
+        "tags": ["Account"],
+        "summary": "Get all accounts for authenticated user",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/internal_domain_account.Account"
+              }
             }
-        },
-        "/account/{account_id}": {
-            "get": {
-                "description": "Retrieves a specific account by its ID for the authenticated user",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Account"
-                ],
-                "summary": "Get account by ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "Account ID",
-                        "name": "account_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/internal_domain_account.Account"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
             }
-        },
-        "/auth/user": {
-            "get": {
-                "description": "Returns the current authenticated user's information",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Get authenticated user",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/internal_domain_auth.GetAuthUserResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
             }
-        },
-        "/health": {
-            "get": {
-                "description": "Returns health information about infrastructure dependencies.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "System"
-                ],
-                "summary": "Health status",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/internal_domain_system.HealthResponse"
-                        }
-                    },
-                    "503": {
-                        "description": "Service Unavailable",
-                        "schema": {
-                            "$ref": "#/definitions/internal_domain_system.HealthResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/user": {
-            "put": {
-                "description": "Updates the authenticated user's information",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Update user",
-                "parameters": [
-                    {
-                        "description": "User update request",
-                        "name": "user",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/internal_domain_user.UpdateUserReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/internal_domain_user.User"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
+          }
         }
-    },
-    "definitions": {
-        "internal_domain_account.Account": {
-            "type": "object",
-            "properties": {
-                "account_name": {
-                    "type": "string"
-                },
-                "account_number": {
-                    "type": "string"
-                },
-                "account_type": {
-                    "type": "string"
-                },
-                "bank": {
-                    "$ref": "#/definitions/internal_domain_account.Bank"
-                },
-                "bank_id": {
-                    "type": "string"
-                },
-                "current_balence": {
-                    "type": "number"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
+      },
+      "put": {
+        "description": "Updates an existing account's information for the authenticated user",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["Account"],
+        "summary": "Update an existing account",
+        "parameters": [
+          {
+            "description": "Account update request",
+            "name": "account",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/internal_domain_account.UpdateAccountReq"
             }
-        },
-        "internal_domain_account.Bank": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/internal_domain_account.Account"
             }
-        },
-        "internal_domain_account.CreateAccountReq": {
-            "type": "object",
-            "required": [
-                "account_name",
-                "account_number",
-                "account_type",
-                "bank_id"
-            ],
-            "properties": {
-                "account_name": {
-                    "type": "string"
-                },
-                "account_number": {
-                    "type": "integer"
-                },
-                "account_type": {
-                    "type": "string"
-                },
-                "bank_id": {
-                    "type": "string"
-                }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
             }
-        },
-        "internal_domain_account.UpdateAccountReq": {
-            "type": "object",
-            "required": [
-                "account_id"
-            ],
-            "properties": {
-                "account_id": {
-                    "type": "string"
-                },
-                "account_name": {
-                    "type": "string"
-                },
-                "account_number": {
-                    "type": "string"
-                },
-                "account_type": {
-                    "type": "string"
-                },
-                "bank_id": {
-                    "type": "string"
-                },
-                "current_balence": {
-                    "type": "number"
-                },
-                "is_primary": {
-                    "type": "boolean"
-                }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
             }
-        },
-        "internal_domain_auth.GetAuthUserResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string",
-                    "example": "2025-01-02T15:04:05Z"
-                },
-                "database_url": {
-                    "type": "string",
-                    "example": "postgresql://user:pass@localhost/db"
-                },
-                "email": {
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "is_active": {
-                    "type": "boolean",
-                    "example": true
-                },
-                "lifetime_expense": {
-                    "type": "number",
-                    "example": 30000
-                },
-                "lifetime_income": {
-                    "type": "number",
-                    "example": 50000
-                },
-                "llm_parse_credits": {
-                    "type": "integer",
-                    "example": 100
-                },
-                "updated_at": {
-                    "type": "string",
-                    "example": "2025-01-02T15:04:05Z"
-                },
-                "use_llm_parsing": {
-                    "type": "boolean",
-                    "example": true
-                }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
             }
-        },
-        "internal_domain_system.HealthCheckResult": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string",
-                    "example": "connection refused"
-                },
-                "response_time": {
-                    "type": "string",
-                    "example": "5ms"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "healthy"
-                }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
             }
-        },
-        "internal_domain_system.HealthResponse": {
-            "type": "object",
-            "properties": {
-                "checks": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/internal_domain_system.HealthCheckResult"
-                    }
-                },
-                "environment": {
-                    "type": "string",
-                    "example": "production"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "healthy"
-                },
-                "timestamp": {
-                    "type": "string",
-                    "example": "2025-01-02T15:04:05Z"
-                }
-            }
-        },
-        "internal_domain_user.UpdateUserReq": {
-            "type": "object",
-            "properties": {
-                "database_url": {
-                    "type": "string"
-                },
-                "lifetime_expense": {
-                    "type": "number"
-                },
-                "lifetime_income": {
-                    "type": "number"
-                },
-                "use_llm_parsing": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "internal_domain_user.User": {
-            "type": "object",
-            "properties": {
-                "clerk_id": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "database_url": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "lifetime_expense": {
-                    "type": "number"
-                },
-                "lifetime_income": {
-                    "type": "number"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_llm_parsing": {
-                    "type": "boolean"
-                }
-            }
+          }
         }
-    },
-    "securityDefinitions": {
-        "BearerAuth": {
-            "description": "Type \"Bearer\" followed by a space and JWT token from Clerk.",
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header"
+      },
+      "post": {
+        "description": "Creates a new financial account for the authenticated user",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["Account"],
+        "summary": "Create a new account",
+        "parameters": [
+          {
+            "description": "Account creation request",
+            "name": "account",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/internal_domain_account.CreateAccountReq"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/internal_domain_account.Account"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
         }
+      }
+    },
+    "/account/{account_id}": {
+      "get": {
+        "description": "Retrieves a specific account by its ID for the authenticated user",
+        "produces": ["application/json"],
+        "tags": ["Account"],
+        "summary": "Get account by ID",
+        "parameters": [
+          {
+            "type": "string",
+            "format": "uuid",
+            "description": "Account ID",
+            "name": "account_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/internal_domain_account.Account"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Deletes an existing account for the authenticated user",
+        "produces": ["application/json"],
+        "tags": ["Account"],
+        "summary": "Delete an existing account",
+        "parameters": [
+          {
+            "type": "string",
+            "format": "uuid",
+            "description": "Account ID",
+            "name": "account_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/user": {
+      "get": {
+        "description": "Returns the current authenticated user's information",
+        "produces": ["application/json"],
+        "tags": ["Auth"],
+        "summary": "Get authenticated user",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/internal_domain_auth.GetAuthUserResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Returns health information about infrastructure dependencies.",
+        "produces": ["application/json"],
+        "tags": ["System"],
+        "summary": "Health status",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/internal_domain_system.HealthResponse"
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "$ref": "#/definitions/internal_domain_system.HealthResponse"
+            }
+          }
+        }
+      }
+    },
+    "/static/bank": {
+      "get": {
+        "description": "Retrieves a list of all available banks",
+        "produces": ["application/json"],
+        "tags": ["Static"],
+        "summary": "Get all banks",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/internal_domain_static.Bank"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/static/categories": {
+      "get": {
+        "description": "Retrieves a list of all available transaction categories",
+        "produces": ["application/json"],
+        "tags": ["Static"],
+        "summary": "Get all categories",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/internal_domain_static.Categories"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/static/merchants": {
+      "get": {
+        "description": "Retrieves a list of all available merchants",
+        "produces": ["application/json"],
+        "tags": ["Static"],
+        "summary": "Get all merchants",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/internal_domain_static.Merchants"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user": {
+      "put": {
+        "description": "Updates the authenticated user's information",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["User"],
+        "summary": "Update user",
+        "parameters": [
+          {
+            "description": "User update request",
+            "name": "user",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/internal_domain_user.UpdateUserReq"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/internal_domain_user.User"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
     }
+  },
+  "definitions": {
+    "internal_domain_account.Account": {
+      "type": "object",
+      "properties": {
+        "account_name": {
+          "type": "string"
+        },
+        "account_number": {
+          "type": "string"
+        },
+        "account_type": {
+          "type": "string"
+        },
+        "bank": {
+          "$ref": "#/definitions/internal_domain_account.Bank"
+        },
+        "bank_id": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "current_balence": {
+          "type": "number"
+        },
+        "id": {
+          "type": "string"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "is_primary": {
+          "type": "boolean"
+        },
+        "updated_at": {
+          "type": "string"
+        },
+        "user_id": {
+          "type": "string"
+        }
+      }
+    },
+    "internal_domain_account.Bank": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        }
+      }
+    },
+    "internal_domain_account.CreateAccountReq": {
+      "type": "object",
+      "required": [
+        "account_name",
+        "account_number",
+        "account_type",
+        "bank_id",
+        "is_primary"
+      ],
+      "properties": {
+        "account_name": {
+          "type": "string"
+        },
+        "account_number": {
+          "type": "string"
+        },
+        "account_type": {
+          "type": "string"
+        },
+        "bank_id": {
+          "type": "string"
+        },
+        "is_primary": {
+          "type": "boolean"
+        }
+      }
+    },
+    "internal_domain_account.UpdateAccountReq": {
+      "type": "object",
+      "required": ["account_id"],
+      "properties": {
+        "account_id": {
+          "type": "string"
+        },
+        "account_name": {
+          "type": "string"
+        },
+        "account_number": {
+          "type": "string"
+        },
+        "account_type": {
+          "type": "string"
+        },
+        "bank_id": {
+          "type": "string"
+        },
+        "current_balence": {
+          "type": "number"
+        },
+        "is_primary": {
+          "type": "boolean"
+        }
+      }
+    },
+    "internal_domain_auth.GetAuthUserResponse": {
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "example": "2025-01-02T15:04:05Z"
+        },
+        "database_url": {
+          "type": "string",
+          "example": "postgresql://user:pass@localhost/db"
+        },
+        "email": {
+          "type": "string",
+          "example": "user@example.com"
+        },
+        "is_active": {
+          "type": "boolean",
+          "example": true
+        },
+        "lifetime_expense": {
+          "type": "number",
+          "example": 30000
+        },
+        "lifetime_income": {
+          "type": "number",
+          "example": 50000
+        },
+        "llm_parse_credits": {
+          "type": "integer",
+          "example": 100
+        },
+        "updated_at": {
+          "type": "string",
+          "example": "2025-01-02T15:04:05Z"
+        },
+        "use_llm_parsing": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "internal_domain_static.Bank": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "internal_domain_static.Categories": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "internal_domain_static.Merchants": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "internal_domain_system.HealthCheckResult": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string",
+          "example": "connection refused"
+        },
+        "response_time": {
+          "type": "string",
+          "example": "5ms"
+        },
+        "status": {
+          "type": "string",
+          "example": "healthy"
+        }
+      }
+    },
+    "internal_domain_system.HealthResponse": {
+      "type": "object",
+      "properties": {
+        "checks": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/internal_domain_system.HealthCheckResult"
+          }
+        },
+        "environment": {
+          "type": "string",
+          "example": "production"
+        },
+        "status": {
+          "type": "string",
+          "example": "healthy"
+        },
+        "timestamp": {
+          "type": "string",
+          "example": "2025-01-02T15:04:05Z"
+        }
+      }
+    },
+    "internal_domain_user.UpdateUserReq": {
+      "type": "object",
+      "properties": {
+        "database_url": {
+          "type": "string"
+        },
+        "lifetime_expense": {
+          "type": "number"
+        },
+        "lifetime_income": {
+          "type": "number"
+        },
+        "use_llm_parsing": {
+          "type": "boolean"
+        }
+      }
+    },
+    "internal_domain_user.User": {
+      "type": "object",
+      "properties": {
+        "clerk_id": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "database_url": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "is_active": {
+          "type": "boolean"
+        },
+        "lifetime_expense": {
+          "type": "number"
+        },
+        "lifetime_income": {
+          "type": "number"
+        },
+        "updated_at": {
+          "type": "string"
+        },
+        "user_llm_parsing": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "BearerAuth": {
+      "description": "Type \"Bearer\" followed by a space and JWT token from Clerk.",
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  }
 }

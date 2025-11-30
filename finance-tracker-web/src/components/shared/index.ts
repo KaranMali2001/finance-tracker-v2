@@ -7,9 +7,6 @@ export * from './utils';
 // Feedback Components
 export * from './feedback';
 
-// Form Components
-export * from './form';
-
 // Dropdown Components
 export * from './dropdown';
 
@@ -18,6 +15,9 @@ export * from './dialog';
 
 // Layout Components
 export * from './layout';
+
+// Display Components
+export * from './display';
 
 // Hooks
 export * from './hooks';

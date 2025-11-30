@@ -38,10 +38,7 @@ export function useUpdateUser() {
   return useApiMutation<internal_domain_user_User, internal_domain_user_UpdateUserReq>(
     (data) => UserService.putUser(data),
     {
-      onSuccess: () => {
-        // Invalidate and refetch auth user
-        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
-      },
+      onSuccess: () => {},
       showToastOnSuccess: true,
       successMessage: 'Profile updated successfully',
       showToastOnError: true,

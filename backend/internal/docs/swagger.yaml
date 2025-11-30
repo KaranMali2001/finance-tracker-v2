@@ -9,12 +9,20 @@ definitions:
       account_type:
         type: string
       bank:
-        $ref: '#/definitions/internal_domain_account.Bank'
+        $ref: "#/definitions/internal_domain_account.Bank"
       bank_id:
+        type: string
+      created_at:
         type: string
       current_balence:
         type: number
       id:
+        type: string
+      is_active:
+        type: boolean
+      is_primary:
+        type: boolean
+      updated_at:
         type: string
       user_id:
         type: string
@@ -39,16 +47,19 @@ definitions:
       account_name:
         type: string
       account_number:
-        type: integer
+        type: string
       account_type:
         type: string
       bank_id:
         type: string
+      is_primary:
+        type: boolean
     required:
-    - account_name
-    - account_number
-    - account_type
-    - bank_id
+      - account_name
+      - account_number
+      - account_type
+      - bank_id
+      - is_primary
     type: object
   internal_domain_account.UpdateAccountReq:
     properties:
@@ -67,7 +78,7 @@ definitions:
       is_primary:
         type: boolean
     required:
-    - account_id
+      - account_id
     type: object
   internal_domain_auth.GetAuthUserResponse:
     properties:
@@ -99,6 +110,31 @@ definitions:
         example: true
         type: boolean
     type: object
+  internal_domain_static.Bank:
+    properties:
+      code:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  internal_domain_static.Categories:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+    type: object
+  internal_domain_static.Merchants:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   internal_domain_system.HealthCheckResult:
     properties:
       error:
@@ -115,7 +151,7 @@ definitions:
     properties:
       checks:
         additionalProperties:
-          $ref: '#/definitions/internal_domain_system.HealthCheckResult'
+          $ref: "#/definitions/internal_domain_system.HealthCheckResult"
         type: object
       environment:
         example: production
@@ -170,13 +206,13 @@ paths:
     get:
       description: Retrieves all accounts associated with the authenticated user
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: '#/definitions/internal_domain_account.Account'
+              $ref: "#/definitions/internal_domain_account.Account"
             type: array
         "401":
           description: Unauthorized
@@ -192,25 +228,25 @@ paths:
             type: object
       summary: Get all accounts for authenticated user
       tags:
-      - Account
+        - Account
     post:
       consumes:
-      - application/json
+        - application/json
       description: Creates a new financial account for the authenticated user
       parameters:
-      - description: Account creation request
-        in: body
-        name: account
-        required: true
-        schema:
-          $ref: '#/definitions/internal_domain_account.CreateAccountReq'
+        - description: Account creation request
+          in: body
+          name: account
+          required: true
+          schema:
+            $ref: "#/definitions/internal_domain_account.CreateAccountReq"
       produces:
-      - application/json
+        - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/internal_domain_account.Account'
+            $ref: "#/definitions/internal_domain_account.Account"
         "400":
           description: Bad Request
           schema:
@@ -231,26 +267,27 @@ paths:
             type: object
       summary: Create a new account
       tags:
-      - Account
+        - Account
     put:
       consumes:
-      - application/json
-      description: Updates an existing account's information for the authenticated
+        - application/json
+      description:
+        Updates an existing account's information for the authenticated
         user
       parameters:
-      - description: Account update request
-        in: body
-        name: account
-        required: true
-        schema:
-          $ref: '#/definitions/internal_domain_account.UpdateAccountReq'
+        - description: Account update request
+          in: body
+          name: account
+          required: true
+          schema:
+            $ref: "#/definitions/internal_domain_account.UpdateAccountReq"
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_domain_account.Account'
+            $ref: "#/definitions/internal_domain_account.Account"
         "400":
           description: Bad Request
           schema:
@@ -277,24 +314,69 @@ paths:
             type: object
       summary: Update an existing account
       tags:
-      - Account
+        - Account
   /account/{account_id}:
+    delete:
+      description: Deletes an existing account for the authenticated user
+      parameters:
+        - description: Account ID
+          format: uuid
+          in: path
+          name: account_id
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete an existing account
+      tags:
+        - Account
     get:
       description: Retrieves a specific account by its ID for the authenticated user
       parameters:
-      - description: Account ID
-        format: uuid
-        in: path
-        name: account_id
-        required: true
-        type: string
+        - description: Account ID
+          format: uuid
+          in: path
+          name: account_id
+          required: true
+          type: string
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_domain_account.Account'
+            $ref: "#/definitions/internal_domain_account.Account"
         "400":
           description: Bad Request
           schema:
@@ -321,17 +403,17 @@ paths:
             type: object
       summary: Get account by ID
       tags:
-      - Account
+        - Account
   /auth/user:
     get:
       description: Returns the current authenticated user's information
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_domain_auth.GetAuthUserResponse'
+            $ref: "#/definitions/internal_domain_auth.GetAuthUserResponse"
         "401":
           description: Unauthorized
           schema:
@@ -340,43 +422,124 @@ paths:
             type: object
       summary: Get authenticated user
       tags:
-      - Auth
+        - Auth
   /health:
     get:
       description: Returns health information about infrastructure dependencies.
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_domain_system.HealthResponse'
+            $ref: "#/definitions/internal_domain_system.HealthResponse"
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/internal_domain_system.HealthResponse'
+            $ref: "#/definitions/internal_domain_system.HealthResponse"
       summary: Health status
       tags:
-      - System
-  /user:
-    put:
-      consumes:
-      - application/json
-      description: Updates the authenticated user's information
-      parameters:
-      - description: User update request
-        in: body
-        name: user
-        required: true
-        schema:
-          $ref: '#/definitions/internal_domain_user.UpdateUserReq'
+        - System
+  /static/bank:
+    get:
+      description: Retrieves a list of all available banks
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_domain_user.User'
+            items:
+              $ref: "#/definitions/internal_domain_static.Bank"
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all banks
+      tags:
+        - Static
+  /static/categories:
+    get:
+      description: Retrieves a list of all available transaction categories
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: "#/definitions/internal_domain_static.Categories"
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all categories
+      tags:
+        - Static
+  /static/merchants:
+    get:
+      description: Retrieves a list of all available merchants
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: "#/definitions/internal_domain_static.Merchants"
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all merchants
+      tags:
+        - Static
+  /user:
+    put:
+      consumes:
+        - application/json
+      description: Updates the authenticated user's information
+      parameters:
+        - description: User update request
+          in: body
+          name: user
+          required: true
+          schema:
+            $ref: "#/definitions/internal_domain_user.UpdateUserReq"
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/internal_domain_user.User"
         "400":
           description: Bad Request
           schema:
@@ -397,7 +560,7 @@ paths:
             type: object
       summary: Update user
       tags:
-      - User
+        - User
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token from Clerk.
