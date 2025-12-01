@@ -7,7 +7,7 @@
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token from Clerk.
 
-// @host      localhost:8080
+// @host      localhost:8081
 // @BasePath  /api/v1
 
 package main
@@ -30,6 +30,7 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/auth"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/static"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/system"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/transaction"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/user"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/logger"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/router"
@@ -87,12 +88,16 @@ func main() {
 		Server:  server,
 		Queries: queries,
 	})
+	transactionModule := transaction.NewTxnModule(transaction.Deps{
+		Server:  server,
+		Queries: queries,
+	})
 	log.Info().
 		Strs("cors_origins", cfg.Server.CORSAllowedOrigins).
 		Msg("CORS configuration loaded")
 	r := router.NewRouter(server,
 		[]router.RouteRegistrar{systemModule},
-		[]router.RouteRegistrar{authModule, userModule, accountModule, staticModule},
+		[]router.RouteRegistrar{authModule, userModule, accountModule, staticModule, transactionModule},
 	)
 	docs.SwaggerInfo.Title = "Finance Tracker API"
 	docs.SwaggerInfo.Description = "API documentation for Finance Tracker services."

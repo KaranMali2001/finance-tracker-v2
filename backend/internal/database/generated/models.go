@@ -98,6 +98,52 @@ func (ns NullJobType) Value() (driver.Value, error) {
 	return string(ns.JobType), nil
 }
 
+type TxnType string
+
+const (
+	TxnTypeDEBIT        TxnType = "DEBIT"
+	TxnTypeCREDIT       TxnType = "CREDIT"
+	TxnTypeSUBSCRIPTION TxnType = "SUBSCRIPTION"
+	TxnTypeINVESTMENT   TxnType = "INVESTMENT"
+	TxnTypeINCOME       TxnType = "INCOME"
+	TxnTypeREFUND       TxnType = "REFUND"
+)
+
+func (e *TxnType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TxnType(s)
+	case string:
+		*e = TxnType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TxnType: %T", src)
+	}
+	return nil
+}
+
+type NullTxnType struct {
+	TxnType TxnType
+	Valid   bool // Valid is true if TxnType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullTxnType) Scan(value interface{}) error {
+	if value == nil {
+		ns.TxnType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TxnType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullTxnType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TxnType), nil
+}
+
 type Account struct {
 	ID             pgtype.UUID
 	UserID         string
@@ -358,7 +404,7 @@ type Transaction struct {
 	ToAccountID     pgtype.UUID
 	CategoryID      pgtype.UUID
 	MerchantID      pgtype.UUID
-	Type            string
+	Type            TxnType
 	Amount          pgtype.Numeric
 	Description     pgtype.Text
 	Notes           pgtype.Text

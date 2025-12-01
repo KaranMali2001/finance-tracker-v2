@@ -17,6 +17,10 @@ export type { internal_domain_static_Categories } from './models/internal_domain
 export type { internal_domain_static_Merchants } from './models/internal_domain_static_Merchants';
 export type { internal_domain_system_HealthCheckResult } from './models/internal_domain_system_HealthCheckResult';
 export type { internal_domain_system_HealthResponse } from './models/internal_domain_system_HealthResponse';
+export type { internal_domain_transaction_CreateTxnReq } from './models/internal_domain_transaction_CreateTxnReq';
+export type { internal_domain_transaction_SoftDeleteTxnsReq } from './models/internal_domain_transaction_SoftDeleteTxnsReq';
+export type { internal_domain_transaction_Trasaction } from './models/internal_domain_transaction_Trasaction';
+export { internal_domain_transaction_TxnType } from './models/internal_domain_transaction_TxnType';
 export type { internal_domain_user_UpdateUserReq } from './models/internal_domain_user_UpdateUserReq';
 export type { internal_domain_user_User } from './models/internal_domain_user_User';
 
@@ -24,4 +28,5 @@ export { AccountService } from './services/AccountService';
 export { AuthService } from './services/AuthService';
 export { StaticService } from './services/StaticService';
 export { SystemService } from './services/SystemService';
+export { TransactionService } from './services/TransactionService';
 export { UserService } from './services/UserService';

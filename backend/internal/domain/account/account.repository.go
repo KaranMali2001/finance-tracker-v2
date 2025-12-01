@@ -2,7 +2,6 @@ package account
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
@@ -107,7 +106,7 @@ func (r *AccRepo) GetAccountsByUserId(c context.Context, clerkId string) ([]Acco
 	return accounts, nil
 }
 func (r *AccRepo) UpdateAccount(c context.Context, payload *UpdateAccountReq, clerkId string) (*Account, error) {
-	fmt.Println("payload recevied in update account", payload)
+
 	account, err := r.q.UpdateAccount(c, generated.UpdateAccountParams{
 		ID:             utils.UUIDToPgtype(payload.AccountId),
 		UserID:         clerkId,

@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
 import type { internal_domain_account_Account } from '../models/internal_domain_account_Account';
 import type { internal_domain_account_CreateAccountReq } from '../models/internal_domain_account_CreateAccountReq';
 import type { internal_domain_account_UpdateAccountReq } from '../models/internal_domain_account_UpdateAccountReq';
+import type { CancelablePromise } from '../core/CancelablePromise';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class AccountService {
   /**
    * Get all accounts for authenticated user
@@ -94,10 +94,10 @@ export class AccountService {
    * Delete an existing account
    * Deletes an existing account for the authenticated user
    * @param accountId Account ID
-   * @returns any OK
+   * @returns string Success
    * @throws ApiError
    */
-  public static deleteAccount(accountId: string): CancelablePromise<any> {
+  public static deleteAccount(accountId: string): CancelablePromise<Record<string, string>> {
     return __request(OpenAPI, {
       method: 'DELETE',
       url: '/account/{account_id}',

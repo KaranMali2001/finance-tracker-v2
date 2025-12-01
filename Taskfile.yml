@@ -125,31 +125,31 @@ tasks:
       - echo "Code formatted successfully"
 
   services:up:
-    desc: Ensure local infrastructure containers are running
+    desc: Start all services using docker-compose in detached mode
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - |
-        set -euo pipefail
+      - docker compose -f dev.docker-compose.yml up -d
+      - echo "Services started in detached mode"
 
-        ensure_container() {
-          local name="$1"
-          local service="$2"
+  services:down:
+    desc: Stop all services using docker-compose
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - docker compose -f dev.docker-compose.yml down
+      - echo "Services stopped"
 
-          if docker ps -a --format '{{.Names}}' | grep -w "$name" >/dev/null 2>&1; then
-            if docker ps --filter "name=$name" --filter "status=running" --format '{{.Names}}' | grep -w "$name" >/dev/null 2>&1; then
-              echo "Container $name already running"
-            else
-              echo "Starting existing container $name"
-              docker start "$name" >/dev/null
-            fi
-          else
-            echo "Creating container $name using docker compose service $service"
-            docker compose -f dev.docker-compose.yml up -d "$service"
-          fi
-        }
+  services:logs:
+    desc: View logs from all services
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - docker compose -f dev.docker-compose.yml logs -f
 
-        ensure_container "finance-tracker-postgres" "postgres"
-        ensure_container "finance-tracker-redis" "redis"
+  services:restart:
+    desc: Restart all services
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - docker compose -f dev.docker-compose.yml restart
+      - echo "Services restarted"
 
   docs:generate:
     desc: Generate Swagger documentation and update frontend API types
@@ -161,7 +161,7 @@ tasks:
     desc: Generate Swagger documentation from annotations
     dir: "{{.BACKEND_DIR}}"
     cmds:
-      - swag init -g cmd/backend/main.go -o internal/docs --parseDependency --parseInternal --parseDepth 2
+      - swag init -g cmd/backend/main.go -o internal/docs --parseDependency --parseInternal
       - echo "Swagger docs generated successfully"
 
   docs:generate:frontend:

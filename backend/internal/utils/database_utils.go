@@ -146,6 +146,26 @@ func TimestampToTime(t pgtype.Timestamp) time.Time {
 	return t.Time
 }
 
+// TimestampToPgtype converts time.Time to pgtype.Timestamp
+func TimestampToPgtype(t time.Time) pgtype.Timestamp {
+	return pgtype.Timestamp{
+		Time:  t,
+		Valid: true,
+	}
+}
+
+// TimestampPtrToPgtype converts *time.Time to pgtype.Timestamp
+// Returns invalid Timestamp if the pointer is nil
+func TimestampPtrToPgtype(t *time.Time) pgtype.Timestamp {
+	if t == nil {
+		return pgtype.Timestamp{Valid: false}
+	}
+	return pgtype.Timestamp{
+		Time:  *t,
+		Valid: true,
+	}
+}
+
 // DateToTimePtr converts pgtype.Date to *time.Time
 // Returns nil if the value is invalid
 func DateToTimePtr(d pgtype.Date) *time.Time {
@@ -190,6 +210,9 @@ func Float64PtrToNum(f *float64) pgtype.Numeric {
 	return n
 }
 func UUIDToPgtype(id uuid.UUID) pgtype.UUID {
+	if id == uuid.Nil {
+		return pgtype.UUID{Valid: false}
+	}
 	return pgtype.UUID{
 		Bytes: id,
 		Valid: true,

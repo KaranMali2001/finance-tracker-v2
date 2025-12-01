@@ -6,7 +6,7 @@
     "contact": {},
     "version": "1.0.0"
   },
-  "host": "localhost:8080",
+  "host": "localhost:8081",
   "basePath": "/api/v1",
   "paths": {
     "/account": {
@@ -444,6 +444,178 @@
         }
       }
     },
+    "/transaction": {
+      "get": {
+        "description": "Retrieves transactions for the authenticated user with optional filters",
+        "produces": ["application/json"],
+        "tags": ["Transaction"],
+        "summary": "Get transactions with filters",
+        "parameters": [
+          {
+            "type": "string",
+            "format": "uuid",
+            "description": "Account ID",
+            "name": "account_id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "format": "uuid",
+            "description": "Category ID",
+            "name": "category_id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "format": "uuid",
+            "description": "Merchant ID",
+            "name": "merchant_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/internal_domain_transaction.Trasaction"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Creates a new financial transaction for the authenticated user",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["Transaction"],
+        "summary": "Create a new transaction",
+        "parameters": [
+          {
+            "description": "Transaction creation request",
+            "name": "transaction",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/internal_domain_transaction.CreateTxnReq"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "schema": {
+              "$ref": "#/definitions/internal_domain_transaction.Trasaction"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Soft deletes multiple transactions for the authenticated user",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "tags": ["Transaction"],
+        "summary": "Soft delete transactions",
+        "parameters": [
+          {
+            "description": "Soft delete request",
+            "name": "transaction",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/internal_domain_transaction.SoftDeleteTxnsReq"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
     "/user": {
       "put": {
         "description": "Updates the authenticated user's information",
@@ -738,6 +910,157 @@
           "example": "2025-01-02T15:04:05Z"
         }
       }
+    },
+    "internal_domain_transaction.CreateTxnReq": {
+      "type": "object",
+      "required": ["account_id"],
+      "properties": {
+        "account_id": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "number"
+        },
+        "category_id": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "is_recurring": {
+          "type": "boolean"
+        },
+        "merchant_id": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "payment_method": {
+          "type": "string"
+        },
+        "reference_number": {
+          "type": "string"
+        },
+        "sms_id": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "string"
+        },
+        "transaction_date": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/internal_domain_transaction.TxnType"
+        },
+        "user_id": {
+          "type": "string"
+        }
+      }
+    },
+    "internal_domain_transaction.SoftDeleteTxnsReq": {
+      "type": "object",
+      "required": ["ids"],
+      "properties": {
+        "deleted_by": {
+          "type": "string"
+        },
+        "ids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "internal_domain_transaction.Trasaction": {
+      "type": "object",
+      "properties": {
+        "account_id": {
+          "type": "string"
+        },
+        "amount": {
+          "type": "number"
+        },
+        "category_id": {
+          "type": "string"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "deleted_at": {
+          "type": "string"
+        },
+        "deleted_by": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "is_cash": {
+          "type": "boolean"
+        },
+        "is_excluded": {
+          "type": "boolean"
+        },
+        "is_recurring": {
+          "type": "boolean"
+        },
+        "merchant_id": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "payment_method": {
+          "type": "string"
+        },
+        "reference_number": {
+          "type": "string"
+        },
+        "sms_id": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "string"
+        },
+        "to_account_id": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/internal_domain_transaction.TxnType"
+        },
+        "updated_at": {
+          "type": "string"
+        },
+        "user_id": {
+          "type": "string"
+        }
+      }
+    },
+    "internal_domain_transaction.TxnType": {
+      "type": "string",
+      "enum": [
+        "DEBIT",
+        "CREDIT",
+        "SUBSCRIPTION",
+        "INVESTMENT",
+        "INCOME",
+        "REFUND"
+      ],
+      "x-enum-varnames": [
+        "TxnTypeDebit",
+        "TxnTypeCredit",
+        "TxnTypeSubscription",
+        "TxnTypeInvestment",
+        "TxnTypeIncome",
+        "TxnTypeRefund"
+      ]
     },
     "internal_domain_user.UpdateUserReq": {
       "type": "object",
