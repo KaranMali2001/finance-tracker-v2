@@ -54,6 +54,10 @@ export function useCreateTransaction() {
     onSuccess: () => {
       // Invalidate and refetch transactions list
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      // Invalidate user data (lifetime_income, lifetime_expense, etc.)
+      queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+      // Invalidate accounts (account balances may have changed)
+      queryClient.invalidateQueries({ queryKey: ['accounts'] });
     },
     showToastOnSuccess: true,
     successMessage: 'Transaction created successfully',
@@ -74,6 +78,10 @@ export function useDeleteTransactions() {
       onSuccess: () => {
         // Invalidate and refetch transactions list
         queryClient.invalidateQueries({ queryKey: ['transactions'] });
+        // Invalidate user data (lifetime_income, lifetime_expense, etc.)
+        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+        // Invalidate accounts (account balances may have changed)
+        queryClient.invalidateQueries({ queryKey: ['accounts'] });
       },
       showToastOnSuccess: true,
       successMessage: 'Transactions deleted successfully',

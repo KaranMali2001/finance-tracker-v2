@@ -62,13 +62,6 @@ func (auth *AuthMiddleware) RequireAuth(next echo.HandlerFunc) echo.HandlerFunc 
 		c.Set("user_role", claims.ActiveOrganizationRole)
 		c.Set("permissions", claims.Claims.ActiveOrganizationPermissions)
 
-		auth.server.Logger.Info().
-			Str("function", "RequireAuth").
-			Str("user_id", claims.Subject).
-			Str("request_id", GetRequestID(c)).
-			Dur("duration", time.Since(start)).
-			Msg("user authenticated successfully")
-
 		return next(c)
 	})
 }

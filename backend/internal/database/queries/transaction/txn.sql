@@ -12,15 +12,18 @@ SELECT * from transactions
 WHERE (user_id=$1) 
 AND ($2::uuid IS NULL OR account_id=$2)
 AND ($3::uuid IS NULL OR category_id=$3)
-AND ($4::uuid IS NULL OR merchant_id=$4);
+AND ($4::uuid IS NULL OR merchant_id=$4)
+AND deleted_at IS NULL 
+AND deleted_by IS NULL;
 
 
 
--- name: SoftDeleteTxns :exec
+-- name: SoftDeleteTxns :many
 UPDATE transactions
 SET (deleted_at, deleted_by) = ($1, $2)
 WHERE user_id = $3
-  AND id = ANY($4::uuid[]);
+  AND id = ANY($4::uuid[])
+RETURNING *;
 
 -- name: HardDeleteTxns :exec
 DELETE FROM transactions WHERE user_id=$1 AND id=ANY($2::uuid[]);

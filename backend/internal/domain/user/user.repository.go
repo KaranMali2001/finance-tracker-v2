@@ -45,3 +45,20 @@ func (r *UserRepository) UpdateUser(c context.Context, updateUser *UpdateUserReq
 	}, nil
 
 }
+func (r *UserRepository) GetUserByClerkId(c context.Context, clerkId string) (*User, error) {
+	user, err := r.queries.GetAuthUser(c, clerkId)
+	if err != nil {
+		return nil, err
+	}
+	return &User{
+
+		Email:           user.Email,
+		LifetimeIncome:  utils.NumericToFloat64(user.LifetimeIncome),
+		LifetimeExpense: utils.NumericToFloat64(user.LifetimeExpense),
+		UseLlmParsing:   utils.BoolToBool(user.UseLlmParsing),
+		IsActive:        utils.BoolToBool(user.IsActive),
+		DatabaseUrl:     utils.TextToString(user.DatabaseUrl),
+		CreatedAt:       utils.TimestampToTime(user.CreatedAt),
+		UpdatedAt:       utils.TimestampToTime(user.UpdatedAt),
+	}, nil
+}

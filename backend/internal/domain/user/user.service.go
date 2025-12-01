@@ -29,3 +29,6 @@ func (s *UserService) UpdateUser(c echo.Context, payload *UpdateUserReq, clerkId
 	}
 	return updatedUser, nil
 }
+func (s *UserService) GetUserByClerkId(c echo.Context, clerkId string) (*User, error) {
+	return s.repository.GetUserByClerkId(c.Request().Context(), clerkId)
+}

@@ -91,6 +91,7 @@ func main() {
 	transactionModule := transaction.NewTxnModule(transaction.Deps{
 		Server:  server,
 		Queries: queries,
+		UserSvc: userModule.GetUserService(),
 	})
 	log.Info().
 		Strs("cors_origins", cfg.Server.CORSAllowedOrigins).

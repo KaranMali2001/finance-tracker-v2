@@ -91,6 +91,8 @@ WHERE (user_id=$1)
 AND ($2::uuid IS NULL OR account_id=$2)
 AND ($3::uuid IS NULL OR category_id=$3)
 AND ($4::uuid IS NULL OR merchant_id=$4)
+AND deleted_at IS NULL 
+AND deleted_by IS NULL
 `
 
 type GetTxnsWithFiltersParams struct {
@@ -162,11 +164,12 @@ func (q *Queries) HardDeleteTxns(ctx context.Context, arg HardDeleteTxnsParams) 
 	return err
 }
 
-const softDeleteTxns = `-- name: SoftDeleteTxns :exec
+const softDeleteTxns = `-- name: SoftDeleteTxns :many
 UPDATE transactions
 SET (deleted_at, deleted_by) = ($1, $2)
 WHERE user_id = $3
   AND id = ANY($4::uuid[])
+RETURNING id, user_id, account_id, to_account_id, category_id, merchant_id, type, amount, description, notes, tags, transaction_date, sms_id, payment_method, reference_number, is_recurring, is_excluded, is_cash, deleted_at, deleted_by, created_at, updated_at
 `
 
 type SoftDeleteTxnsParams struct {
@@ -176,12 +179,50 @@ type SoftDeleteTxnsParams struct {
 	Column4   []pgtype.UUID
 }
 
-func (q *Queries) SoftDeleteTxns(ctx context.Context, arg SoftDeleteTxnsParams) error {
-	_, err := q.db.Exec(ctx, softDeleteTxns,
+func (q *Queries) SoftDeleteTxns(ctx context.Context, arg SoftDeleteTxnsParams) ([]Transaction, error) {
+	rows, err := q.db.Query(ctx, softDeleteTxns,
 		arg.DeletedAt,
 		arg.DeletedBy,
 		arg.UserID,
 		arg.Column4,
 	)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Transaction
+	for rows.Next() {
+		var i Transaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.AccountID,
+			&i.ToAccountID,
+			&i.CategoryID,
+			&i.MerchantID,
+			&i.Type,
+			&i.Amount,
+			&i.Description,
+			&i.Notes,
+			&i.Tags,
+			&i.TransactionDate,
+			&i.SmsID,
+			&i.PaymentMethod,
+			&i.ReferenceNumber,
+			&i.IsRecurring,
+			&i.IsExcluded,
+			&i.IsCash,
+			&i.DeletedAt,
+			&i.DeletedBy,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

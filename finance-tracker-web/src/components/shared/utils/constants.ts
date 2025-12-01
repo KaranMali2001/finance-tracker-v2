@@ -36,3 +36,19 @@ export const SUCCESS_MESSAGES = {
   DELETED: 'Deleted successfully',
   SAVED: 'Saved successfully',
 } as const;
+
+/**
+ * Account type options for forms
+ */
+import type { FormOption } from '../types/form';
+
+export const ACCOUNT_TYPES = [
+  { value: 'Savings', label: 'Savings' },
+  { value: 'Current', label: 'Current' },
+  { value: 'Credit Card', label: 'Credit Card' },
+  { value: 'Debit Card', label: 'Debit Card' },
+  { value: 'Fixed Deposit', label: 'Fixed Deposit' },
+  { value: 'Recurring Deposit', label: 'Recurring Deposit' },
+  { value: 'Loan', label: 'Loan' },
+  { value: 'Investment', label: 'Investment' },
+] as const satisfies readonly FormOption[];

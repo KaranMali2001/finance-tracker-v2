@@ -42,7 +42,7 @@ interface FormSelectProps<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 > extends BaseFormFieldProps<TFieldValues, TName> {
-  options: FormOption[];
+  options: readonly FormOption[];
   placeholder?: string;
   searchable?: boolean;
 }

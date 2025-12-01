@@ -104,23 +104,45 @@ func (r *TxnRepository) GetTxnsWithFilters(c context.Context, clerkId string, fi
 	}
 	return txns, nil
 }
-func (r *TxnRepository) SoftDeleteTxns(c context.Context, clerkId string, payload *SoftDeleteTxnsReq) error {
+func (r *TxnRepository) SoftDeleteTxns(c context.Context, clerkId string, payload *SoftDeleteTxnsReq) ([]*Trasaction, error) {
 	ids := make([]pgtype.UUID, len(payload.Ids))
 	for i, idStr := range payload.Ids {
 		id, err := uuid.Parse(idStr)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		ids[i] = utils.UUIDToPgtype(id)
 	}
-	err := r.queries.SoftDeleteTxns(c, generated.SoftDeleteTxnsParams{
+	dbTxns, err := r.queries.SoftDeleteTxns(c, generated.SoftDeleteTxnsParams{
 		DeletedAt: utils.TimestampToPgtype(time.Now().UTC()),
 		DeletedBy: utils.StringToPgtypeText(payload.DeletedBy),
 		UserID:    clerkId,
 		Column4:   ids,
 	})
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	txns := make([]*Trasaction, len(dbTxns))
+	for i, dbTxn := range dbTxns {
+		txns[i] = &Trasaction{
+			Id:              utils.UUIDToString(dbTxn.ID),
+			UserId:          dbTxn.UserID,
+			AccountId:       utils.UUIDToString(dbTxn.AccountID),
+			ToAccountId:     utils.UUIDToStringPtr(dbTxn.ToAccountID),
+			CategoryId:      utils.UUIDToStringPtr(dbTxn.CategoryID),
+			MerchantId:      utils.UUIDToStringPtr(dbTxn.MerchantID),
+			Type:            TxnType(dbTxn.Type),
+			Amount:          utils.NumericToFloat64(dbTxn.Amount),
+			Description:     utils.TextToStringPtr(dbTxn.Description),
+			Notes:           utils.TextToStringPtr(dbTxn.Notes),
+			Tags:            utils.TextToStringPtr(dbTxn.Tags),
+			SmsId:           utils.UUIDToStringPtr(dbTxn.SmsID),
+			PaymentMethod:   utils.TextToStringPtr(dbTxn.PaymentMethod),
+			ReferenceNumber: utils.TextToStringPtr(dbTxn.ReferenceNumber),
+			IsRecurring:     utils.BoolToBool(dbTxn.IsRecurring),
+			CreatedAt:       utils.TimestampToTime(dbTxn.CreatedAt),
+			UpdatedAt:       utils.TimestampToTime(dbTxn.UpdatedAt),
+		}
+	}
+	return txns, nil
 }

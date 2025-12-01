@@ -1,24 +1,13 @@
 'use client';
 
-import { Form, FormInput, FormOption, FormSelect, FormSwitch } from '@/components/shared/form';
+import { Form, FormInput, FormSelect, FormSwitch } from '@/components/shared/form';
 import { useCreateAccount } from '@/components/shared/hooks/useAccount';
 import { useBanks } from '@/components/shared/hooks/useStatic';
+import { ACCOUNT_TYPES } from '@/components/shared/utils/constants';
 import { Button } from '@/components/ui/button';
 import type { internal_domain_account_CreateAccountReq } from '@/generated/api';
 import { useMemo } from 'react';
 import * as z from 'zod';
-
-// Account Type Enum
-const ACCOUNT_TYPES = [
-  { value: 'Savings', label: 'Savings' },
-  { value: 'Current', label: 'Current' },
-  { value: 'Credit Card', label: 'Credit Card' },
-  { value: 'Debit Card', label: 'Debit Card' },
-  { value: 'Fixed Deposit', label: 'Fixed Deposit' },
-  { value: 'Recurring Deposit', label: 'Recurring Deposit' },
-  { value: 'Loan', label: 'Loan' },
-  { value: 'Investment', label: 'Investment' },
-] as const;
 
 const createAccountSchema = z.object({
   account_name: z.string().min(1, 'Account name is required'),
@@ -103,7 +92,7 @@ export function AccountCreateForm({ onSuccess, onCancel }: AccountCreateFormProp
             name="account_type"
             label="Account Type"
             required
-            options={ACCOUNT_TYPES as unknown as FormOption[]}
+            options={ACCOUNT_TYPES}
             placeholder="Select account type"
           />
           <FormSelect

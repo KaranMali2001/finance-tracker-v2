@@ -1,3 +1,4 @@
+import { ErrorBoundary } from '@/components/shared/error-boundary';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
@@ -63,8 +64,10 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Providers>
-          <Toaster />
-          {children}
+          <ErrorBoundary>
+            <Toaster />
+            {children}
+          </ErrorBoundary>
         </Providers>
       </body>
     </html>

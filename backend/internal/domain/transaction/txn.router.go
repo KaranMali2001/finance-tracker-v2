@@ -2,6 +2,7 @@ package transaction
 
 import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/user"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/labstack/echo/v4"
@@ -14,11 +15,12 @@ type Module struct {
 type Deps struct {
 	Server  *server.Server
 	Queries *generated.Queries
+	UserSvc *user.UserService
 }
 
 func NewTxnModule(deps Deps) *Module {
 	repo := NewTxnRepository(deps.Server, deps.Queries)
-	service := NewTxnService(deps.Server, repo)
+	service := NewTxnService(deps.Server, repo, deps.UserSvc)
 	handler := NewTxnHandler(deps.Server, service)
 
 	return &Module{

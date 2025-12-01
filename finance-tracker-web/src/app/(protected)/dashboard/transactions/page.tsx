@@ -1,23 +1,28 @@
 'use client';
 
 import {
+  ConfirmDialog,
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/shared/dialog';
-import { useTransactions } from '@/components/shared/hooks/useTransaction';
+import { useDeleteTransactions, useTransactions } from '@/components/shared/hooks/useTransaction';
 import { EmptyState, ErrorState, LoadingState, PageShell } from '@/components/shared/layout';
-import { formatRupees } from '@/components/shared/utils';
+import type { Transaction } from '@/components/shared/types';
+import { formatDate, formatRupees, getTypeColor } from '@/components/shared/utils';
 import { Button } from '@/components/ui/button';
-import { Receipt, Plus } from 'lucide-react';
+import { Plus, Receipt, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { TransactionCreateForm } from '../../../../components/transactionComponents/TransactionCreateForm/TransactionCreateForm';
 
 export default function TransactionsPage() {
   const { data: transactions, isLoading, error, refetch, isFetching } = useTransactions();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { mutate: deleteTransactions, isPending: isDeleting } = useDeleteTransactions();
 
   // Show loading state while fetching or when data hasn't been loaded yet
   if (isLoading || isFetching || transactions === undefined) {
@@ -73,35 +78,28 @@ export default function TransactionsPage() {
     );
   }
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) {
-      return 'N/A';
-    }
-    try {
-      return new Date(dateString).toLocaleDateString('en-IN', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
-    } catch {
-      return dateString;
+  const handleDeleteClick = (transaction: Transaction) => {
+    setTransactionToDelete(transaction);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (transactionToDelete?.id) {
+      deleteTransactions(
+        { ids: [transactionToDelete.id] },
+        {
+          onSuccess: () => {
+            setIsDeleteDialogOpen(false);
+            setTransactionToDelete(null);
+          },
+        }
+      );
     }
   };
 
-  const getTypeColor = (type?: string) => {
-    switch (type) {
-      case 'DEBIT':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
-      case 'CREDIT':
-      case 'INCOME':
-      case 'REFUND':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
-      case 'SUBSCRIPTION':
-      case 'INVESTMENT':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
-    }
+  const handleDeleteCancel = () => {
+    setIsDeleteDialogOpen(false);
+    setTransactionToDelete(null);
   };
 
   return (
@@ -143,6 +141,17 @@ export default function TransactionsPage() {
                   )}
                 </div>
               </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => {
+                  handleDeleteClick(transaction);
+                }}
+                disabled={isDeleting}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
             <div className="space-y-2">
               {transaction.description && (
@@ -212,6 +221,21 @@ export default function TransactionsPage() {
           />
         </DialogContent>
       </Dialog>
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Delete Transaction"
+        description={
+          transactionToDelete
+            ? `Are you sure you want to delete this transaction of ${formatRupees(transactionToDelete.amount || 0)}? This action cannot be undone.`
+            : 'Are you sure you want to delete this transaction? This action cannot be undone.'
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        destructive
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
     </PageShell>
   );
 }

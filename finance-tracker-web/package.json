@@ -55,7 +55,6 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
-    "baseline-browser-mapping": "^2.8.32",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.0",
     "openapi-typescript-codegen": "^0.29.0",
