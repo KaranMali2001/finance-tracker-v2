@@ -12,7 +12,7 @@ import (
 )
 
 const getAuthUser = `-- name: GetAuthUser :one
-SELECT clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at FROM users WHERE clerk_id=$1
+SELECT clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes FROM users WHERE clerk_id=$1
 `
 
 func (q *Queries) GetAuthUser(ctx context.Context, clerkID string) (User, error) {
@@ -29,6 +29,8 @@ func (q *Queries) GetAuthUser(ctx context.Context, clerkID string) (User, error)
 		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TransactionImageParseAttempts,
+		&i.TransactionImageParseSuccesses,
 	)
 	return i, err
 }
@@ -36,7 +38,7 @@ func (q *Queries) GetAuthUser(ctx context.Context, clerkID string) (User, error)
 const insertUser = `-- name: InsertUser :one
 INSERT INTO users (email, clerk_id)
 VALUES ($1, $2)
-RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at
+RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes
 `
 
 type InsertUserParams struct {
@@ -58,6 +60,8 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, e
 		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TransactionImageParseAttempts,
+		&i.TransactionImageParseSuccesses,
 	)
 	return i, err
 }
@@ -68,7 +72,7 @@ UPDATE users SET
   database_url=COALESCE($2, database_url),
   lifetime_income=COALESCE($3, lifetime_income),
   lifetime_expense=COALESCE($4, lifetime_expense)
-WHERE clerk_id=$5 RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at
+WHERE clerk_id=$5 RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes
 `
 
 type UpdateUserParams struct {
@@ -99,6 +103,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.TransactionImageParseAttempts,
+		&i.TransactionImageParseSuccesses,
 	)
 	return i, err
 }

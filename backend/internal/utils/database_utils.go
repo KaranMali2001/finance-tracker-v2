@@ -35,6 +35,60 @@ func NumericToFloat64(n pgtype.Numeric) float64 {
 	return val.Float64
 }
 
+// NumericToUintPtr converts pgtype.Numeric to *uint
+// Returns nil if the value is invalid or conversion fails
+func NumericToUintPtr(n pgtype.Numeric) *uint {
+	if !n.Valid {
+		return nil
+	}
+	val, err := n.Float64Value()
+	if err != nil || !val.Valid {
+		return nil
+	}
+	uintVal := uint(val.Float64)
+	return &uintVal
+}
+
+// NumericToUint converts pgtype.Numeric to uint
+// Returns 0 if the value is invalid or conversion fails
+func NumericToUint(n pgtype.Numeric) uint {
+	if !n.Valid {
+		return 0
+	}
+	val, err := n.Float64Value()
+	if err != nil || !val.Valid {
+		return 0
+	}
+	return uint(val.Float64)
+}
+
+// NumericToIntPtr converts pgtype.Numeric to *int
+// Returns nil if the value is invalid or conversion fails
+func NumericToIntPtr(n pgtype.Numeric) *int {
+	if !n.Valid {
+		return nil
+	}
+	val, err := n.Float64Value()
+	if err != nil || !val.Valid {
+		return nil
+	}
+	intVal := int(val.Float64)
+	return &intVal
+}
+
+// NumericToInt converts pgtype.Numeric to int
+// Returns 0 if the value is invalid or conversion fails
+func NumericToInt(n pgtype.Numeric) int {
+	if !n.Valid {
+		return 0
+	}
+	val, err := n.Float64Value()
+	if err != nil || !val.Valid {
+		return 0
+	}
+	return int(val.Float64)
+}
+
 // Int4ToIntPtr converts pgtype.Int4 to *int
 // Returns nil if the value is invalid
 func Int4ToIntPtr(i pgtype.Int4) *int {
@@ -52,6 +106,65 @@ func Int4ToInt(i pgtype.Int4) int {
 		return 0
 	}
 	return int(i.Int32)
+}
+
+// Int4ToUintPtr converts pgtype.Int4 to *uint
+// Returns nil if the value is invalid
+func Int4ToUintPtr(i pgtype.Int4) *uint {
+	if !i.Valid {
+		return nil
+	}
+	uintVal := uint(i.Int32)
+	return &uintVal
+}
+
+// Int4ToUint converts pgtype.Int4 to uint
+// Returns 0 if the value is invalid
+func Int4ToUint(i pgtype.Int4) uint {
+	if !i.Valid {
+		return 0
+	}
+	return uint(i.Int32)
+}
+
+// UintPtrToInt4 converts *uint to pgtype.Int4
+// Returns invalid Int4 if the pointer is nil
+func UintPtrToInt4(u *uint) pgtype.Int4 {
+	if u == nil {
+		return pgtype.Int4{Valid: false}
+	}
+	return pgtype.Int4{
+		Int32: int32(*u),
+		Valid: true,
+	}
+}
+
+// UintToInt4 converts uint to pgtype.Int4
+func UintToInt4(u uint) pgtype.Int4 {
+	return pgtype.Int4{
+		Int32: int32(u),
+		Valid: true,
+	}
+}
+
+// IntPtrToInt4 converts *int to pgtype.Int4
+// Returns invalid Int4 if the pointer is nil
+func IntPtrToInt4(i *uint) pgtype.Int4 {
+	if i == nil {
+		return pgtype.Int4{Valid: false}
+	}
+	return pgtype.Int4{
+		Int32: int32(*i),
+		Valid: true,
+	}
+}
+
+// IntToInt4 converts int to pgtype.Int4
+func IntToInt4(i int) pgtype.Int4 {
+	return pgtype.Int4{
+		Int32: int32(i),
+		Valid: true,
+	}
 }
 
 // TextToStringPtr converts pgtype.Text to *string

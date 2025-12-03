@@ -2,6 +2,7 @@
 
 import type {
   internal_domain_transaction_CreateTxnReq,
+  internal_domain_transaction_ParsedTxnRes,
   internal_domain_transaction_SoftDeleteTxnsReq,
   internal_domain_transaction_Trasaction,
 } from '@/generated/api';
@@ -86,6 +87,22 @@ export function useDeleteTransactions() {
       showToastOnSuccess: true,
       successMessage: 'Transactions deleted successfully',
       showToastOnError: true,
+    }
+  );
+}
+
+/**
+ * Parse transaction image hook
+ * Parses transaction details from an uploaded image for the authenticated user
+ */
+export function useParseTransactionImage() {
+  return useApiMutation<internal_domain_transaction_ParsedTxnRes, File>(
+    (file) => {
+      return TransactionService.postTransactionImageParse(file);
+    },
+    {
+      showToastOnError: true,
+      showToastOnSuccess: false,
     }
   );
 }

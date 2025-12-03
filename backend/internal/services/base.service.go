@@ -4,11 +4,14 @@ import (
 	"fmt"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/config"
+	aiservices "github.com/KaranMali2001/finance-tracker-v2-backend/internal/services/aiServices"
+
 	"github.com/rs/zerolog"
 )
 
 type Services struct {
-	EmailService *EmailService
+	EmailService  *EmailService
+	GeminiService *aiservices.GeminiService
 }
 
 func NewServices(cfg *config.Config, logger *zerolog.Logger) (*Services, error) {
@@ -20,7 +23,12 @@ func NewServices(cfg *config.Config, logger *zerolog.Logger) (*Services, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create email service: %w", err)
 	}
+	geminiService, err := aiservices.NewGeminiService(&cfg.AIConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Gemini service: %w", err)
+	}
 	return &Services{
-		EmailService: emailService,
+		EmailService:  emailService,
+		GeminiService: geminiService,
 	}, nil
 }

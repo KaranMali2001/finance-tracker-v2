@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { internal_domain_transaction_CreateTxnReq } from '../models/internal_domain_transaction_CreateTxnReq';
+import type { internal_domain_transaction_ParsedTxnRes } from '../models/internal_domain_transaction_ParsedTxnRes';
 import type { internal_domain_transaction_SoftDeleteTxnsReq } from '../models/internal_domain_transaction_SoftDeleteTxnsReq';
 import type { internal_domain_transaction_Trasaction } from '../models/internal_domain_transaction_Trasaction';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -73,6 +74,29 @@ export class TransactionService {
       method: 'DELETE',
       url: '/transaction',
       body: transaction,
+      errors: {
+        400: `Bad Request`,
+        401: `Unauthorized`,
+        500: `Internal Server Error`,
+      },
+    });
+  }
+  /**
+   * Parse transaction from image
+   * Parses transaction information from an uploaded image using AI/OCR for the authenticated user
+   * @param image Transaction image file (JPEG, PNG, GIF, WEBP)
+   * @returns internal_domain_transaction_ParsedTxnRes OK
+   * @throws ApiError
+   */
+  public static postTransactionImageParse(
+    image: Blob
+  ): CancelablePromise<internal_domain_transaction_ParsedTxnRes> {
+    return __request(OpenAPI, {
+      method: 'POST',
+      url: '/transaction/image-parse',
+      formData: {
+        image: image,
+      },
       errors: {
         400: `Bad Request`,
         401: `Unauthorized`,

@@ -455,16 +455,18 @@ type TransactionReconciliation struct {
 }
 
 type User struct {
-	ClerkID         string
-	Email           string
-	DatabaseUrl     pgtype.Text
-	LifetimeIncome  pgtype.Numeric
-	LifetimeExpense pgtype.Numeric
-	UseLlmParsing   pgtype.Bool
-	LlmParseCredits pgtype.Int4
-	IsActive        pgtype.Bool
-	CreatedAt       pgtype.Timestamp
-	UpdatedAt       pgtype.Timestamp
+	ClerkID                        string
+	Email                          string
+	DatabaseUrl                    pgtype.Text
+	LifetimeIncome                 pgtype.Numeric
+	LifetimeExpense                pgtype.Numeric
+	UseLlmParsing                  pgtype.Bool
+	LlmParseCredits                pgtype.Int4
+	IsActive                       pgtype.Bool
+	CreatedAt                      pgtype.Timestamp
+	UpdatedAt                      pgtype.Timestamp
+	TransactionImageParseAttempts  pgtype.Int4
+	TransactionImageParseSuccesses pgtype.Int4
 }
 
 type UserNotification struct {

@@ -18,6 +18,7 @@ type Config struct {
 	Auth          AuthConfig           `koanf:"auth" validate:"required"`
 	Redis         RedisConfig          `koanf:"redis" validate:"required"`
 	Integration   IntegrationConfig    `koanf:"integration" validate:"required"`
+	AIConfig      AIConfig             `koanf:"ai" validate:"required"`
 	Observability *ObservabilityConfig `koanf:"observability"`
 	ObjectStorage ObjectStorage        `koanf:"sevalla"`
 }
@@ -54,7 +55,9 @@ type IntegrationConfig struct {
 	ResendAPIKey string `koanf:"resend_api_key" validate:"required"`
 	ResendEmail  string `koanf:"resend_email" validate:"omitempty,email"`
 }
-
+type AIConfig struct {
+	GeminiAPIKey string `koanf:"gemini_api_key" validate:"required"`
+}
 type AuthConfig struct {
 	SecretKey  string `koanf:"secret_key" validate:"required"`
 	WebhookKey string `koanf:"webhook_key" validate:"required"`

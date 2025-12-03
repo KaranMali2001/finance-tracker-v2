@@ -682,6 +682,65 @@ const docTemplate = `{
                 }
             }
         },
+        "/transaction/image-parse": {
+            "post": {
+                "description": "Parses transaction information from an uploaded image using AI/OCR for the authenticated user",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Parse transaction from image",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Transaction image file (JPEG, PNG, GIF, WEBP)",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_transaction.ParsedTxnRes"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/user": {
             "put": {
                 "description": "Updates the authenticated user's information",
@@ -873,8 +932,7 @@ const docTemplate = `{
                     "example": "2025-01-02T15:04:05Z"
                 },
                 "database_url": {
-                    "type": "string",
-                    "example": "postgresql://user:pass@localhost/db"
+                    "type": "string"
                 },
                 "email": {
                     "type": "string",
@@ -895,6 +953,12 @@ const docTemplate = `{
                 "llm_parse_credits": {
                     "type": "integer",
                     "example": 100
+                },
+                "transaction_image_parse_attempt": {
+                    "type": "integer"
+                },
+                "transaction_image_parse_success": {
+                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string",
@@ -1031,6 +1095,53 @@ const docTemplate = `{
                     "$ref": "#/definitions/internal_domain_transaction.TxnType"
                 },
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_transaction.ParsedTxnRes": {
+            "type": "object",
+            "properties": {
+                "account_num": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "merchant_id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "reference_number": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "string"
+                },
+                "transaction_amount": {
+                    "type": "number"
+                },
+                "transaction_date": {
+                    "type": "string"
+                },
+                "transaction_time": {
+                    "type": "string"
+                },
+                "transaction_type": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }
@@ -1180,6 +1291,12 @@ const docTemplate = `{
                 },
                 "lifetime_income": {
                     "type": "number"
+                },
+                "transaction_image_parse_attempt": {
+                    "type": "integer"
+                },
+                "transaction_image_parse_success": {
+                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string"

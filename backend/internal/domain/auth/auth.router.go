@@ -3,7 +3,9 @@ package auth
 import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/queue"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
 	"github.com/labstack/echo/v4"
 )
 
@@ -15,13 +17,15 @@ type Module struct {
 // Dependencies captures whatever infrastructure Auth needs.
 // Expand this struct as you add actual dependencies (DB, Redis, JWT, etc.).
 type Dependencies struct {
-	Server  *server.Server
-	Queries *generated.Queries
+	Server       *server.Server
+	Queries      *generated.Queries
+	TaskService  *tasks.TaskService
+	QueueService *queue.JobService
 }
 
 func NewModule(deps Dependencies) *Module {
 	repo := NewAuthRepository(deps.Server, deps.Queries)
-	service := NewAuthService(deps.Server, repo)
+	service := NewAuthService(deps.Server, repo, deps.TaskService, deps.QueueService)
 	handler := NewAuthHandler(deps.Server, service)
 
 	return &Module{handler: handler}

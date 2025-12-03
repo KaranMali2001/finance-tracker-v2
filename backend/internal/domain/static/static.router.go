@@ -8,7 +8,8 @@ import (
 )
 
 type Module struct {
-	handler *StaticHandler
+	handler   *StaticHandler
+	staticSvc *StaticService
 }
 type Dependencies struct {
 	Server  *server.Server
@@ -20,7 +21,12 @@ func NewModule(deps Dependencies) *Module {
 	service := NewStaticService(deps.Server, repo)
 	handler := NewStaticHandler(deps.Server, service)
 
-	return &Module{handler: handler}
+	return &Module{handler: handler,
+		staticSvc: service,
+	}
+}
+func (m *Module) GetService() *StaticService {
+	return m.staticSvc
 }
 func (m *Module) RegisterRoutes(g *echo.Group) {
 	authMiddleware := middleware.NewAuthMiddleware(m.handler.server)

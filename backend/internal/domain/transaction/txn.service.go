@@ -1,23 +1,36 @@
 package transaction
 
 import (
+	"fmt"
+	"io"
+	"mime"
+	"mime/multipart"
+	"path/filepath"
+
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/static"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/user"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/handler"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
+	aiservices "github.com/KaranMali2001/finance-tracker-v2-backend/internal/services/aiServices"
 	"github.com/labstack/echo/v4"
 )
 
 type TxnService struct {
-	s       *server.Server
-	r       *TxnRepository
-	userSvc *user.UserService
+	s         *server.Server
+	r         *TxnRepository
+	userSvc   *user.UserService
+	geminiSvc *aiservices.GeminiService
+	StaticSvc *static.StaticService
 }
 
-func NewTxnService(s *server.Server, r *TxnRepository, userSvc *user.UserService) *TxnService {
+func NewTxnService(s *server.Server, r *TxnRepository, userSvc *user.UserService, geminiSvc *aiservices.GeminiService, staticSvc *static.StaticService) *TxnService {
 	return &TxnService{
-		s:       s,
-		r:       r,
-		userSvc: userSvc,
+		s:         s,
+		r:         r,
+		userSvc:   userSvc,
+		geminiSvc: geminiSvc,
+		StaticSvc: staticSvc,
 	}
 }
 
@@ -99,4 +112,79 @@ func (s *TxnService) SoftDeleteTxns(c echo.Context, payload *SoftDeleteTxnsReq, 
 	log.Info().
 		Msg("User Lifetime balence updated successfully ")
 	return nil
+}
+func (s *TxnService) ParseTxnImage(c echo.Context, payload *ParseTxnImgReq, clerkId string) (*ParsedTxnRes, error) {
+	log := middleware.GetLogger(c)
+	//getting user
+	currUser, err := s.userSvc.GetUserByClerkId(c, clerkId)
+	if err != nil {
+		log.Error().Err(err).Msg("Error while getting user in ParseTxnImage from userService")
+		return nil, err
+	}
+	//updating the attempt
+	newAttempt := currUser.TransactionImageParseAttempt + 1
+	newSuccess := currUser.TransactionImageParseSuccess + 1
+	_, err = s.userSvc.UpdateUserInternal(c, &user.UpdateUserInternal{
+		TransactionImageParseAttempt: &newAttempt,
+	}, clerkId)
+	if err != nil {
+		log.Error().Err(err).Msgf("Error while updating the Attempt of user ID %v", clerkId)
+		return nil, err
+	}
+	//TODO:FallBack to Global Category Object,Same for merchant
+	cats, err := s.StaticSvc.GetCategories(c)
+	if err != nil {
+		log.Error().Err(err).Msg("Error while getting Categories from the static service")
+
+		return nil, err
+	}
+	merchants, err := s.StaticSvc.GetMerchants(c)
+	if err != nil {
+		log.Error().Err(err).Msg("Error while getting Merchants from the static service")
+
+		return nil, err
+	}
+
+	categoryMap := make(map[string]string, len(cats))
+	for _, v := range cats {
+		categoryMap[v.Id] = v.Name
+	}
+	merchantMap := make(map[string]string, len(merchants))
+	for _, v := range merchants {
+		merchantMap[v.Id] = v.Name
+	}
+	fileHeader, ok := c.Get(handler.ImageContextKey).(*multipart.FileHeader)
+	if !ok || fileHeader == nil {
+		log.Error().Err(err).Msg("Error while geting file from context")
+		return nil, fmt.Errorf("image file not found or courrpted")
+	}
+	file, err := fileHeader.Open()
+	if err != nil {
+		log.Error().Err(err).Msg("error while opening the file")
+		return nil, err
+	}
+	defer file.Close()
+	mimeType := fileHeader.Header.Get("Content-Type")
+	if mimeType == "" {
+		mimeType = mime.TypeByExtension(filepath.Ext(fileHeader.Filename))
+	}
+	imageData, err := io.ReadAll(file)
+	if err != nil {
+		log.Error().Err(err).Msg("error while reading the File")
+		return nil, err
+	}
+	parseTxn, err := s.geminiSvc.ParseTxn(c.Request().Context(), imageData, categoryMap, merchantMap, mimeType, log)
+	if err != nil {
+		log.Error().Err(err).Msg("error while parsing txn through gemini")
+		return nil, err
+	}
+	log.Debug().Msgf("Parsed Txn before updating the User %v", parseTxn)
+	_, err = s.userSvc.UpdateUserInternal(c, &user.UpdateUserInternal{
+		TransactionImageParseSuccess: &newSuccess,
+	}, clerkId)
+	if err != nil {
+		log.Error().Err(err).Msgf("Error while updating the Success Parse Txn of user ID %v", clerkId)
+		return nil, err
+	}
+	return (*ParsedTxnRes)(parseTxn), nil
 }

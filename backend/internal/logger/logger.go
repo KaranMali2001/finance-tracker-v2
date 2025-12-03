@@ -65,7 +65,7 @@ func (ls *LoggerService) GetApplication() *newrelic.Application {
 }
 
 // NewLoggerWithService creates a logger with full config and logger service
-func NewLoggerWithService(cfg *config.ObservabilityConfig, loggerService *LoggerService) zerolog.Logger {
+func NewLoggerWithService(cfg *config.ObservabilityConfig, loggerService *LoggerService) *zerolog.Logger {
 	var logLevel zerolog.Level
 	level := cfg.GetLogLevel()
 
@@ -123,7 +123,7 @@ func NewLoggerWithService(cfg *config.ObservabilityConfig, loggerService *Logger
 		logger = logger.With().Stack().Logger()
 	}
 
-	return logger
+	return &logger
 }
 
 // WithTraceContext adds New Relic transaction context to logger

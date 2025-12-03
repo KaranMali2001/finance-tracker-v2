@@ -65,12 +65,19 @@ const createTransactionSchema = z.object({
     ),
 });
 
+type CreateTransactionFormSchema = z.infer<typeof createTransactionSchema>;
+
 interface TransactionCreateFormProps {
   onSuccess?: () => void;
   onCancel?: () => void;
+  initialValues?: Partial<CreateTransactionFormSchema>;
 }
 
-export function TransactionCreateForm({ onSuccess, onCancel }: TransactionCreateFormProps) {
+export function TransactionCreateForm({
+  onSuccess,
+  onCancel,
+  initialValues,
+}: TransactionCreateFormProps) {
   const createTransaction = useCreateTransaction();
   const { data: accounts, isLoading: isLoadingAccounts } = useAccounts();
   const { data: categories, isLoading: isLoadingCategories } = useCategories();
@@ -141,7 +148,7 @@ export function TransactionCreateForm({ onSuccess, onCancel }: TransactionCreate
     return today.toISOString();
   };
 
-  const defaultValues: Partial<z.infer<typeof createTransactionSchema>> = {
+  const defaultValues: Partial<CreateTransactionFormSchema> = {
     account_id: '',
     type: undefined,
     amount: undefined,
@@ -156,10 +163,16 @@ export function TransactionCreateForm({ onSuccess, onCancel }: TransactionCreate
     transaction_date: getTodayDateString(),
   };
 
+  const mergedDefaultValues: Partial<CreateTransactionFormSchema> = {
+    ...defaultValues,
+    ...(initialValues || {}),
+  };
+
   return (
     <Form
+      key={JSON.stringify(mergedDefaultValues)}
       schema={createTransactionSchema}
-      defaultValues={defaultValues}
+      defaultValues={mergedDefaultValues}
       onSubmit={handleSubmit}
       showToastOnSuccess={false}
       showToastOnError={false}

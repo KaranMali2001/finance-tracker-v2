@@ -86,7 +86,6 @@ definitions:
         example: "2025-01-02T15:04:05Z"
         type: string
       database_url:
-        example: postgresql://user:pass@localhost/db
         type: string
       email:
         example: user@example.com
@@ -102,6 +101,10 @@ definitions:
         type: number
       llm_parse_credits:
         example: 100
+        type: integer
+      transaction_image_parse_attempt:
+        type: integer
+      transaction_image_parse_success:
         type: integer
       updated_at:
         example: "2025-01-02T15:04:05Z"
@@ -195,6 +198,37 @@ definitions:
         type: string
     required:
       - account_id
+    type: object
+  internal_domain_transaction.ParsedTxnRes:
+    properties:
+      account_num:
+        type: string
+      amount:
+        type: number
+      category_id:
+        type: string
+      description:
+        type: string
+      merchant_id:
+        type: string
+      notes:
+        type: string
+      payment_method:
+        type: string
+      reference_number:
+        type: string
+      tags:
+        type: string
+      transaction_amount:
+        type: number
+      transaction_date:
+        type: string
+      transaction_time:
+        type: string
+      transaction_type:
+        type: string
+      type:
+        type: string
     type: object
   internal_domain_transaction.SoftDeleteTxnsReq:
     properties:
@@ -296,6 +330,10 @@ definitions:
         type: number
       lifetime_income:
         type: number
+      transaction_image_parse_attempt:
+        type: integer
+      transaction_image_parse_success:
+        type: integer
       updated_at:
         type: string
       user_llm_parsing:
@@ -752,6 +790,47 @@ paths:
               type: string
             type: object
       summary: Create a new transaction
+      tags:
+        - Transaction
+  /transaction/image-parse:
+    post:
+      consumes:
+        - multipart/form-data
+      description:
+        Parses transaction information from an uploaded image using AI/OCR
+        for the authenticated user
+      parameters:
+        - description: Transaction image file (JPEG, PNG, GIF, WEBP)
+          in: formData
+          name: image
+          required: true
+          type: file
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/internal_domain_transaction.ParsedTxnRes"
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Parse transaction from image
       tags:
         - Transaction
   /user:

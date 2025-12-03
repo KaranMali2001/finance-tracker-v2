@@ -52,13 +52,39 @@ func (r *UserRepository) GetUserByClerkId(c context.Context, clerkId string) (*U
 	}
 	return &User{
 
-		Email:           user.Email,
-		LifetimeIncome:  utils.NumericToFloat64(user.LifetimeIncome),
-		LifetimeExpense: utils.NumericToFloat64(user.LifetimeExpense),
-		UseLlmParsing:   utils.BoolToBool(user.UseLlmParsing),
-		IsActive:        utils.BoolToBool(user.IsActive),
-		DatabaseUrl:     utils.TextToString(user.DatabaseUrl),
-		CreatedAt:       utils.TimestampToTime(user.CreatedAt),
-		UpdatedAt:       utils.TimestampToTime(user.UpdatedAt),
+		Email:                        user.Email,
+		LifetimeIncome:               utils.NumericToFloat64(user.LifetimeIncome),
+		LifetimeExpense:              utils.NumericToFloat64(user.LifetimeExpense),
+		UseLlmParsing:                utils.BoolToBool(user.UseLlmParsing),
+		IsActive:                     utils.BoolToBool(user.IsActive),
+		DatabaseUrl:                  utils.TextToString(user.DatabaseUrl),
+		CreatedAt:                    utils.TimestampToTime(user.CreatedAt),
+		UpdatedAt:                    utils.TimestampToTime(user.UpdatedAt),
+		TransactionImageParseAttempt: utils.Int4ToUint(user.TransactionImageParseAttempts),
+		TransactionImageParseSuccess: utils.Int4ToUint(user.TransactionImageParseSuccesses),
+	}, nil
+}
+func (r *UserRepository) UpdateUserInternal(c context.Context, payload *UpdateUserInternal, clerkId string) (*User, error) {
+	updateReqParams := generated.UpdateUserInternalParams{
+		ClerkID:                        clerkId,
+		TransactionImageParseAttempts:  utils.IntPtrToInt4(payload.TransactionImageParseAttempt),
+		TransactionImageParseSuccesses: utils.IntPtrToInt4(payload.TransactionImageParseSuccess),
+	}
+	user, err := r.queries.UpdateUserInternal(c, updateReqParams)
+	if err != nil {
+		return nil, err
+	}
+	return &User{
+
+		Email:                        user.Email,
+		LifetimeIncome:               utils.NumericToFloat64(user.LifetimeIncome),
+		LifetimeExpense:              utils.NumericToFloat64(user.LifetimeExpense),
+		UseLlmParsing:                utils.BoolToBool(user.UseLlmParsing),
+		IsActive:                     utils.BoolToBool(user.IsActive),
+		DatabaseUrl:                  utils.TextToString(user.DatabaseUrl),
+		CreatedAt:                    utils.TimestampToTime(user.CreatedAt),
+		UpdatedAt:                    utils.TimestampToTime(user.UpdatedAt),
+		TransactionImageParseAttempt: utils.Int4ToUint(user.TransactionImageParseAttempts),
+		TransactionImageParseSuccess: utils.Int4ToUint(user.TransactionImageParseSuccesses),
 	}, nil
 }

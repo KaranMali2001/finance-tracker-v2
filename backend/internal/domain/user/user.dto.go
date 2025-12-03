@@ -18,13 +18,19 @@ func (u *UpdateUserReq) Validate() error {
 }
 
 type User struct {
-	Email           string    `json:"email,omitempty"`
-	IsActive        bool      `json:"is_active,omitempty"`
-	ClerkId         string    `json:"clerk_id,omitempty"`
-	CreatedAt       time.Time `json:"created_at,omitempty"`
-	UpdatedAt       time.Time `json:"updated_at,omitempty"`
-	LifetimeExpense float64   `json:"lifetime_expense,omitempty"`
-	LifetimeIncome  float64   `json:"lifetime_income,omitempty"`
-	UseLlmParsing   bool      `json:"user_llm_parsing,omitempty"`
-	DatabaseUrl     string    `json:"database_url,omitempty"`
+	Email                        string    `json:"email,omitempty"`
+	IsActive                     bool      `json:"is_active,omitempty"`
+	ClerkId                      string    `json:"clerk_id,omitempty"`
+	CreatedAt                    time.Time `json:"created_at,omitempty"`
+	UpdatedAt                    time.Time `json:"updated_at,omitempty"`
+	LifetimeExpense              float64   `json:"lifetime_expense,omitempty"`
+	LifetimeIncome               float64   `json:"lifetime_income,omitempty"`
+	UseLlmParsing                bool      `json:"user_llm_parsing,omitempty"`
+	DatabaseUrl                  string    `json:"database_url,omitempty"`
+	TransactionImageParseAttempt uint      `json:"transaction_image_parse_attempt,omitempty"`
+	TransactionImageParseSuccess uint      `json:"transaction_image_parse_success,omitempty"`
+}
+type UpdateUserInternal struct {
+	TransactionImageParseAttempt *uint `json:"transaction_image_parse_attempt"`
+	TransactionImageParseSuccess *uint `json:"transaction_image_parse_success"`
 }

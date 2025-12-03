@@ -18,6 +18,7 @@ export type { internal_domain_static_Merchants } from './models/internal_domain_
 export type { internal_domain_system_HealthCheckResult } from './models/internal_domain_system_HealthCheckResult';
 export type { internal_domain_system_HealthResponse } from './models/internal_domain_system_HealthResponse';
 export type { internal_domain_transaction_CreateTxnReq } from './models/internal_domain_transaction_CreateTxnReq';
+export type { internal_domain_transaction_ParsedTxnRes } from './models/internal_domain_transaction_ParsedTxnRes';
 export type { internal_domain_transaction_SoftDeleteTxnsReq } from './models/internal_domain_transaction_SoftDeleteTxnsReq';
 export type { internal_domain_transaction_Trasaction } from './models/internal_domain_transaction_Trasaction';
 export { internal_domain_transaction_TxnType } from './models/internal_domain_transaction_TxnType';

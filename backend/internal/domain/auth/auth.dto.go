@@ -38,15 +38,17 @@ type GetAuthUserRequest struct{}
 
 // GetAuthUserResponse represents the authenticated user's information
 type GetAuthUserResponse struct {
-	Email           string    `json:"email,omitempty" example:"user@example.com"`
-	LifetimeIncome  *float64  `json:"lifetime_income,omitempty" example:"50000.00"`
-	LifetimeExpense *float64  `json:"lifetime_expense,omitempty" example:"30000.00"`
-	UseLlmParsing   *bool     `json:"use_llm_parsing,omitempty" example:"true"`
-	LlmParseCredits *int      `json:"llm_parse_credits,omitempty" example:"100"`
-	IsActive        *bool     `json:"is_active,omitempty" example:"true"`
-	DatabaseUrl     *string   `json:"database_url,omitempty" example:"postgresql://user:pass@localhost/db"`
-	CreatedAt       time.Time `json:"created_at,omitempty" example:"2025-01-02T15:04:05Z"`
-	UpdatedAt       time.Time `json:"updated_at,omitempty" example:"2025-01-02T15:04:05Z"`
+	Email                        string    `json:"email,omitempty" example:"user@example.com"`
+	LifetimeIncome               *float64  `json:"lifetime_income,omitempty" example:"50000.00"`
+	LifetimeExpense              *float64  `json:"lifetime_expense,omitempty" example:"30000.00"`
+	UseLlmParsing                *bool     `json:"use_llm_parsing,omitempty" example:"true"`
+	LlmParseCredits              *int      `json:"llm_parse_credits,omitempty" example:"100"`
+	IsActive                     *bool     `json:"is_active,omitempty" example:"true"`
+	DatabaseUrl                  *string   `json:"database_url,omitempty"`
+	CreatedAt                    time.Time `json:"created_at" example:"2025-01-02T15:04:05Z"`
+	UpdatedAt                    time.Time `json:"updated_at" example:"2025-01-02T15:04:05Z"`
+	TransactionImageParseAttempt uint      `json:"transaction_image_parse_attempt,omitempty"`
+	TransactionImageParseSuccess uint      `json:"transaction_image_parse_success,omitempty"`
 }
 
 func (u *GetAuthUserRequest) Validate() error {

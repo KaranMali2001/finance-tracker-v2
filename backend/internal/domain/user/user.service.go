@@ -32,3 +32,6 @@ func (s *UserService) UpdateUser(c echo.Context, payload *UpdateUserReq, clerkId
 func (s *UserService) GetUserByClerkId(c echo.Context, clerkId string) (*User, error) {
 	return s.repository.GetUserByClerkId(c.Request().Context(), clerkId)
 }
+func (s *UserService) UpdateUserInternal(c echo.Context, payload *UpdateUserInternal, clerkId string) (*User, error) {
+	return s.repository.UpdateUserInternal(c.Request().Context(), payload, clerkId)
+}

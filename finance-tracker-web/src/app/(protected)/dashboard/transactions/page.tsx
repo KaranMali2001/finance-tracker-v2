@@ -1,29 +1,22 @@
 'use client';
 
-import {
-  ConfirmDialog,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/shared/dialog';
+import { ConfirmDialog } from '@/components/shared/dialog';
 import { useDeleteTransactions, useTransactions } from '@/components/shared/hooks/useTransaction';
 import { EmptyState, ErrorState, LoadingState, PageShell } from '@/components/shared/layout';
 import type { Transaction } from '@/components/shared/types';
 import { formatDate, formatRupees, getTypeColor } from '@/components/shared/utils';
 import { Button } from '@/components/ui/button';
 import { Plus, Receipt, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { TransactionCreateForm } from '../../../../components/transactionComponents/TransactionCreateForm/TransactionCreateForm';
 
 export default function TransactionsPage() {
   const { data: transactions, isLoading, error, refetch, isFetching } = useTransactions();
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { mutate: deleteTransactions, isPending: isDeleting } = useDeleteTransactions();
-
+  const router = useRouter();
   // Show loading state while fetching or when data hasn't been loaded yet
   if (isLoading || isFetching || transactions === undefined) {
     return (
@@ -52,28 +45,10 @@ export default function TransactionsPage() {
           action={{
             label: 'Create Transaction',
             onClick: () => {
-              setIsCreateDialogOpen(true);
+              router.push('/dashboard/transactions/new');
             },
           }}
         />
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Transaction</DialogTitle>
-              <DialogDescription>
-                Fill in the details to create a new financial transaction.
-              </DialogDescription>
-            </DialogHeader>
-            <TransactionCreateForm
-              onSuccess={() => {
-                setIsCreateDialogOpen(false);
-              }}
-              onCancel={() => {
-                setIsCreateDialogOpen(false);
-              }}
-            />
-          </DialogContent>
-        </Dialog>
       </PageShell>
     );
   }
@@ -107,9 +82,11 @@ export default function TransactionsPage() {
       title="Transactions"
       description="View and manage your financial transactions"
       actions={
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Transaction
+        <Button asChild>
+          <Link href="/dashboard/transactions/new">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Transaction
+          </Link>
         </Button>
       }
     >
@@ -203,24 +180,6 @@ export default function TransactionsPage() {
           </div>
         ))}
       </div>
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Transaction</DialogTitle>
-            <DialogDescription>
-              Fill in the details to create a new financial transaction.
-            </DialogDescription>
-          </DialogHeader>
-          <TransactionCreateForm
-            onSuccess={() => {
-              setIsCreateDialogOpen(false);
-            }}
-            onCancel={() => {
-              setIsCreateDialogOpen(false);
-            }}
-          />
-        </DialogContent>
-      </Dialog>
       <ConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}

@@ -96,3 +96,25 @@ func (h *TxnHandler) SoftDeleteTxns(c echo.Context) error {
 		&SoftDeleteTxnsReq{},
 	)(c)
 }
+
+// ParseTxn godoc
+// @Summary Parse transaction from image
+// @Description Parses transaction information from an uploaded image using AI/OCR for the authenticated user
+// @Tags Transaction
+// @Accept multipart/form-data
+// @Produce json
+// @Name ParseTxn
+// @Param image formData file true "Transaction image file (JPEG, PNG, GIF, WEBP)"
+// @Success 200 {object} ParsedTxnRes
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /transaction/image-parse [post]
+func (h *TxnHandler) ParseTxn(c echo.Context) error {
+	return handler.HandleUpload(h.base, func(c echo.Context, payload *ParseTxnImgReq) (*ParsedTxnRes, error) {
+		return h.service.ParseTxnImage(c, payload, middleware.GetUserID(c))
+	},
+		http.StatusOK,
+		&ParseTxnImgReq{},
+	)(c)
+}

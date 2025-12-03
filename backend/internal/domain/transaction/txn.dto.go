@@ -81,3 +81,26 @@ type SoftDeleteTxnsReq struct {
 func (s *SoftDeleteTxnsReq) Validate() error {
 	return validator.New().Struct(s)
 }
+
+type ParseTxnImgReq struct{}
+
+func (s *ParseTxnImgReq) Validate() error {
+	return nil
+}
+
+type ParsedTxnRes struct {
+	Amount            float64    `json:"amount,omitempty"`
+	AccountNum        *string    `json:"account_num,omitempty"`
+	CategoryId        *string    `json:"category_id,omitempty"`
+	MerchantId        *string    `json:"merchant_id,omitempty"`
+	Type              string     `json:"type,omitempty"`
+	Description       *string    `json:"description,omitempty"`
+	Notes             *string    `json:"notes,omitempty"`
+	Tags              *string    `json:"tags,omitempty"`
+	PaymentMethod     *string    `json:"payment_method,omitempty"`
+	ReferenceNumber   *string    `json:"reference_number,omitempty"`
+	TransactionDate   *time.Time `json:"transaction_date,omitempty"`
+	TransactionTime   *time.Time `json:"transaction_time,omitempty"`
+	TransactionType   *string    `json:"transaction_type,omitempty"`
+	TransactionAmount *float64   `json:"transaction_amount,omitempty"`
+}

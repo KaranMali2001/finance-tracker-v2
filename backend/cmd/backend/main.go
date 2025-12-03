@@ -33,8 +33,11 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/transaction"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/user"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/logger"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/queue"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/router"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/services"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
 	"github.com/clerk/clerk-sdk-go/v2"
 )
 
@@ -53,15 +56,25 @@ func main() {
 	// Initialize Clerk SDK with secret key for token validation
 	clerk.SetKey(cfg.Auth.SecretKey)
 	log.Info().Msg("Clerk SDK initialized")
+	globalSvcs, err := services.NewServices(cfg, log)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to start global services")
+	}
+	taskService := tasks.NewTaskService(globalSvcs)
+	//create new job service
+	q := queue.NewJobService(log, cfg, taskService)
 
+	if err := q.Start(); err != nil {
+		log.Error().Err(err).Msg("failed to start Queue services")
+	}
 	if err := migrate.MigrateAndSeed(&cfg.Database); err != nil {
 		log.Fatal().Err(err).Msg("failed to migrate database")
 	}
-	server, err := server.New(cfg, &log, loggerService)
+	server, err := server.New(cfg, log, loggerService)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create server")
 	}
-	db, err := database.New(cfg, &log, loggerService)
+	db, err := database.New(cfg, log, loggerService)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create database")
 	}
@@ -73,8 +86,10 @@ func main() {
 	queries := generated.New(server.DB.Pool)
 	systemModule := system.NewModule(system.Dependencies{Server: server})
 	authModule := auth.NewModule(auth.Dependencies{
-		Server:  server,
-		Queries: queries,
+		Server:       server,
+		Queries:      queries,
+		TaskService:  taskService,
+		QueueService: q,
 	})
 	userModule := user.NewModule(user.Deps{
 		Server:  server,
@@ -89,9 +104,11 @@ func main() {
 		Queries: queries,
 	})
 	transactionModule := transaction.NewTxnModule(transaction.Deps{
-		Server:  server,
-		Queries: queries,
-		UserSvc: userModule.GetUserService(),
+		Server:    server,
+		Queries:   queries,
+		UserSvc:   userModule.GetUserService(),
+		GeminiSvc: globalSvcs.GeminiService,
+		StaticSvc: staticModule.GetService(),
 	})
 	log.Info().
 		Strs("cors_origins", cfg.Server.CORSAllowedOrigins).

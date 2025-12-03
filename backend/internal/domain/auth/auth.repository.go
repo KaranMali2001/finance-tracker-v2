@@ -45,14 +45,16 @@ func (r *AuthRepository) GetAuthUser(c context.Context, clerkId string) (*GetAut
 	}
 	return &GetAuthUserResponse{
 
-		Email:           user.Email,
-		LifetimeIncome:  utils.NumericToFloat64Ptr(user.LifetimeIncome),
-		LifetimeExpense: utils.NumericToFloat64Ptr(user.LifetimeExpense),
-		UseLlmParsing:   utils.BoolToBoolPtr(user.UseLlmParsing),
-		LlmParseCredits: utils.Int4ToIntPtr(user.LlmParseCredits),
-		IsActive:        utils.BoolToBoolPtr(user.IsActive),
-		DatabaseUrl:     utils.TextToStringPtr(user.DatabaseUrl),
-		CreatedAt:       utils.TimestampToTime(user.CreatedAt),
-		UpdatedAt:       utils.TimestampToTime(user.UpdatedAt),
+		Email:                        user.Email,
+		LifetimeIncome:               utils.NumericToFloat64Ptr(user.LifetimeIncome),
+		LifetimeExpense:              utils.NumericToFloat64Ptr(user.LifetimeExpense),
+		UseLlmParsing:                utils.BoolToBoolPtr(user.UseLlmParsing),
+		LlmParseCredits:              utils.Int4ToIntPtr(user.LlmParseCredits),
+		IsActive:                     utils.BoolToBoolPtr(user.IsActive),
+		DatabaseUrl:                  utils.TextToStringPtr(user.DatabaseUrl),
+		CreatedAt:                    utils.TimestampToTime(user.CreatedAt),
+		UpdatedAt:                    utils.TimestampToTime(user.UpdatedAt),
+		TransactionImageParseAttempt: utils.Int4ToUint(user.TransactionImageParseAttempts),
+		TransactionImageParseSuccess: utils.Int4ToUint(user.TransactionImageParseSuccesses),
 	}, nil
 }
