@@ -12,6 +12,8 @@ export type { internal_domain_account_Bank } from './models/internal_domain_acco
 export type { internal_domain_account_CreateAccountReq } from './models/internal_domain_account_CreateAccountReq';
 export type { internal_domain_account_UpdateAccountReq } from './models/internal_domain_account_UpdateAccountReq';
 export type { internal_domain_auth_GetAuthUserResponse } from './models/internal_domain_auth_GetAuthUserResponse';
+export type { internal_domain_sms_CreateSmsReq } from './models/internal_domain_sms_CreateSmsReq';
+export type { internal_domain_sms_SmsLogs } from './models/internal_domain_sms_SmsLogs';
 export type { internal_domain_static_Bank } from './models/internal_domain_static_Bank';
 export type { internal_domain_static_Categories } from './models/internal_domain_static_Categories';
 export type { internal_domain_static_Merchants } from './models/internal_domain_static_Merchants';
@@ -27,6 +29,7 @@ export type { internal_domain_user_User } from './models/internal_domain_user_Us
 
 export { AccountService } from './services/AccountService';
 export { AuthService } from './services/AuthService';
+export { SmsService } from './services/SmsService';
 export { StaticService } from './services/StaticService';
 export { SystemService } from './services/SystemService';
 export { TransactionService } from './services/TransactionService';

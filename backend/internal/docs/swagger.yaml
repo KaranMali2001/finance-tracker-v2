@@ -113,6 +113,46 @@ definitions:
         example: true
         type: boolean
     type: object
+  internal_domain_sms.CreateSmsReq:
+    properties:
+      raw_message:
+        type: string
+      received_at:
+        type: string
+      sender:
+        type: string
+    type: object
+  internal_domain_sms.SmsLogs:
+    properties:
+      created_at:
+        type: string
+      error_message:
+        type: string
+      id:
+        type: string
+      last_retry_at:
+        type: string
+      llm_parsed:
+        type: boolean
+      llm_parsed_attempted:
+        type: boolean
+      llm_response:
+        type: string
+      parsing_status:
+        type: string
+      raw_message:
+        type: string
+      received_at:
+        type: string
+      retry_count:
+        type: integer
+      sender:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
   internal_domain_static.Bank:
     properties:
       code:
@@ -584,6 +624,116 @@ paths:
       summary: Health status
       tags:
         - System
+  /sms:
+    get:
+      description: Retrieves all SMS logs for the authenticated user
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: "#/definitions/internal_domain_sms.SmsLogs"
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all SMS logs
+      tags:
+        - SMS
+    post:
+      consumes:
+        - application/json
+      description: Creates a new SMS log entry
+      parameters:
+        - description: SMS creation request
+          in: body
+          name: sms
+          required: true
+          schema:
+            $ref: "#/definitions/internal_domain_sms.CreateSmsReq"
+      produces:
+        - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: "#/definitions/internal_domain_sms.SmsLogs"
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new SMS log
+      tags:
+        - SMS
+  /sms/{id}:
+    get:
+      description: Retrieves a specific SMS log by its ID for the authenticated user
+      parameters:
+        - description: SMS ID
+          format: uuid
+          in: path
+          name: id
+          required: true
+          type: string
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/internal_domain_sms.SmsLogs"
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get SMS log by ID
+      tags:
+        - SMS
   /static/bank:
     get:
       description: Retrieves a list of all available banks

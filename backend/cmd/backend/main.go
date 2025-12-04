@@ -28,6 +28,7 @@ import (
 	docs "github.com/KaranMali2001/finance-tracker-v2-backend/internal/docs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/account"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/auth"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/sms"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/static"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/system"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/transaction"
@@ -110,12 +111,16 @@ func main() {
 		GeminiSvc: globalSvcs.GeminiService,
 		StaticSvc: staticModule.GetService(),
 	})
+	smsModule := sms.NewSmsModule(sms.Deps{
+		Server:  server,
+		Queries: queries,
+	})
 	log.Info().
 		Strs("cors_origins", cfg.Server.CORSAllowedOrigins).
 		Msg("CORS configuration loaded")
 	r := router.NewRouter(server,
 		[]router.RouteRegistrar{systemModule},
-		[]router.RouteRegistrar{authModule, userModule, accountModule, staticModule, transactionModule},
+		[]router.RouteRegistrar{authModule, userModule, accountModule, staticModule, transactionModule, smsModule},
 	)
 	docs.SwaggerInfo.Title = "Finance Tracker API"
 	docs.SwaggerInfo.Description = "API documentation for Finance Tracker services."
