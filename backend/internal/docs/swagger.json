@@ -875,6 +875,49 @@
           }
         }
       }
+    },
+    "/user/generate-api-key": {
+      "get": {
+        "description": "Generates a new API key for the authenticated user",
+        "produces": ["application/json"],
+        "tags": ["User"],
+        "summary": "Generate API key",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/internal_domain_user.User"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -999,6 +1042,9 @@
     "internal_domain_auth.GetAuthUserResponse": {
       "type": "object",
       "properties": {
+        "api_key": {
+          "type": "string"
+        },
         "created_at": {
           "type": "string",
           "example": "2025-01-02T15:04:05Z"
@@ -1025,6 +1071,9 @@
         "llm_parse_credits": {
           "type": "integer",
           "example": 100
+        },
+        "qr_string": {
+          "type": "string"
         },
         "transaction_image_parse_attempt": {
           "type": "integer"
@@ -1400,6 +1449,9 @@
     "internal_domain_user.User": {
       "type": "object",
       "properties": {
+        "api_key": {
+          "type": "string"
+        },
         "clerk_id": {
           "type": "string"
         },
@@ -1420,6 +1472,9 @@
         },
         "lifetime_income": {
           "type": "number"
+        },
+        "qr_string": {
+          "type": "string"
         },
         "transaction_image_parse_attempt": {
           "type": "integer"

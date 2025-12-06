@@ -12,7 +12,7 @@ import (
 )
 
 const getAuthUser = `-- name: GetAuthUser :one
-SELECT clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes FROM users WHERE clerk_id=$1
+SELECT clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string FROM users WHERE clerk_id=$1
 `
 
 func (q *Queries) GetAuthUser(ctx context.Context, clerkID string) (User, error) {
@@ -31,6 +31,34 @@ func (q *Queries) GetAuthUser(ctx context.Context, clerkID string) (User, error)
 		&i.UpdatedAt,
 		&i.TransactionImageParseAttempts,
 		&i.TransactionImageParseSuccesses,
+		&i.ApiKey,
+		&i.QrString,
+	)
+	return i, err
+}
+
+const getUserByApiKey = `-- name: GetUserByApiKey :one
+SELECT clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string FROM users WHERE api_key=$1
+`
+
+func (q *Queries) GetUserByApiKey(ctx context.Context, apiKey pgtype.Text) (User, error) {
+	row := q.db.QueryRow(ctx, getUserByApiKey, apiKey)
+	var i User
+	err := row.Scan(
+		&i.ClerkID,
+		&i.Email,
+		&i.DatabaseUrl,
+		&i.LifetimeIncome,
+		&i.LifetimeExpense,
+		&i.UseLlmParsing,
+		&i.LlmParseCredits,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.TransactionImageParseAttempts,
+		&i.TransactionImageParseSuccesses,
+		&i.ApiKey,
+		&i.QrString,
 	)
 	return i, err
 }
@@ -38,7 +66,7 @@ func (q *Queries) GetAuthUser(ctx context.Context, clerkID string) (User, error)
 const insertUser = `-- name: InsertUser :one
 INSERT INTO users (email, clerk_id)
 VALUES ($1, $2)
-RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes
+RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string
 `
 
 type InsertUserParams struct {
@@ -62,6 +90,8 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, e
 		&i.UpdatedAt,
 		&i.TransactionImageParseAttempts,
 		&i.TransactionImageParseSuccesses,
+		&i.ApiKey,
+		&i.QrString,
 	)
 	return i, err
 }
@@ -72,7 +102,7 @@ UPDATE users SET
   database_url=COALESCE($2, database_url),
   lifetime_income=COALESCE($3, lifetime_income),
   lifetime_expense=COALESCE($4, lifetime_expense)
-WHERE clerk_id=$5 RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes
+WHERE clerk_id=$5 RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string
 `
 
 type UpdateUserParams struct {
@@ -105,6 +135,8 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.UpdatedAt,
 		&i.TransactionImageParseAttempts,
 		&i.TransactionImageParseSuccesses,
+		&i.ApiKey,
+		&i.QrString,
 	)
 	return i, err
 }

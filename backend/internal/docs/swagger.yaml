@@ -82,6 +82,8 @@ definitions:
     type: object
   internal_domain_auth.GetAuthUserResponse:
     properties:
+      api_key:
+        type: string
       created_at:
         example: "2025-01-02T15:04:05Z"
         type: string
@@ -102,6 +104,8 @@ definitions:
       llm_parse_credits:
         example: 100
         type: integer
+      qr_string:
+        type: string
       transaction_image_parse_attempt:
         type: integer
       transaction_image_parse_success:
@@ -356,6 +360,8 @@ definitions:
     type: object
   internal_domain_user.User:
     properties:
+      api_key:
+        type: string
       clerk_id:
         type: string
       created_at:
@@ -370,6 +376,8 @@ definitions:
         type: number
       lifetime_income:
         type: number
+      qr_string:
+        type: string
       transaction_image_parse_attempt:
         type: integer
       transaction_image_parse_success:
@@ -1021,6 +1029,37 @@ paths:
               type: string
             type: object
       summary: Update user
+      tags:
+        - User
+  /user/generate-api-key:
+    get:
+      description: Generates a new API key for the authenticated user
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/internal_domain_user.User"
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Generate API key
       tags:
         - User
 securityDefinitions:

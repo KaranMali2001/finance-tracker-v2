@@ -45,10 +45,12 @@ type GetAuthUserResponse struct {
 	LlmParseCredits              *int      `json:"llm_parse_credits,omitempty" example:"100"`
 	IsActive                     *bool     `json:"is_active,omitempty" example:"true"`
 	DatabaseUrl                  *string   `json:"database_url,omitempty"`
-	CreatedAt                    time.Time `json:"created_at" example:"2025-01-02T15:04:05Z"`
-	UpdatedAt                    time.Time `json:"updated_at" example:"2025-01-02T15:04:05Z"`
+	CreatedAt                    time.Time `json:"created_at,omitempty" example:"2025-01-02T15:04:05Z"`
+	UpdatedAt                    time.Time `json:"updated_at,omitempty" example:"2025-01-02T15:04:05Z"`
 	TransactionImageParseAttempt uint      `json:"transaction_image_parse_attempt,omitempty"`
 	TransactionImageParseSuccess uint      `json:"transaction_image_parse_success,omitempty"`
+	ApiKey                       string    `json:"api_key,omitempty"`
+	QrString                     string    `json:"qr_string,omitempty"`
 }
 
 func (u *GetAuthUserRequest) Validate() error {

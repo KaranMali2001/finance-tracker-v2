@@ -29,8 +29,18 @@ type User struct {
 	DatabaseUrl                  string    `json:"database_url,omitempty"`
 	TransactionImageParseAttempt uint      `json:"transaction_image_parse_attempt,omitempty"`
 	TransactionImageParseSuccess uint      `json:"transaction_image_parse_success,omitempty"`
+	ApiKey                       string    `json:"api_key,omitempty"`
+	QrString                     string    `json:"qr_string,omitempty"`
 }
+
 type UpdateUserInternal struct {
-	TransactionImageParseAttempt *uint `json:"transaction_image_parse_attempt"`
-	TransactionImageParseSuccess *uint `json:"transaction_image_parse_success"`
+	TransactionImageParseAttempt *uint   `json:"transaction_image_parse_attempt,omitempty" validate:"omitempty,min=0"`
+	TransactionImageParseSuccess *uint   `json:"transaction_image_parse_success,omitempty" validate:"omitempty,min=0"`
+	ApiKey                       *string `json:"api_key,omitempty"`
+	QrString                     *string `json:"qr_string,omitempty"`
+}
+type GenerateApiKeyReq struct{}
+
+func (u *GenerateApiKeyReq) Validate() error {
+	return nil
 }

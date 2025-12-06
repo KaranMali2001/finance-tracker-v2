@@ -56,5 +56,7 @@ func (r *AuthRepository) GetAuthUser(c context.Context, clerkId string) (*GetAut
 		UpdatedAt:                    utils.TimestampToTime(user.UpdatedAt),
 		TransactionImageParseAttempt: utils.Int4ToUint(user.TransactionImageParseAttempts),
 		TransactionImageParseSuccess: utils.Int4ToUint(user.TransactionImageParseSuccesses),
+		ApiKey:                       utils.TextToString(user.ApiKey),
+		QrString:                     utils.TextToString(user.QrString),
 	}, nil
 }

@@ -25,6 +25,7 @@ require (
 	github.com/redis/go-redis/v9 v9.16.0
 	github.com/resend/resend-go/v2 v2.28.0
 	github.com/rs/zerolog v1.34.0
+	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/svix/svix-webhooks v1.81.0
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.6

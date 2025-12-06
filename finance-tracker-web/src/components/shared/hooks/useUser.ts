@@ -45,3 +45,23 @@ export function useUpdateUser() {
     }
   );
 }
+
+/**
+ * Generate API key hook
+ * Generates a new API key for the authenticated user
+ */
+export function useGenerateApiKey() {
+  const queryClient = useQueryClient();
+
+  return useApiMutation<internal_domain_user_User, void>(
+    () => UserService.getUserGenerateApiKey(),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+      },
+      showToastOnSuccess: true,
+      successMessage: 'API key generated successfully',
+      showToastOnError: true,
+    }
+  );
+}

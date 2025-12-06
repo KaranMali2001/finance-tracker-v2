@@ -32,5 +32,5 @@ func (m *Module) GetUserService() *UserService {
 func (m *Module) RegisterRoutes(g *echo.Group) {
 	authMiddleware := middleware.NewAuthMiddleware(m.handler.server).RequireAuth
 	g.PUT("/user", m.handler.UpdateUser, authMiddleware)
-
+	g.GET("/user/generate-api-key", m.handler.GenerateApiKey, authMiddleware)
 }

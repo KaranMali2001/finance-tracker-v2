@@ -8,25 +8,42 @@ import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class UserService {
-    /**
-     * Update user
-     * Updates the authenticated user's information
-     * @param user User update request
-     * @returns internal_domain_user_User OK
-     * @throws ApiError
-     */
-    public static putUser(
-        user: internal_domain_user_UpdateUserReq,
-    ): CancelablePromise<internal_domain_user_User> {
-        return __request(OpenAPI, {
-            method: 'PUT',
-            url: '/user',
-            body: user,
-            errors: {
-                400: `Bad Request`,
-                401: `Unauthorized`,
-                500: `Internal Server Error`,
-            },
-        });
-    }
+  /**
+   * Update user
+   * Updates the authenticated user's information
+   * @param user User update request
+   * @returns internal_domain_user_User OK
+   * @throws ApiError
+   */
+  public static putUser(
+    user: internal_domain_user_UpdateUserReq
+  ): CancelablePromise<internal_domain_user_User> {
+    return __request(OpenAPI, {
+      method: 'PUT',
+      url: '/user',
+      body: user,
+      errors: {
+        400: `Bad Request`,
+        401: `Unauthorized`,
+        500: `Internal Server Error`,
+      },
+    });
+  }
+  /**
+   * Generate API key
+   * Generates a new API key for the authenticated user
+   * @returns internal_domain_user_User OK
+   * @throws ApiError
+   */
+  public static getUserGenerateApiKey(): CancelablePromise<internal_domain_user_User> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/user/generate-api-key',
+      errors: {
+        400: `Bad Request`,
+        401: `Unauthorized`,
+        500: `Internal Server Error`,
+      },
+    });
+  }
 }

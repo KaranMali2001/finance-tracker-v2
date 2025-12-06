@@ -42,6 +42,8 @@ func (r *UserRepository) UpdateUser(c context.Context, updateUser *UpdateUserReq
 		UseLlmParsing:   utils.BoolToBool(u.UseLlmParsing),
 		CreatedAt:       utils.TimestampToTime(u.CreatedAt),
 		UpdatedAt:       utils.TimestampToTime(u.UpdatedAt),
+		ApiKey:          utils.TextToString(u.ApiKey),
+		QrString:        utils.TextToString(u.QrString),
 	}, nil
 
 }
@@ -62,6 +64,8 @@ func (r *UserRepository) GetUserByClerkId(c context.Context, clerkId string) (*U
 		UpdatedAt:                    utils.TimestampToTime(user.UpdatedAt),
 		TransactionImageParseAttempt: utils.Int4ToUint(user.TransactionImageParseAttempts),
 		TransactionImageParseSuccess: utils.Int4ToUint(user.TransactionImageParseSuccesses),
+		ApiKey:                       utils.TextToString(user.ApiKey),
+		QrString:                     utils.TextToString(user.QrString),
 	}, nil
 }
 func (r *UserRepository) UpdateUserInternal(c context.Context, payload *UpdateUserInternal, clerkId string) (*User, error) {
@@ -69,6 +73,8 @@ func (r *UserRepository) UpdateUserInternal(c context.Context, payload *UpdateUs
 		ClerkID:                        clerkId,
 		TransactionImageParseAttempts:  utils.IntPtrToInt4(payload.TransactionImageParseAttempt),
 		TransactionImageParseSuccesses: utils.IntPtrToInt4(payload.TransactionImageParseSuccess),
+		ApiKey:                         utils.StringPtrToText(payload.ApiKey),
+		QrString:                       utils.StringPtrToText(payload.QrString),
 	}
 	user, err := r.queries.UpdateUserInternal(c, updateReqParams)
 	if err != nil {
@@ -86,5 +92,29 @@ func (r *UserRepository) UpdateUserInternal(c context.Context, payload *UpdateUs
 		UpdatedAt:                    utils.TimestampToTime(user.UpdatedAt),
 		TransactionImageParseAttempt: utils.Int4ToUint(user.TransactionImageParseAttempts),
 		TransactionImageParseSuccess: utils.Int4ToUint(user.TransactionImageParseSuccesses),
+		ApiKey:                       utils.TextToString(user.ApiKey),
+		QrString:                     utils.TextToString(user.QrString),
+	}, nil
+}
+
+func (r *UserRepository) GetUserByApiKey(c context.Context, apiKey string) (*User, error) {
+	user, err := r.queries.GetUserByApiKey(c, utils.StringToPgtypeText(apiKey))
+	if err != nil {
+		return nil, err
+	}
+	return &User{
+
+		Email:                        user.Email,
+		LifetimeIncome:               utils.NumericToFloat64(user.LifetimeIncome),
+		LifetimeExpense:              utils.NumericToFloat64(user.LifetimeExpense),
+		UseLlmParsing:                utils.BoolToBool(user.UseLlmParsing),
+		IsActive:                     utils.BoolToBool(user.IsActive),
+		DatabaseUrl:                  utils.TextToString(user.DatabaseUrl),
+		CreatedAt:                    utils.TimestampToTime(user.CreatedAt),
+		UpdatedAt:                    utils.TimestampToTime(user.UpdatedAt),
+		TransactionImageParseAttempt: utils.Int4ToUint(user.TransactionImageParseAttempts),
+		TransactionImageParseSuccess: utils.Int4ToUint(user.TransactionImageParseSuccesses),
+		ApiKey:                       utils.TextToString(user.ApiKey),
+		QrString:                     utils.TextToString(user.QrString),
 	}, nil
 }

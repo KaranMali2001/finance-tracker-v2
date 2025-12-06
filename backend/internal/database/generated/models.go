@@ -467,6 +467,8 @@ type User struct {
 	UpdatedAt                      pgtype.Timestamp
 	TransactionImageParseAttempts  pgtype.Int4
 	TransactionImageParseSuccesses pgtype.Int4
+	ApiKey                         pgtype.Text
+	QrString                       pgtype.Text
 }
 
 type UserNotification struct {

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Edit2, X } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { ApiKeySection } from './ApiKeySection';
 import { ProfileUpdateForm } from './ProfileUpdateForm';
 
 export default function ProfilePage() {
@@ -88,6 +89,8 @@ export default function ProfilePage() {
             </div>
           </CardContent>
         </Card>
+
+        {!isEditing && <ApiKeySection apiKey={userData?.api_key} qrString={userData?.qr_string} />}
 
         {isEditing ? (
           <ProfileUpdateForm

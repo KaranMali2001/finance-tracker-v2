@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type internal_domain_auth_GetAuthUserResponse = {
+  api_key?: string;
   created_at?: string;
   database_url?: string;
   email?: string;
@@ -10,6 +11,7 @@ export type internal_domain_auth_GetAuthUserResponse = {
   lifetime_expense?: number;
   lifetime_income?: number;
   llm_parse_credits?: number;
+  qr_string?: string;
   transaction_image_parse_attempt?: number;
   transaction_image_parse_success?: number;
   updated_at?: string;

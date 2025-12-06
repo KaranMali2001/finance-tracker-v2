@@ -13,3 +13,6 @@ UPDATE users SET
   lifetime_income=COALESCE($3, lifetime_income),
   lifetime_expense=COALESCE($4, lifetime_expense)
 WHERE clerk_id=$5 RETURNING *;
+
+-- name: GetUserByApiKey :one
+SELECT * FROM users WHERE api_key=$1 ;
