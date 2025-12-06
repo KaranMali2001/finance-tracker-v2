@@ -21,3 +21,6 @@ export * from './display';
 
 // Hooks
 export * from './hooks';
+
+// Table Components
+export * from './table';

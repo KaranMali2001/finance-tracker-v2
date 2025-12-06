@@ -49,6 +49,12 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.90.11
         version: 5.90.11(react@19.2.0)
+      ag-grid-community:
+        specifier: ^34.3.1
+        version: 34.3.1
+      ag-grid-react:
+        specifier: ^34.3.1
+        version: 34.3.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       axios:
         specifier: ^1.13.2
         version: 1.13.2
@@ -1458,6 +1464,27 @@ packages:
       {
         integrity: sha512-MWtvHrGZLFttgeEj28VXHxpmwYbor/ATPYbBfSFZEIRK0ecCFLl2Qo55z52Hss+UV9CRN7trSeq1zbgx7YDWWg==,
       }
+
+  ag-charts-types@12.3.1:
+    resolution:
+      {
+        integrity: sha512-5216xYoawnvMXDFI6kTpPku+mH0Csiwu/FE7lsAm8Z22HEN6ciSG/V7g+IrpLWncELqksgENebCTP75PZ3CsHA==,
+      }
+
+  ag-grid-community@34.3.1:
+    resolution:
+      {
+        integrity: sha512-PwlrPudsFOzGumphi2y9ihWeaUlIwKhOra/MXu2LjeV2U8DgLLcYS8CartE5Hszhn1poJHawwI9HWrxlKliwdw==,
+      }
+
+  ag-grid-react@34.3.1:
+    resolution:
+      {
+        integrity: sha512-1UTlBT+xJkjNZAuf7RxK61mgxKGTPB+6XR99oIHq7cYC89kJmLbWqhHt/1XqRWF5cAgSKk8u+HtOQaN8tAZStw==,
+      }
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   ansi-escapes@7.2.0:
     resolution:
@@ -3566,6 +3593,19 @@ snapshots:
   '@types/react@19.2.7':
     dependencies:
       csstype: 3.2.3
+
+  ag-charts-types@12.3.1: {}
+
+  ag-grid-community@34.3.1:
+    dependencies:
+      ag-charts-types: 12.3.1
+
+  ag-grid-react@34.3.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+    dependencies:
+      ag-grid-community: 34.3.1
+      prop-types: 15.8.1
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
 
   ansi-escapes@7.2.0:
     dependencies:

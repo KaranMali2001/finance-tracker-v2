@@ -184,3 +184,48 @@ input[type='number']::-webkit-outer-spin-button {
 input[type='number'] {
   -moz-appearance: textfield;
 }
+
+/* AG Grid intersecting grid lines - vertical and horizontal borders */
+/* Using legacy theme mode - ensures borders intersect at cell corners */
+.ag-theme-quartz {
+  --ag-borders: solid;
+  --ag-border-color: oklch(0.45 0 0);
+  --ag-border-width: 1px;
+  --ag-row-border-color: oklch(0.45 0 0);
+  --ag-header-column-separator-color: oklch(0.45 0 0);
+  --ag-header-column-separator-display: block;
+  --ag-header-column-separator-width: 1px;
+}
+
+.dark .ag-theme-quartz {
+  --ag-border-color: oklch(0.3 0 0);
+  --ag-row-border-color: oklch(0.3 0 0);
+  --ag-header-column-separator-color: oklch(0.3 0 0);
+}
+
+/* Ensure all cells have borders that intersect - vertical and horizontal */
+.ag-theme-quartz .ag-cell {
+  border-right: 1px solid var(--ag-border-color) !important;
+  border-bottom: 1px solid var(--ag-row-border-color) !important;
+}
+
+.ag-theme-quartz .ag-header-cell {
+  border-right: 1px solid var(--ag-border-color) !important;
+  border-bottom: 1px solid var(--ag-row-border-color) !important;
+}
+
+/* Remove border from last column */
+.ag-theme-quartz .ag-cell:last-child,
+.ag-theme-quartz .ag-header-cell:last-child {
+  border-right: none !important;
+}
+
+/* Remove border from last row */
+.ag-theme-quartz .ag-row:last-child .ag-cell {
+  border-bottom: none !important;
+}
+
+/* Ensure header row has bottom border to separate from data */
+.ag-theme-quartz .ag-header-row:last-child .ag-header-cell {
+  border-bottom: 1px solid var(--ag-row-border-color) !important;
+}
