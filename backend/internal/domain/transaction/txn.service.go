@@ -17,20 +17,20 @@ import (
 )
 
 type TxnService struct {
-	s         *server.Server
-	r         *TxnRepository
-	userSvc   *user.UserService
-	geminiSvc *aiservices.GeminiService
-	StaticSvc *static.StaticService
+	s          *server.Server
+	r          *TxnRepository
+	userRepo   *user.UserRepository
+	geminiSvc  *aiservices.GeminiService
+	staticRepo *static.StaticRepository
 }
 
-func NewTxnService(s *server.Server, r *TxnRepository, userSvc *user.UserService, geminiSvc *aiservices.GeminiService, staticSvc *static.StaticService) *TxnService {
+func NewTxnService(s *server.Server, r *TxnRepository, userRepo *user.UserRepository, geminiSvc *aiservices.GeminiService, staticRepo *static.StaticRepository) *TxnService {
 	return &TxnService{
-		s:         s,
-		r:         r,
-		userSvc:   userSvc,
-		geminiSvc: geminiSvc,
-		StaticSvc: staticSvc,
+		s:          s,
+		r:          r,
+		userRepo:   userRepo,
+		geminiSvc:  geminiSvc,
+		staticRepo: staticRepo,
 	}
 }
 
@@ -42,7 +42,7 @@ func (s *TxnService) CreateTxn(c echo.Context, payload *CreateTxnReq, clerkId st
 	if err != nil {
 		return nil, err
 	}
-	userData, err := s.userSvc.GetUserByClerkId(c, clerkId)
+	userData, err := s.userRepo.GetUserByClerkId(c.Request().Context(), clerkId)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (s *TxnService) CreateTxn(c echo.Context, payload *CreateTxnReq, clerkId st
 	if updateUserReq.LifetimeExpense == nil && updateUserReq.LifetimeIncome == nil {
 		return txn, nil
 	}
-	_, err = s.userSvc.UpdateUser(c, updateUserReq, clerkId)
+	_, err = s.userRepo.UpdateUser(c.Request().Context(), updateUserReq, clerkId)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (s *TxnService) GetTxnsWithFilters(c echo.Context, payload *GetTxnsWithFilt
 func (s *TxnService) SoftDeleteTxns(c echo.Context, payload *SoftDeleteTxnsReq, clerkId string) error {
 	log := middleware.GetLogger(c)
 	log.Info().Msgf("Soft Deleting Transactions %v for User %v", payload.Ids, clerkId)
-	userData, err := s.userSvc.GetUserByClerkId(c, clerkId)
+	userData, err := s.userRepo.GetUserByClerkId(c.Request().Context(), clerkId)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (s *TxnService) SoftDeleteTxns(c echo.Context, payload *SoftDeleteTxnsReq, 
 	updateUserReq.LifetimeExpense = &newExpense
 	updateUserReq.LifetimeIncome = &newIncome
 
-	_, err = s.userSvc.UpdateUser(c, updateUserReq, clerkId)
+	_, err = s.userRepo.UpdateUser(c.Request().Context(), updateUserReq, clerkId)
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func (s *TxnService) UpdateTxn(c echo.Context, payload *UpdateTxnReq, clerkId st
 func (s *TxnService) ParseTxnImage(c echo.Context, payload *ParseTxnImgReq, clerkId string) (*ParsedTxnRes, error) {
 	log := middleware.GetLogger(c)
 	// getting user
-	currUser, err := s.userSvc.GetUserByClerkId(c, clerkId)
+	currUser, err := s.userRepo.GetUserByClerkId(c.Request().Context(), clerkId)
 	if err != nil {
 		log.Error().Err(err).Msg("Error while getting user in ParseTxnImage from userService")
 		return nil, err
@@ -131,7 +131,7 @@ func (s *TxnService) ParseTxnImage(c echo.Context, payload *ParseTxnImgReq, cler
 	// updating the attempt
 	newAttempt := currUser.TransactionImageParseAttempt + 1
 	newSuccess := currUser.TransactionImageParseSuccess + 1
-	_, err = s.userSvc.UpdateUserInternal(c, &user.UpdateUserInternal{
+	_, err = s.userRepo.UpdateUserInternal(c.Request().Context(), &user.UpdateUserInternal{
 		TransactionImageParseAttempt: &newAttempt,
 	}, clerkId)
 	if err != nil {
@@ -139,13 +139,13 @@ func (s *TxnService) ParseTxnImage(c echo.Context, payload *ParseTxnImgReq, cler
 		return nil, err
 	}
 	// TODO:FallBack to Global Category Object,Same for merchant
-	cats, err := s.StaticSvc.GetCategories(c)
+	cats, err := s.staticRepo.GetCategories(c.Request().Context())
 	if err != nil {
 		log.Error().Err(err).Msg("Error while getting Categories from the static service")
 
 		return nil, err
 	}
-	merchants, err := s.StaticSvc.GetMerchants(c)
+	merchants, err := s.staticRepo.GetMerchants(c.Request().Context())
 	if err != nil {
 		log.Error().Err(err).Msg("Error while getting Merchants from the static service")
 
@@ -186,7 +186,7 @@ func (s *TxnService) ParseTxnImage(c echo.Context, payload *ParseTxnImgReq, cler
 		return nil, err
 	}
 	log.Debug().Msgf("Parsed Txn before updating the User %v", parseTxn)
-	_, err = s.userSvc.UpdateUserInternal(c, &user.UpdateUserInternal{
+	_, err = s.userRepo.UpdateUserInternal(c.Request().Context(), &user.UpdateUserInternal{
 		TransactionImageParseSuccess: &newSuccess,
 	}, clerkId)
 	if err != nil {

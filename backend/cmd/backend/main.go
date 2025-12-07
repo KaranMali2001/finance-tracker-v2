@@ -105,11 +105,11 @@ func main() {
 		Queries: queries,
 	})
 	transactionModule := transaction.NewTxnModule(transaction.Deps{
-		Server:    server,
-		Queries:   queries,
-		UserSvc:   userModule.GetUserService(),
-		GeminiSvc: globalSvcs.GeminiService,
-		StaticSvc: staticModule.GetService(),
+		Server:     server,
+		Queries:    queries,
+		UserRepo:   userModule.GetUserRepository(),
+		GeminiSvc:  globalSvcs.GeminiService,
+		StaticRepo: staticModule.GetRepository(),
 	})
 	smsModule := sms.NewSmsModule(sms.Deps{
 		Server:  server,

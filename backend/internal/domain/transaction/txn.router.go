@@ -15,16 +15,16 @@ type Module struct {
 }
 
 type Deps struct {
-	Server    *server.Server
-	Queries   *generated.Queries
-	UserSvc   *user.UserService
-	GeminiSvc *aiservices.GeminiService
-	StaticSvc *static.StaticService
+	Server     *server.Server
+	Queries    *generated.Queries
+	UserRepo   *user.UserRepository
+	GeminiSvc  *aiservices.GeminiService
+	StaticRepo *static.StaticRepository
 }
 
 func NewTxnModule(deps Deps) *Module {
 	repo := NewTxnRepository(deps.Server, deps.Queries)
-	service := NewTxnService(deps.Server, repo, deps.UserSvc, deps.GeminiSvc, deps.StaticSvc)
+	service := NewTxnService(deps.Server, repo, deps.UserRepo, deps.GeminiSvc, deps.StaticRepo)
 	handler := NewTxnHandler(deps.Server, service)
 
 	return &Module{

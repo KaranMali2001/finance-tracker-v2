@@ -10,6 +10,7 @@ import (
 type Module struct {
 	handler   *StaticHandler
 	staticSvc *StaticService
+	repo      *StaticRepository
 }
 type Dependencies struct {
 	Server  *server.Server
@@ -24,11 +25,16 @@ func NewModule(deps Dependencies) *Module {
 	return &Module{
 		handler:   handler,
 		staticSvc: service,
+		repo:      repo,
 	}
 }
 
 func (m *Module) GetService() *StaticService {
 	return m.staticSvc
+}
+
+func (m *Module) GetRepository() *StaticRepository {
+	return m.repo
 }
 
 func (m *Module) RegisterRoutes(g *echo.Group) {

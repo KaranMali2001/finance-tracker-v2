@@ -10,6 +10,7 @@ import (
 type Module struct {
 	handler *UserHandler
 	service *UserService
+	repo    *UserRepository
 }
 type Deps struct {
 	Server  *server.Server
@@ -23,11 +24,12 @@ func NewModule(deps Deps) *Module {
 	return &Module{
 		handler: handler,
 		service: service,
+		repo:    repo,
 	}
 }
 
-func (m *Module) GetUserService() *UserService {
-	return m.service
+func (m *Module) GetUserRepository() *UserRepository {
+	return m.repo
 }
 
 func (m *Module) RegisterRoutes(g *echo.Group) {
