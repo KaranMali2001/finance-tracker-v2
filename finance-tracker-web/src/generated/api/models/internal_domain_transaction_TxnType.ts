@@ -3,10 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 export enum internal_domain_transaction_TxnType {
-  TxnTypeDebit = 'DEBIT',
-  TxnTypeCredit = 'CREDIT',
-  TxnTypeSubscription = 'SUBSCRIPTION',
-  TxnTypeInvestment = 'INVESTMENT',
-  TxnTypeIncome = 'INCOME',
-  TxnTypeRefund = 'REFUND',
+    TxnTypeDebit = 'DEBIT',
+    TxnTypeCredit = 'CREDIT',
+    TxnTypeSubscription = 'SUBSCRIPTION',
+    TxnTypeInvestment = 'INVESTMENT',
+    TxnTypeIncome = 'INCOME',
+    TxnTypeRefund = 'REFUND',
 }

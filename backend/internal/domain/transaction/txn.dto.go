@@ -19,18 +19,29 @@ const (
 )
 
 type Trasaction struct {
-	Id              string     `json:"id,omitempty"`
-	UserId          string     `json:"user_id,omitempty"`
-	AccountId       string     `json:"account_id,omitempty"`
-	ToAccountId     *string    `json:"to_account_id,omitempty"`
-	CategoryId      *string    `json:"category_id,omitempty"`
+	Id              string  `json:"id,omitempty"`
+	UserId          string  `json:"user_id,omitempty"`
+	AccountId       string  `json:"account_id,omitempty"`
+	AccountNumber   string  `json:"account_number,omitempty"`
+	AccountType     string  `json:"account_type,omitempty"`
+	AccountName     string  `json:"account_name,omitempty"`
+	ToAccountId     *string `json:"to_account_id,omitempty"`
+	ToAccountNumber string  `json:"to_account_number,omitempty"`
+
+	ToAccountName string `json:"to_account_name,omitempty"`
+
+	CategoryId   *string `json:"category_id,omitempty"`
+	CategoryName *string `json:"category_name,omitempty"`
+
 	MerchantId      *string    `json:"merchant_id,omitempty"`
+	MerchantName    *string    `json:"merchant_name,omitempty"`
 	Type            TxnType    `json:"type,omitempty"`
 	Amount          float64    `json:"amount,omitempty"`
 	Description     *string    `json:"description,omitempty"`
 	Notes           *string    `json:"notes,omitempty"`
 	Tags            *string    `json:"tags,omitempty"`
 	SmsId           *string    `json:"sms_id,omitempty"`
+	SmsMessage      *string    `json:"sms_message,omitempty"`
 	PaymentMethod   *string    `json:"payment_method,omitempty"`
 	ReferenceNumber *string    `json:"reference_number,omitempty"`
 	IsRecurring     bool       `json:"is_recurring,omitempty"`
@@ -86,6 +97,20 @@ type ParseTxnImgReq struct{}
 
 func (s *ParseTxnImgReq) Validate() error {
 	return nil
+}
+
+type UpdateTxnReq struct {
+	Id              string     `json:"id" validate:"required"`
+	CategoryId      *uuid.UUID `json:"category_id,omitempty"`
+	MerchantId      *uuid.UUID `json:"merchant_id,omitempty"`
+	Amount          *float64   `json:"amount,omitempty"`
+	Description     *string    `json:"description,omitempty"`
+	TransactionDate *time.Time `json:"transaction_date,omitempty"`
+	Type            *TxnType   `json:"type,omitempty"`
+}
+
+func (u *UpdateTxnReq) Validate() error {
+	return validator.New().Struct(u)
 }
 
 type ParsedTxnRes struct {

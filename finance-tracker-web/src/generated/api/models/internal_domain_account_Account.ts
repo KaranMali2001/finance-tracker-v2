@@ -4,16 +4,17 @@
 /* eslint-disable */
 import type { internal_domain_account_Bank } from './internal_domain_account_Bank';
 export type internal_domain_account_Account = {
-  account_name?: string;
-  account_number?: string;
-  account_type?: string;
-  bank?: internal_domain_account_Bank;
-  bank_id?: string;
-  created_at?: string;
-  current_balence?: number;
-  id?: string;
-  is_active?: boolean;
-  is_primary?: boolean;
-  updated_at?: string;
-  user_id?: string;
+    account_name?: string;
+    account_number?: string;
+    account_type?: string;
+    bank?: internal_domain_account_Bank;
+    bank_id?: string;
+    created_at?: string;
+    current_balence?: number;
+    id?: string;
+    is_active?: boolean;
+    is_primary?: boolean;
+    updated_at?: string;
+    user_id?: string;
 };
+

@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type internal_domain_static_Merchants = {
-  id?: string;
-  name?: string;
+    id?: string;
+    name?: string;
 };
+

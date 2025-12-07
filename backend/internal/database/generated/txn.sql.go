@@ -86,13 +86,50 @@ func (q *Queries) CreateTxn(ctx context.Context, arg CreateTxnParams) (Transacti
 }
 
 const getTxnsWithFilters = `-- name: GetTxnsWithFilters :many
-SELECT id, user_id, account_id, to_account_id, category_id, merchant_id, type, amount, description, notes, tags, transaction_date, sms_id, payment_method, reference_number, is_recurring, is_excluded, is_cash, deleted_at, deleted_by, created_at, updated_at from transactions 
-WHERE (user_id=$1) 
+SELECT 
+t.id AS id,
+t.type AS type,
+t.amount AS amount,
+t.description AS description,
+t.notes as notes,
+t.transaction_date AS transaction_date,
+t.payment_method AS payment_method,
+t.reference_number AS reference_number,
+t.is_recurring AS is_recurring,
+t.tags As tags,
+a.id AS account_id,
+a.account_number AS account_number,
+a.account_type AS account_type,
+a.account_name AS account_name,
+ta.id AS to_account_id,
+ta.account_name AS to_account_name,
+ta.account_number AS to_account_number,
+s.id AS sms_id,
+s.raw_message AS sms_message,
+c.id AS category_id,
+c.name AS category_name,
+m.id AS merchant_id,
+m.name AS merchant_name
+from transactions t 
+
+LEFT JOIN accounts a  ON t.account_id=a.id
+
+LEFT JOIN accounts ta  ON t.to_account_id=ta.id
+
+LEFT JOIN categories c ON t.category_id=c.id
+
+LEFT JOIN merchants m       ON t.merchant_id = m.id
+
+
+LEFT JOIN sms_logs s    ON t.sms_id = s.id  
+
+WHERE a.user_id=$1
+
 AND ($2::uuid IS NULL OR account_id=$2)
 AND ($3::uuid IS NULL OR category_id=$3)
 AND ($4::uuid IS NULL OR merchant_id=$4)
-AND deleted_at IS NULL 
-AND deleted_by IS NULL
+AND t.deleted_at IS NULL 
+AND t.deleted_by IS NULL
 `
 
 type GetTxnsWithFiltersParams struct {
@@ -102,7 +139,33 @@ type GetTxnsWithFiltersParams struct {
 	Column4 pgtype.UUID
 }
 
-func (q *Queries) GetTxnsWithFilters(ctx context.Context, arg GetTxnsWithFiltersParams) ([]Transaction, error) {
+type GetTxnsWithFiltersRow struct {
+	ID              pgtype.UUID
+	Type            TxnType
+	Amount          pgtype.Numeric
+	Description     pgtype.Text
+	Notes           pgtype.Text
+	TransactionDate pgtype.Timestamp
+	PaymentMethod   pgtype.Text
+	ReferenceNumber pgtype.Text
+	IsRecurring     pgtype.Bool
+	Tags            pgtype.Text
+	AccountID       pgtype.UUID
+	AccountNumber   pgtype.Text
+	AccountType     pgtype.Text
+	AccountName     pgtype.Text
+	ToAccountID     pgtype.UUID
+	ToAccountName   pgtype.Text
+	ToAccountNumber pgtype.Text
+	SmsID           pgtype.UUID
+	SmsMessage      pgtype.Text
+	CategoryID      pgtype.UUID
+	CategoryName    pgtype.Text
+	MerchantID      pgtype.UUID
+	MerchantName    pgtype.Text
+}
+
+func (q *Queries) GetTxnsWithFilters(ctx context.Context, arg GetTxnsWithFiltersParams) ([]GetTxnsWithFiltersRow, error) {
 	rows, err := q.db.Query(ctx, getTxnsWithFilters,
 		arg.UserID,
 		arg.Column2,
@@ -113,32 +176,33 @@ func (q *Queries) GetTxnsWithFilters(ctx context.Context, arg GetTxnsWithFilters
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Transaction
+	var items []GetTxnsWithFiltersRow
 	for rows.Next() {
-		var i Transaction
+		var i GetTxnsWithFiltersRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.UserID,
-			&i.AccountID,
-			&i.ToAccountID,
-			&i.CategoryID,
-			&i.MerchantID,
 			&i.Type,
 			&i.Amount,
 			&i.Description,
 			&i.Notes,
-			&i.Tags,
 			&i.TransactionDate,
-			&i.SmsID,
 			&i.PaymentMethod,
 			&i.ReferenceNumber,
 			&i.IsRecurring,
-			&i.IsExcluded,
-			&i.IsCash,
-			&i.DeletedAt,
-			&i.DeletedBy,
-			&i.CreatedAt,
-			&i.UpdatedAt,
+			&i.Tags,
+			&i.AccountID,
+			&i.AccountNumber,
+			&i.AccountType,
+			&i.AccountName,
+			&i.ToAccountID,
+			&i.ToAccountName,
+			&i.ToAccountNumber,
+			&i.SmsID,
+			&i.SmsMessage,
+			&i.CategoryID,
+			&i.CategoryName,
+			&i.MerchantID,
+			&i.MerchantName,
 		); err != nil {
 			return nil, err
 		}
@@ -225,4 +289,47 @@ func (q *Queries) SoftDeleteTxns(ctx context.Context, arg SoftDeleteTxnsParams) 
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateTxn = `-- name: UpdateTxn :one
+UPDATE transactions t
+SET 
+    category_id = COALESCE($2, t.category_id),
+    merchant_id = COALESCE($3, t.merchant_id),
+    amount = COALESCE($4, t.amount),
+    description = COALESCE($5, t.description),
+    transaction_date = COALESCE($6, t.transaction_date),
+     type = COALESCE(NULLIF($7::text, ''), t.type)
+FROM accounts a
+WHERE t.id = $1
+  AND a.id = t.account_id
+  AND a.user_id = $8  -- pass authenticated user_id as parameter
+RETURNING t.id
+`
+
+type UpdateTxnParams struct {
+	ID              pgtype.UUID
+	CategoryID      pgtype.UUID
+	MerchantID      pgtype.UUID
+	Amount          pgtype.Numeric
+	Description     pgtype.Text
+	TransactionDate pgtype.Timestamp
+	Column7         string
+	UserID          string
+}
+
+func (q *Queries) UpdateTxn(ctx context.Context, arg UpdateTxnParams) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, updateTxn,
+		arg.ID,
+		arg.CategoryID,
+		arg.MerchantID,
+		arg.Amount,
+		arg.Description,
+		arg.TransactionDate,
+		arg.Column7,
+		arg.UserID,
+	)
+	var id pgtype.UUID
+	err := row.Scan(&id)
+	return id, err
 }

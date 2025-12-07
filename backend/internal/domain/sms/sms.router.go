@@ -24,8 +24,8 @@ func NewSmsModule(deps Deps) *Module {
 		handler: handler,
 	}
 }
-func (m *Module) RegisterRoutes(g *echo.Group) {
 
+func (m *Module) RegisterRoutes(g *echo.Group) {
 	authMiddleware := middleware.NewAuthMiddleware(m.handler.server).RequireAuth
 	g.GET("/sms", m.handler.GetSmses, authMiddleware)
 	g.GET("/sms/:id", m.handler.GetSmsById, authMiddleware)

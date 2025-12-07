@@ -24,6 +24,7 @@ export type { internal_domain_transaction_ParsedTxnRes } from './models/internal
 export type { internal_domain_transaction_SoftDeleteTxnsReq } from './models/internal_domain_transaction_SoftDeleteTxnsReq';
 export type { internal_domain_transaction_Trasaction } from './models/internal_domain_transaction_Trasaction';
 export { internal_domain_transaction_TxnType } from './models/internal_domain_transaction_TxnType';
+export type { internal_domain_transaction_UpdateTxnReq } from './models/internal_domain_transaction_UpdateTxnReq';
 export type { internal_domain_user_UpdateUserReq } from './models/internal_domain_user_UpdateUserReq';
 export type { internal_domain_user_User } from './models/internal_domain_user_User';
 

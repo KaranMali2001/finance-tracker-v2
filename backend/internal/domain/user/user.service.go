@@ -22,7 +22,6 @@ func NewUserService(s *server.Server, r *UserRepository) *UserService {
 		server:     s,
 		repository: r,
 	}
-
 }
 
 func (s *UserService) UpdateUser(c echo.Context, payload *UpdateUserReq, clerkId string) (*User, error) {
@@ -35,9 +34,11 @@ func (s *UserService) UpdateUser(c echo.Context, payload *UpdateUserReq, clerkId
 	}
 	return updatedUser, nil
 }
+
 func (s *UserService) GetUserByClerkId(c echo.Context, clerkId string) (*User, error) {
 	return s.repository.GetUserByClerkId(c.Request().Context(), clerkId)
 }
+
 func (s *UserService) UpdateUserInternal(c echo.Context, payload *UpdateUserInternal, clerkId string) (*User, error) {
 	log := middleware.GetLogger(c)
 	currUser, err := s.repository.GetUserByClerkId(c.Request().Context(), clerkId)
@@ -67,6 +68,7 @@ func (s *UserService) UpdateUserInternal(c echo.Context, payload *UpdateUserInte
 	payload.QrString = &qrCodeDataURL
 	return s.repository.UpdateUserInternal(c.Request().Context(), payload, clerkId)
 }
+
 func (s *UserService) GetUserByApiKey(c echo.Context, apiKey string) (*User, error) {
 	return s.repository.GetUserByApiKey(c.Request().Context(), apiKey)
 }

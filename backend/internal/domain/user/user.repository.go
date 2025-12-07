@@ -32,7 +32,6 @@ func (r *UserRepository) UpdateUser(c context.Context, updateUser *UpdateUserReq
 	}
 
 	return &User{
-
 		Email:           u.Email,
 		IsActive:        utils.BoolToBool(u.IsActive),
 		ClerkId:         u.ClerkID,
@@ -45,15 +44,14 @@ func (r *UserRepository) UpdateUser(c context.Context, updateUser *UpdateUserReq
 		ApiKey:          utils.TextToString(u.ApiKey),
 		QrString:        utils.TextToString(u.QrString),
 	}, nil
-
 }
+
 func (r *UserRepository) GetUserByClerkId(c context.Context, clerkId string) (*User, error) {
 	user, err := r.queries.GetAuthUser(c, clerkId)
 	if err != nil {
 		return nil, err
 	}
 	return &User{
-
 		Email:                        user.Email,
 		LifetimeIncome:               utils.NumericToFloat64(user.LifetimeIncome),
 		LifetimeExpense:              utils.NumericToFloat64(user.LifetimeExpense),
@@ -68,6 +66,7 @@ func (r *UserRepository) GetUserByClerkId(c context.Context, clerkId string) (*U
 		QrString:                     utils.TextToString(user.QrString),
 	}, nil
 }
+
 func (r *UserRepository) UpdateUserInternal(c context.Context, payload *UpdateUserInternal, clerkId string) (*User, error) {
 	updateReqParams := generated.UpdateUserInternalParams{
 		ClerkID:                        clerkId,
@@ -81,7 +80,6 @@ func (r *UserRepository) UpdateUserInternal(c context.Context, payload *UpdateUs
 		return nil, err
 	}
 	return &User{
-
 		Email:                        user.Email,
 		LifetimeIncome:               utils.NumericToFloat64(user.LifetimeIncome),
 		LifetimeExpense:              utils.NumericToFloat64(user.LifetimeExpense),
@@ -103,7 +101,6 @@ func (r *UserRepository) GetUserByApiKey(c context.Context, apiKey string) (*Use
 		return nil, err
 	}
 	return &User{
-
 		Email:                        user.Email,
 		LifetimeIncome:               utils.NumericToFloat64(user.LifetimeIncome),
 		LifetimeExpense:              utils.NumericToFloat64(user.LifetimeExpense),

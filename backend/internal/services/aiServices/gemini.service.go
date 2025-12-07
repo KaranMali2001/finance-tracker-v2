@@ -50,7 +50,6 @@ type ParsedTxn struct {
 }
 
 func (gs *GeminiService) ParseTxn(ctx context.Context, file []byte, categories map[string]string, merchants map[string]string, mimeType string, log *zerolog.Logger) (*ParsedTxn, error) {
-
 	parts := []*genai.Part{
 		{
 			InlineData: &genai.Blob{
@@ -68,18 +67,17 @@ func (gs *GeminiService) ParseTxn(ctx context.Context, file []byte, categories m
 	}
 	resp, err := gs.GeminiClient.Models.GenerateContent(ctx, gs.Model, content, nil)
 	if err != nil {
-
 		return nil, err
 	}
 	text := resp.Text()
 	log.Info().Msgf("Generated Content from Gemini is %v", text)
 	parsedTxn, err := parseResponse(text)
 	if err != nil {
-
 		return nil, err
 	}
 	return parsedTxn, nil
 }
+
 func (gs *GeminiService) buildPrompt(categories map[string]string, merchants map[string]string) string {
 	var catList strings.Builder
 	for catId, catName := range categories {

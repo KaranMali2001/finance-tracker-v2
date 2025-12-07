@@ -9,107 +9,111 @@ import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class AccountService {
-  /**
-   * Get all accounts for authenticated user
-   * Retrieves all accounts associated with the authenticated user
-   * @returns internal_domain_account_Account OK
-   * @throws ApiError
-   */
-  public static getAccount(): CancelablePromise<Array<internal_domain_account_Account>> {
-    return __request(OpenAPI, {
-      method: 'GET',
-      url: '/account',
-      errors: {
-        401: `Unauthorized`,
-        500: `Internal Server Error`,
-      },
-    });
-  }
-  /**
-   * Update an existing account
-   * Updates an existing account's information for the authenticated user
-   * @param account Account update request
-   * @returns internal_domain_account_Account OK
-   * @throws ApiError
-   */
-  public static putAccount(
-    account: internal_domain_account_UpdateAccountReq
-  ): CancelablePromise<internal_domain_account_Account> {
-    return __request(OpenAPI, {
-      method: 'PUT',
-      url: '/account',
-      body: account,
-      errors: {
-        400: `Bad Request`,
-        401: `Unauthorized`,
-        404: `Not Found`,
-        500: `Internal Server Error`,
-      },
-    });
-  }
-  /**
-   * Create a new account
-   * Creates a new financial account for the authenticated user
-   * @param account Account creation request
-   * @returns internal_domain_account_Account Created
-   * @throws ApiError
-   */
-  public static postAccount(
-    account: internal_domain_account_CreateAccountReq
-  ): CancelablePromise<internal_domain_account_Account> {
-    return __request(OpenAPI, {
-      method: 'POST',
-      url: '/account',
-      body: account,
-      errors: {
-        400: `Bad Request`,
-        401: `Unauthorized`,
-        500: `Internal Server Error`,
-      },
-    });
-  }
-  /**
-   * Get account by ID
-   * Retrieves a specific account by its ID for the authenticated user
-   * @param accountId Account ID
-   * @returns internal_domain_account_Account OK
-   * @throws ApiError
-   */
-  public static getAccount1(accountId: string): CancelablePromise<internal_domain_account_Account> {
-    return __request(OpenAPI, {
-      method: 'GET',
-      url: '/account/{account_id}',
-      path: {
-        account_id: accountId,
-      },
-      errors: {
-        400: `Bad Request`,
-        401: `Unauthorized`,
-        404: `Not Found`,
-        500: `Internal Server Error`,
-      },
-    });
-  }
-  /**
-   * Delete an existing account
-   * Deletes an existing account for the authenticated user
-   * @param accountId Account ID
-   * @returns string Success
-   * @throws ApiError
-   */
-  public static deleteAccount(accountId: string): CancelablePromise<Record<string, string>> {
-    return __request(OpenAPI, {
-      method: 'DELETE',
-      url: '/account/{account_id}',
-      path: {
-        account_id: accountId,
-      },
-      errors: {
-        400: `Bad Request`,
-        401: `Unauthorized`,
-        404: `Not Found`,
-        500: `Internal Server Error`,
-      },
-    });
-  }
+    /**
+     * Get all accounts for authenticated user
+     * Retrieves all accounts associated with the authenticated user
+     * @returns internal_domain_account_Account OK
+     * @throws ApiError
+     */
+    public static getAccount(): CancelablePromise<Array<internal_domain_account_Account>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/account',
+            errors: {
+                401: `Unauthorized`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Update an existing account
+     * Updates an existing account's information for the authenticated user
+     * @param account Account update request
+     * @returns internal_domain_account_Account OK
+     * @throws ApiError
+     */
+    public static putAccount(
+        account: internal_domain_account_UpdateAccountReq,
+    ): CancelablePromise<internal_domain_account_Account> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/account',
+            body: account,
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Create a new account
+     * Creates a new financial account for the authenticated user
+     * @param account Account creation request
+     * @returns internal_domain_account_Account Created
+     * @throws ApiError
+     */
+    public static postAccount(
+        account: internal_domain_account_CreateAccountReq,
+    ): CancelablePromise<internal_domain_account_Account> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/account',
+            body: account,
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Get account by ID
+     * Retrieves a specific account by its ID for the authenticated user
+     * @param accountId Account ID
+     * @returns internal_domain_account_Account OK
+     * @throws ApiError
+     */
+    public static getAccount1(
+        accountId: string,
+    ): CancelablePromise<internal_domain_account_Account> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/account/{account_id}',
+            path: {
+                'account_id': accountId,
+            },
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Delete an existing account
+     * Deletes an existing account for the authenticated user
+     * @param accountId Account ID
+     * @returns string Success
+     * @throws ApiError
+     */
+    public static deleteAccount(
+        accountId: string,
+    ): CancelablePromise<Record<string, string>> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/account/{account_id}',
+            path: {
+                'account_id': accountId,
+            },
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
 }

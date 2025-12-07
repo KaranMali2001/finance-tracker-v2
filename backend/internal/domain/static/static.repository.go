@@ -19,6 +19,7 @@ func NewStaticRepository(s *server.Server, q *generated.Queries) *StaticReposito
 		queries: q,
 	}
 }
+
 func (r *StaticRepository) GetBanks(c context.Context) ([]Bank, error) {
 	dbBanks, err := r.queries.GetBanks(c)
 	if err != nil {
@@ -34,6 +35,7 @@ func (r *StaticRepository) GetBanks(c context.Context) ([]Bank, error) {
 	}
 	return banks, nil
 }
+
 func (r *StaticRepository) GetCategories(c context.Context) ([]Categories, error) {
 	dbCategories, err := r.queries.GetCategories(c)
 	if err != nil {
@@ -49,6 +51,7 @@ func (r *StaticRepository) GetCategories(c context.Context) ([]Categories, error
 	}
 	return categories, nil
 }
+
 func (r *StaticRepository) GetMerchants(c context.Context) ([]Merchants, error) {
 	dbMerchanats, err := r.queries.GetMerchants(c)
 	if err != nil {
@@ -62,5 +65,4 @@ func (r *StaticRepository) GetMerchants(c context.Context) ([]Merchants, error) 
 		}
 	}
 	return merchanats, nil
-
 }

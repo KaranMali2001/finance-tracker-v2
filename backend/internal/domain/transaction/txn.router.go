@@ -36,6 +36,7 @@ func (m *Module) RegisterRoutes(g *echo.Group) {
 	authMiddleware := middleware.NewAuthMiddleware(m.handler.server).RequireAuth
 	g.POST("/transaction", m.handler.CreateTxn, authMiddleware)
 	g.GET("/transaction", m.handler.GetTxnsWithFilters, authMiddleware)
+	g.PUT("/transaction/:id", m.handler.UpdateTxn, authMiddleware)
 	g.DELETE("/transaction", m.handler.SoftDeleteTxns, authMiddleware)
 	g.POST("/transaction/image-parse", m.handler.ParseTxn, authMiddleware)
 }

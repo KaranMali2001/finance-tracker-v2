@@ -1,1502 +1,1726 @@
 {
-  "swagger": "2.0",
-  "info": {
-    "description": "API documentation for Finance Tracker services.",
-    "title": "Finance Tracker API",
-    "contact": {},
-    "version": "1.0.0"
-  },
-  "host": "localhost:8081",
-  "basePath": "/api/v1",
-  "paths": {
-    "/account": {
-      "get": {
-        "description": "Retrieves all accounts associated with the authenticated user",
-        "produces": ["application/json"],
-        "tags": ["Account"],
-        "summary": "Get all accounts for authenticated user",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/internal_domain_account.Account"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      },
-      "put": {
-        "description": "Updates an existing account's information for the authenticated user",
-        "consumes": ["application/json"],
-        "produces": ["application/json"],
-        "tags": ["Account"],
-        "summary": "Update an existing account",
-        "parameters": [
-          {
-            "description": "Account update request",
-            "name": "account",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/internal_domain_account.UpdateAccountReq"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/internal_domain_account.Account"
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "description": "Creates a new financial account for the authenticated user",
-        "consumes": ["application/json"],
-        "produces": ["application/json"],
-        "tags": ["Account"],
-        "summary": "Create a new account",
-        "parameters": [
-          {
-            "description": "Account creation request",
-            "name": "account",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/internal_domain_account.CreateAccountReq"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created",
-            "schema": {
-              "$ref": "#/definitions/internal_domain_account.Account"
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
+    "swagger": "2.0",
+    "info": {
+        "description": "API documentation for Finance Tracker services.",
+        "title": "Finance Tracker API",
+        "contact": {},
+        "version": "1.0.0"
     },
-    "/account/{account_id}": {
-      "get": {
-        "description": "Retrieves a specific account by its ID for the authenticated user",
-        "produces": ["application/json"],
-        "tags": ["Account"],
-        "summary": "Get account by ID",
-        "parameters": [
-          {
+    "host": "localhost:8081",
+    "basePath": "/api/v1",
+    "paths": {
+        "/account": {
+            "get": {
+                "description": "Retrieves all accounts associated with the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Get all accounts for authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_domain_account.Account"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an existing account's information for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Update an existing account",
+                "parameters": [
+                    {
+                        "description": "Account update request",
+                        "name": "account",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_account.UpdateAccountReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_account.Account"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new financial account for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Create a new account",
+                "parameters": [
+                    {
+                        "description": "Account creation request",
+                        "name": "account",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_account.CreateAccountReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_account.Account"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/account/{account_id}": {
+            "get": {
+                "description": "Retrieves a specific account by its ID for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Get account by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Account ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_account.Account"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes an existing account for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Account"
+                ],
+                "summary": "Delete an existing account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Account ID",
+                        "name": "account_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/user": {
+            "get": {
+                "description": "Returns the current authenticated user's information",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Get authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_auth.GetAuthUserResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "description": "Returns health information about infrastructure dependencies.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "Health status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_system.HealthResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_system.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sms": {
+            "get": {
+                "description": "Retrieves all SMS logs for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SMS"
+                ],
+                "summary": "Get all SMS logs",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_domain_sms.SmsLogs"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new SMS log entry",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SMS"
+                ],
+                "summary": "Create a new SMS log",
+                "parameters": [
+                    {
+                        "description": "SMS creation request",
+                        "name": "sms",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_sms.CreateSmsReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_sms.SmsLogs"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/sms/{id}": {
+            "get": {
+                "description": "Retrieves a specific SMS log by its ID for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SMS"
+                ],
+                "summary": "Get SMS log by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "SMS ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_sms.SmsLogs"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/static/bank": {
+            "get": {
+                "description": "Retrieves a list of all available banks",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Static"
+                ],
+                "summary": "Get all banks",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_domain_static.Bank"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/static/categories": {
+            "get": {
+                "description": "Retrieves a list of all available transaction categories",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Static"
+                ],
+                "summary": "Get all categories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_domain_static.Categories"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/static/merchants": {
+            "get": {
+                "description": "Retrieves a list of all available merchants",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Static"
+                ],
+                "summary": "Get all merchants",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_domain_static.Merchants"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/transaction": {
+            "get": {
+                "description": "Retrieves transactions for the authenticated user with optional filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Get transactions with filters",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Account ID",
+                        "name": "account_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Category ID",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Merchant ID",
+                        "name": "merchant_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_domain_transaction.Trasaction"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new financial transaction for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Create a new transaction",
+                "parameters": [
+                    {
+                        "description": "Transaction creation request",
+                        "name": "transaction",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_transaction.CreateTxnReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_transaction.Trasaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Soft deletes multiple transactions for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Soft delete transactions",
+                "parameters": [
+                    {
+                        "description": "Soft delete request",
+                        "name": "transaction",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_transaction.SoftDeleteTxnsReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/transaction/image-parse": {
+            "post": {
+                "description": "Parses transaction information from an uploaded image using AI/OCR for the authenticated user",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Parse transaction from image",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Transaction image file (JPEG, PNG, GIF, WEBP)",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_transaction.ParsedTxnRes"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/transaction/{id}": {
+            "put": {
+                "description": "Updates an existing transaction for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Update a transaction",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Transaction ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Transaction update request",
+                        "name": "transaction",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_transaction.UpdateTxnReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_transaction.Trasaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user": {
+            "put": {
+                "description": "Updates the authenticated user's information",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Update user",
+                "parameters": [
+                    {
+                        "description": "User update request",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_user.UpdateUserReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_user.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/generate-api-key": {
+            "get": {
+                "description": "Generates a new API key for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Generate API key",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_user.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "internal_domain_account.Account": {
+            "type": "object",
+            "properties": {
+                "account_name": {
+                    "type": "string"
+                },
+                "account_number": {
+                    "type": "string"
+                },
+                "account_type": {
+                    "type": "string"
+                },
+                "bank": {
+                    "$ref": "#/definitions/internal_domain_account.Bank"
+                },
+                "bank_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "current_balence": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_account.Bank": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_account.CreateAccountReq": {
+            "type": "object",
+            "required": [
+                "account_name",
+                "account_number",
+                "account_type",
+                "bank_id",
+                "is_primary"
+            ],
+            "properties": {
+                "account_name": {
+                    "type": "string"
+                },
+                "account_number": {
+                    "type": "string"
+                },
+                "account_type": {
+                    "type": "string"
+                },
+                "bank_id": {
+                    "type": "string"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "internal_domain_account.UpdateAccountReq": {
+            "type": "object",
+            "required": [
+                "account_id"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "account_name": {
+                    "type": "string"
+                },
+                "account_number": {
+                    "type": "string"
+                },
+                "account_type": {
+                    "type": "string"
+                },
+                "bank_id": {
+                    "type": "string"
+                },
+                "current_balence": {
+                    "type": "number"
+                },
+                "is_primary": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "internal_domain_auth.GetAuthUserResponse": {
+            "type": "object",
+            "properties": {
+                "api_key": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-01-02T15:04:05Z"
+                },
+                "database_url": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "lifetime_expense": {
+                    "type": "number",
+                    "example": 30000
+                },
+                "lifetime_income": {
+                    "type": "number",
+                    "example": 50000
+                },
+                "llm_parse_credits": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "qr_string": {
+                    "type": "string"
+                },
+                "transaction_image_parse_attempt": {
+                    "type": "integer"
+                },
+                "transaction_image_parse_success": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2025-01-02T15:04:05Z"
+                },
+                "use_llm_parsing": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "internal_domain_sms.CreateSmsReq": {
+            "type": "object",
+            "properties": {
+                "raw_message": {
+                    "type": "string"
+                },
+                "received_at": {
+                    "type": "string"
+                },
+                "sender": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_sms.SmsLogs": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_retry_at": {
+                    "type": "string"
+                },
+                "llm_parsed": {
+                    "type": "boolean"
+                },
+                "llm_parsed_attempted": {
+                    "type": "boolean"
+                },
+                "llm_response": {
+                    "type": "string"
+                },
+                "parsing_status": {
+                    "type": "string"
+                },
+                "raw_message": {
+                    "type": "string"
+                },
+                "received_at": {
+                    "type": "string"
+                },
+                "retry_count": {
+                    "type": "integer"
+                },
+                "sender": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_static.Bank": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_static.Categories": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_static.Merchants": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_system.HealthCheckResult": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "connection refused"
+                },
+                "response_time": {
+                    "type": "string",
+                    "example": "5ms"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "healthy"
+                }
+            }
+        },
+        "internal_domain_system.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "checks": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/internal_domain_system.HealthCheckResult"
+                    }
+                },
+                "environment": {
+                    "type": "string",
+                    "example": "production"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "healthy"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2025-01-02T15:04:05Z"
+                }
+            }
+        },
+        "internal_domain_transaction.CreateTxnReq": {
+            "type": "object",
+            "required": [
+                "account_id"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "is_recurring": {
+                    "type": "boolean"
+                },
+                "merchant_id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "reference_number": {
+                    "type": "string"
+                },
+                "sms_id": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "string"
+                },
+                "transaction_date": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/internal_domain_transaction.TxnType"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_transaction.ParsedTxnRes": {
+            "type": "object",
+            "properties": {
+                "account_num": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "merchant_id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "reference_number": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "string"
+                },
+                "transaction_amount": {
+                    "type": "number"
+                },
+                "transaction_date": {
+                    "type": "string"
+                },
+                "transaction_time": {
+                    "type": "string"
+                },
+                "transaction_type": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_transaction.SoftDeleteTxnsReq": {
+            "type": "object",
+            "required": [
+                "ids"
+            ],
+            "properties": {
+                "deleted_by": {
+                    "type": "string"
+                },
+                "ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "internal_domain_transaction.Trasaction": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "account_name": {
+                    "type": "string"
+                },
+                "account_number": {
+                    "type": "string"
+                },
+                "account_type": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "category_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "deleted_by": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_cash": {
+                    "type": "boolean"
+                },
+                "is_excluded": {
+                    "type": "boolean"
+                },
+                "is_recurring": {
+                    "type": "boolean"
+                },
+                "merchant_id": {
+                    "type": "string"
+                },
+                "merchant_name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "type": "string"
+                },
+                "reference_number": {
+                    "type": "string"
+                },
+                "sms_id": {
+                    "type": "string"
+                },
+                "sms_message": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "string"
+                },
+                "to_account_id": {
+                    "type": "string"
+                },
+                "to_account_name": {
+                    "type": "string"
+                },
+                "to_account_number": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/internal_domain_transaction.TxnType"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_transaction.TxnType": {
             "type": "string",
-            "format": "uuid",
-            "description": "Account ID",
-            "name": "account_id",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/internal_domain_account.Account"
+            "enum": [
+                "DEBIT",
+                "CREDIT",
+                "SUBSCRIPTION",
+                "INVESTMENT",
+                "INCOME",
+                "REFUND"
+            ],
+            "x-enum-varnames": [
+                "TxnTypeDebit",
+                "TxnTypeCredit",
+                "TxnTypeSubscription",
+                "TxnTypeInvestment",
+                "TxnTypeIncome",
+                "TxnTypeRefund"
+            ]
+        },
+        "internal_domain_transaction.UpdateTxnReq": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "merchant_id": {
+                    "type": "string"
+                },
+                "transaction_date": {
+                    "type": "string"
+                }
             }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
+        },
+        "internal_domain_user.UpdateUserReq": {
+            "type": "object",
+            "properties": {
+                "database_url": {
+                    "type": "string"
+                },
+                "lifetime_expense": {
+                    "type": "number"
+                },
+                "lifetime_income": {
+                    "type": "number"
+                },
+                "use_llm_parsing": {
+                    "type": "boolean"
+                }
             }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
+        },
+        "internal_domain_user.User": {
+            "type": "object",
+            "properties": {
+                "api_key": {
+                    "type": "string"
+                },
+                "clerk_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "database_url": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "lifetime_expense": {
+                    "type": "number"
+                },
+                "lifetime_income": {
+                    "type": "number"
+                },
+                "qr_string": {
+                    "type": "string"
+                },
+                "transaction_image_parse_attempt": {
+                    "type": "integer"
+                },
+                "transaction_image_parse_success": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_llm_parsing": {
+                    "type": "boolean"
+                }
             }
-          },
-          "404": {
-            "description": "Not Found",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
         }
-      },
-      "delete": {
-        "description": "Deletes an existing account for the authenticated user",
-        "produces": ["application/json"],
-        "tags": ["Account"],
-        "summary": "Delete an existing account",
-        "parameters": [
-          {
-            "type": "string",
-            "format": "uuid",
-            "description": "Account ID",
-            "name": "account_id",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
     },
-    "/auth/user": {
-      "get": {
-        "description": "Returns the current authenticated user's information",
-        "produces": ["application/json"],
-        "tags": ["Auth"],
-        "summary": "Get authenticated user",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/internal_domain_auth.GetAuthUserResponse"
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and JWT token from Clerk.",
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
-      }
-    },
-    "/health": {
-      "get": {
-        "description": "Returns health information about infrastructure dependencies.",
-        "produces": ["application/json"],
-        "tags": ["System"],
-        "summary": "Health status",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/internal_domain_system.HealthResponse"
-            }
-          },
-          "503": {
-            "description": "Service Unavailable",
-            "schema": {
-              "$ref": "#/definitions/internal_domain_system.HealthResponse"
-            }
-          }
-        }
-      }
-    },
-    "/sms": {
-      "get": {
-        "description": "Retrieves all SMS logs for the authenticated user",
-        "produces": ["application/json"],
-        "tags": ["SMS"],
-        "summary": "Get all SMS logs",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/internal_domain_sms.SmsLogs"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "description": "Creates a new SMS log entry",
-        "consumes": ["application/json"],
-        "produces": ["application/json"],
-        "tags": ["SMS"],
-        "summary": "Create a new SMS log",
-        "parameters": [
-          {
-            "description": "SMS creation request",
-            "name": "sms",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/internal_domain_sms.CreateSmsReq"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created",
-            "schema": {
-              "$ref": "#/definitions/internal_domain_sms.SmsLogs"
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/sms/{id}": {
-      "get": {
-        "description": "Retrieves a specific SMS log by its ID for the authenticated user",
-        "produces": ["application/json"],
-        "tags": ["SMS"],
-        "summary": "Get SMS log by ID",
-        "parameters": [
-          {
-            "type": "string",
-            "format": "uuid",
-            "description": "SMS ID",
-            "name": "id",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/internal_domain_sms.SmsLogs"
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/static/bank": {
-      "get": {
-        "description": "Retrieves a list of all available banks",
-        "produces": ["application/json"],
-        "tags": ["Static"],
-        "summary": "Get all banks",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/internal_domain_static.Bank"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/static/categories": {
-      "get": {
-        "description": "Retrieves a list of all available transaction categories",
-        "produces": ["application/json"],
-        "tags": ["Static"],
-        "summary": "Get all categories",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/internal_domain_static.Categories"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/static/merchants": {
-      "get": {
-        "description": "Retrieves a list of all available merchants",
-        "produces": ["application/json"],
-        "tags": ["Static"],
-        "summary": "Get all merchants",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/internal_domain_static.Merchants"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/transaction": {
-      "get": {
-        "description": "Retrieves transactions for the authenticated user with optional filters",
-        "produces": ["application/json"],
-        "tags": ["Transaction"],
-        "summary": "Get transactions with filters",
-        "parameters": [
-          {
-            "type": "string",
-            "format": "uuid",
-            "description": "Account ID",
-            "name": "account_id",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "format": "uuid",
-            "description": "Category ID",
-            "name": "category_id",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "format": "uuid",
-            "description": "Merchant ID",
-            "name": "merchant_id",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/internal_domain_transaction.Trasaction"
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "description": "Creates a new financial transaction for the authenticated user",
-        "consumes": ["application/json"],
-        "produces": ["application/json"],
-        "tags": ["Transaction"],
-        "summary": "Create a new transaction",
-        "parameters": [
-          {
-            "description": "Transaction creation request",
-            "name": "transaction",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/internal_domain_transaction.CreateTxnReq"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "Created",
-            "schema": {
-              "$ref": "#/definitions/internal_domain_transaction.Trasaction"
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "description": "Soft deletes multiple transactions for the authenticated user",
-        "consumes": ["application/json"],
-        "produces": ["application/json"],
-        "tags": ["Transaction"],
-        "summary": "Soft delete transactions",
-        "parameters": [
-          {
-            "description": "Soft delete request",
-            "name": "transaction",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/internal_domain_transaction.SoftDeleteTxnsReq"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "No Content"
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/transaction/image-parse": {
-      "post": {
-        "description": "Parses transaction information from an uploaded image using AI/OCR for the authenticated user",
-        "consumes": ["multipart/form-data"],
-        "produces": ["application/json"],
-        "tags": ["Transaction"],
-        "summary": "Parse transaction from image",
-        "parameters": [
-          {
-            "type": "file",
-            "description": "Transaction image file (JPEG, PNG, GIF, WEBP)",
-            "name": "image",
-            "in": "formData",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/internal_domain_transaction.ParsedTxnRes"
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/user": {
-      "put": {
-        "description": "Updates the authenticated user's information",
-        "consumes": ["application/json"],
-        "produces": ["application/json"],
-        "tags": ["User"],
-        "summary": "Update user",
-        "parameters": [
-          {
-            "description": "User update request",
-            "name": "user",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/internal_domain_user.UpdateUserReq"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/internal_domain_user.User"
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/user/generate-api-key": {
-      "get": {
-        "description": "Generates a new API key for the authenticated user",
-        "produces": ["application/json"],
-        "tags": ["User"],
-        "summary": "Generate API key",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/internal_domain_user.User"
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
     }
-  },
-  "definitions": {
-    "internal_domain_account.Account": {
-      "type": "object",
-      "properties": {
-        "account_name": {
-          "type": "string"
-        },
-        "account_number": {
-          "type": "string"
-        },
-        "account_type": {
-          "type": "string"
-        },
-        "bank": {
-          "$ref": "#/definitions/internal_domain_account.Bank"
-        },
-        "bank_id": {
-          "type": "string"
-        },
-        "created_at": {
-          "type": "string"
-        },
-        "current_balence": {
-          "type": "number"
-        },
-        "id": {
-          "type": "string"
-        },
-        "is_active": {
-          "type": "boolean"
-        },
-        "is_primary": {
-          "type": "boolean"
-        },
-        "updated_at": {
-          "type": "string"
-        },
-        "user_id": {
-          "type": "string"
-        }
-      }
-    },
-    "internal_domain_account.Bank": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "string"
-        },
-        "created_at": {
-          "type": "string"
-        },
-        "id": {
-          "type": "string"
-        },
-        "is_active": {
-          "type": "boolean"
-        },
-        "name": {
-          "type": "string"
-        },
-        "updated_at": {
-          "type": "string"
-        }
-      }
-    },
-    "internal_domain_account.CreateAccountReq": {
-      "type": "object",
-      "required": [
-        "account_name",
-        "account_number",
-        "account_type",
-        "bank_id",
-        "is_primary"
-      ],
-      "properties": {
-        "account_name": {
-          "type": "string"
-        },
-        "account_number": {
-          "type": "string"
-        },
-        "account_type": {
-          "type": "string"
-        },
-        "bank_id": {
-          "type": "string"
-        },
-        "is_primary": {
-          "type": "boolean"
-        }
-      }
-    },
-    "internal_domain_account.UpdateAccountReq": {
-      "type": "object",
-      "required": ["account_id"],
-      "properties": {
-        "account_id": {
-          "type": "string"
-        },
-        "account_name": {
-          "type": "string"
-        },
-        "account_number": {
-          "type": "string"
-        },
-        "account_type": {
-          "type": "string"
-        },
-        "bank_id": {
-          "type": "string"
-        },
-        "current_balence": {
-          "type": "number"
-        },
-        "is_primary": {
-          "type": "boolean"
-        }
-      }
-    },
-    "internal_domain_auth.GetAuthUserResponse": {
-      "type": "object",
-      "properties": {
-        "api_key": {
-          "type": "string"
-        },
-        "created_at": {
-          "type": "string",
-          "example": "2025-01-02T15:04:05Z"
-        },
-        "database_url": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string",
-          "example": "user@example.com"
-        },
-        "is_active": {
-          "type": "boolean",
-          "example": true
-        },
-        "lifetime_expense": {
-          "type": "number",
-          "example": 30000
-        },
-        "lifetime_income": {
-          "type": "number",
-          "example": 50000
-        },
-        "llm_parse_credits": {
-          "type": "integer",
-          "example": 100
-        },
-        "qr_string": {
-          "type": "string"
-        },
-        "transaction_image_parse_attempt": {
-          "type": "integer"
-        },
-        "transaction_image_parse_success": {
-          "type": "integer"
-        },
-        "updated_at": {
-          "type": "string",
-          "example": "2025-01-02T15:04:05Z"
-        },
-        "use_llm_parsing": {
-          "type": "boolean",
-          "example": true
-        }
-      }
-    },
-    "internal_domain_sms.CreateSmsReq": {
-      "type": "object",
-      "properties": {
-        "raw_message": {
-          "type": "string"
-        },
-        "received_at": {
-          "type": "string"
-        },
-        "sender": {
-          "type": "string"
-        }
-      }
-    },
-    "internal_domain_sms.SmsLogs": {
-      "type": "object",
-      "properties": {
-        "created_at": {
-          "type": "string"
-        },
-        "error_message": {
-          "type": "string"
-        },
-        "id": {
-          "type": "string"
-        },
-        "last_retry_at": {
-          "type": "string"
-        },
-        "llm_parsed": {
-          "type": "boolean"
-        },
-        "llm_parsed_attempted": {
-          "type": "boolean"
-        },
-        "llm_response": {
-          "type": "string"
-        },
-        "parsing_status": {
-          "type": "string"
-        },
-        "raw_message": {
-          "type": "string"
-        },
-        "received_at": {
-          "type": "string"
-        },
-        "retry_count": {
-          "type": "integer"
-        },
-        "sender": {
-          "type": "string"
-        },
-        "updated_at": {
-          "type": "string"
-        },
-        "user_id": {
-          "type": "string"
-        }
-      }
-    },
-    "internal_domain_static.Bank": {
-      "type": "object",
-      "properties": {
-        "code": {
-          "type": "string"
-        },
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    },
-    "internal_domain_static.Categories": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string"
-        }
-      }
-    },
-    "internal_domain_static.Merchants": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        }
-      }
-    },
-    "internal_domain_system.HealthCheckResult": {
-      "type": "object",
-      "properties": {
-        "error": {
-          "type": "string",
-          "example": "connection refused"
-        },
-        "response_time": {
-          "type": "string",
-          "example": "5ms"
-        },
-        "status": {
-          "type": "string",
-          "example": "healthy"
-        }
-      }
-    },
-    "internal_domain_system.HealthResponse": {
-      "type": "object",
-      "properties": {
-        "checks": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/internal_domain_system.HealthCheckResult"
-          }
-        },
-        "environment": {
-          "type": "string",
-          "example": "production"
-        },
-        "status": {
-          "type": "string",
-          "example": "healthy"
-        },
-        "timestamp": {
-          "type": "string",
-          "example": "2025-01-02T15:04:05Z"
-        }
-      }
-    },
-    "internal_domain_transaction.CreateTxnReq": {
-      "type": "object",
-      "required": ["account_id"],
-      "properties": {
-        "account_id": {
-          "type": "string"
-        },
-        "amount": {
-          "type": "number"
-        },
-        "category_id": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "is_recurring": {
-          "type": "boolean"
-        },
-        "merchant_id": {
-          "type": "string"
-        },
-        "notes": {
-          "type": "string"
-        },
-        "payment_method": {
-          "type": "string"
-        },
-        "reference_number": {
-          "type": "string"
-        },
-        "sms_id": {
-          "type": "string"
-        },
-        "tags": {
-          "type": "string"
-        },
-        "transaction_date": {
-          "type": "string"
-        },
-        "type": {
-          "$ref": "#/definitions/internal_domain_transaction.TxnType"
-        },
-        "user_id": {
-          "type": "string"
-        }
-      }
-    },
-    "internal_domain_transaction.ParsedTxnRes": {
-      "type": "object",
-      "properties": {
-        "account_num": {
-          "type": "string"
-        },
-        "amount": {
-          "type": "number"
-        },
-        "category_id": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "merchant_id": {
-          "type": "string"
-        },
-        "notes": {
-          "type": "string"
-        },
-        "payment_method": {
-          "type": "string"
-        },
-        "reference_number": {
-          "type": "string"
-        },
-        "tags": {
-          "type": "string"
-        },
-        "transaction_amount": {
-          "type": "number"
-        },
-        "transaction_date": {
-          "type": "string"
-        },
-        "transaction_time": {
-          "type": "string"
-        },
-        "transaction_type": {
-          "type": "string"
-        },
-        "type": {
-          "type": "string"
-        }
-      }
-    },
-    "internal_domain_transaction.SoftDeleteTxnsReq": {
-      "type": "object",
-      "required": ["ids"],
-      "properties": {
-        "deleted_by": {
-          "type": "string"
-        },
-        "ids": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "internal_domain_transaction.Trasaction": {
-      "type": "object",
-      "properties": {
-        "account_id": {
-          "type": "string"
-        },
-        "amount": {
-          "type": "number"
-        },
-        "category_id": {
-          "type": "string"
-        },
-        "created_at": {
-          "type": "string"
-        },
-        "deleted_at": {
-          "type": "string"
-        },
-        "deleted_by": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "id": {
-          "type": "string"
-        },
-        "is_cash": {
-          "type": "boolean"
-        },
-        "is_excluded": {
-          "type": "boolean"
-        },
-        "is_recurring": {
-          "type": "boolean"
-        },
-        "merchant_id": {
-          "type": "string"
-        },
-        "notes": {
-          "type": "string"
-        },
-        "payment_method": {
-          "type": "string"
-        },
-        "reference_number": {
-          "type": "string"
-        },
-        "sms_id": {
-          "type": "string"
-        },
-        "tags": {
-          "type": "string"
-        },
-        "to_account_id": {
-          "type": "string"
-        },
-        "type": {
-          "$ref": "#/definitions/internal_domain_transaction.TxnType"
-        },
-        "updated_at": {
-          "type": "string"
-        },
-        "user_id": {
-          "type": "string"
-        }
-      }
-    },
-    "internal_domain_transaction.TxnType": {
-      "type": "string",
-      "enum": [
-        "DEBIT",
-        "CREDIT",
-        "SUBSCRIPTION",
-        "INVESTMENT",
-        "INCOME",
-        "REFUND"
-      ],
-      "x-enum-varnames": [
-        "TxnTypeDebit",
-        "TxnTypeCredit",
-        "TxnTypeSubscription",
-        "TxnTypeInvestment",
-        "TxnTypeIncome",
-        "TxnTypeRefund"
-      ]
-    },
-    "internal_domain_user.UpdateUserReq": {
-      "type": "object",
-      "properties": {
-        "database_url": {
-          "type": "string"
-        },
-        "lifetime_expense": {
-          "type": "number"
-        },
-        "lifetime_income": {
-          "type": "number"
-        },
-        "use_llm_parsing": {
-          "type": "boolean"
-        }
-      }
-    },
-    "internal_domain_user.User": {
-      "type": "object",
-      "properties": {
-        "api_key": {
-          "type": "string"
-        },
-        "clerk_id": {
-          "type": "string"
-        },
-        "created_at": {
-          "type": "string"
-        },
-        "database_url": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string"
-        },
-        "is_active": {
-          "type": "boolean"
-        },
-        "lifetime_expense": {
-          "type": "number"
-        },
-        "lifetime_income": {
-          "type": "number"
-        },
-        "qr_string": {
-          "type": "string"
-        },
-        "transaction_image_parse_attempt": {
-          "type": "integer"
-        },
-        "transaction_image_parse_success": {
-          "type": "integer"
-        },
-        "updated_at": {
-          "type": "string"
-        },
-        "user_llm_parsing": {
-          "type": "boolean"
-        }
-      }
-    }
-  },
-  "securityDefinitions": {
-    "BearerAuth": {
-      "description": "Type \"Bearer\" followed by a space and JWT token from Clerk.",
-      "type": "apiKey",
-      "name": "Authorization",
-      "in": "header"
-    }
-  }
 }

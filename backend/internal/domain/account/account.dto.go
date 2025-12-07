@@ -20,16 +20,19 @@ type GetAccountReq struct {
 type DeleteAccountReq struct {
 	AccountId uuid.UUID `param:"account_id" validate:"required"`
 }
-type GetAccountByUserId struct{}
-type UpdateAccountReq struct {
-	AccountId      uuid.UUID  `json:"account_id" validate:"required"`
-	AccountNumber  *string    `json:"account_number,omitempty"`
-	AccountName    *string    `json:"account_name,omitempty"`
-	AccountType    *string    `json:"account_type,omitempty"`
-	BankId         *uuid.UUID `json:"bank_id,omitempty"`
-	IsPrimary      *bool      `json:"is_primary,omitempty"`
-	CurrentBalence *float64   `json:"current_balence,omitempty"`
-}
+type (
+	GetAccountByUserId struct{}
+	UpdateAccountReq   struct {
+		AccountId      uuid.UUID  `json:"account_id" validate:"required"`
+		AccountNumber  *string    `json:"account_number,omitempty"`
+		AccountName    *string    `json:"account_name,omitempty"`
+		AccountType    *string    `json:"account_type,omitempty"`
+		BankId         *uuid.UUID `json:"bank_id,omitempty"`
+		IsPrimary      *bool      `json:"is_primary,omitempty"`
+		CurrentBalence *float64   `json:"current_balence,omitempty"`
+	}
+)
+
 type Bank struct {
 	Id        string    `json:"id,omitempty"`
 	Name      string    `json:"name,omitempty"`
@@ -56,15 +59,19 @@ type Account struct {
 func (c *CreateAccountReq) Validate() error {
 	return validator.New().Struct(c)
 }
+
 func (u *GetAccountReq) Validate() error {
 	return validator.New().Struct(u)
 }
+
 func (u *GetAccountByUserId) Validate() error {
 	return nil
 }
+
 func (u *UpdateAccountReq) Validate() error {
 	return validator.New().Struct(u)
 }
+
 func (u *DeleteAccountReq) Validate() error {
 	return validator.New().Struct(u)
 }

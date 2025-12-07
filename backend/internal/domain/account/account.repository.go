@@ -19,6 +19,7 @@ func NewAccRepo(s *server.Server, q *generated.Queries) *AccRepo {
 		q: q,
 	}
 }
+
 func (r *AccRepo) CreateAccount(c context.Context, payload *CreateAccountReq, clerkId string) (*Account, error) {
 	acc := generated.CreateAccountParams{
 		BankID:        utils.UUIDToPgtype(payload.BankId),
@@ -31,7 +32,6 @@ func (r *AccRepo) CreateAccount(c context.Context, payload *CreateAccountReq, cl
 
 	account, err := r.q.CreateAccount(c, acc)
 	if err != nil {
-
 		return nil, err
 	}
 	return &Account{
@@ -76,6 +76,7 @@ func (r *AccRepo) GetAccountById(c context.Context, payload *GetAccountReq, cler
 		},
 	}, nil
 }
+
 func (r *AccRepo) GetAccountsByUserId(c context.Context, clerkId string) ([]Account, error) {
 	dbAccounts, err := r.q.GetAccountsByUserId(c, clerkId)
 	if err != nil {
@@ -105,8 +106,8 @@ func (r *AccRepo) GetAccountsByUserId(c context.Context, clerkId string) ([]Acco
 	}
 	return accounts, nil
 }
-func (r *AccRepo) UpdateAccount(c context.Context, payload *UpdateAccountReq, clerkId string) (*Account, error) {
 
+func (r *AccRepo) UpdateAccount(c context.Context, payload *UpdateAccountReq, clerkId string) (*Account, error) {
 	account, err := r.q.UpdateAccount(c, generated.UpdateAccountParams{
 		ID:             utils.UUIDToPgtype(payload.AccountId),
 		UserID:         clerkId,
@@ -135,6 +136,7 @@ func (r *AccRepo) UpdateAccount(c context.Context, payload *UpdateAccountReq, cl
 		},
 	}, nil
 }
+
 func (r *AccRepo) DeleteAccount(c context.Context, payload *DeleteAccountReq, clerkId string) (*Account, error) {
 	err := r.q.DeleteAccount(c, generated.DeleteAccountParams{
 		ID:     utils.UUIDToPgtype(payload.AccountId),

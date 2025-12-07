@@ -9,7 +9,7 @@ definitions:
       account_type:
         type: string
       bank:
-        $ref: "#/definitions/internal_domain_account.Bank"
+        $ref: '#/definitions/internal_domain_account.Bank'
       bank_id:
         type: string
       created_at:
@@ -55,11 +55,11 @@ definitions:
       is_primary:
         type: boolean
     required:
-      - account_name
-      - account_number
-      - account_type
-      - bank_id
-      - is_primary
+    - account_name
+    - account_number
+    - account_type
+    - bank_id
+    - is_primary
     type: object
   internal_domain_account.UpdateAccountReq:
     properties:
@@ -78,7 +78,7 @@ definitions:
       is_primary:
         type: boolean
     required:
-      - account_id
+    - account_id
     type: object
   internal_domain_auth.GetAuthUserResponse:
     properties:
@@ -198,7 +198,7 @@ definitions:
     properties:
       checks:
         additionalProperties:
-          $ref: "#/definitions/internal_domain_system.HealthCheckResult"
+          $ref: '#/definitions/internal_domain_system.HealthCheckResult'
         type: object
       environment:
         example: production
@@ -237,11 +237,11 @@ definitions:
       transaction_date:
         type: string
       type:
-        $ref: "#/definitions/internal_domain_transaction.TxnType"
+        $ref: '#/definitions/internal_domain_transaction.TxnType'
       user_id:
         type: string
     required:
-      - account_id
+    - account_id
     type: object
   internal_domain_transaction.ParsedTxnRes:
     properties:
@@ -284,15 +284,23 @@ definitions:
         minItems: 1
         type: array
     required:
-      - ids
+    - ids
     type: object
   internal_domain_transaction.Trasaction:
     properties:
       account_id:
         type: string
+      account_name:
+        type: string
+      account_number:
+        type: string
+      account_type:
+        type: string
       amount:
         type: number
       category_id:
+        type: string
+      category_name:
         type: string
       created_at:
         type: string
@@ -312,6 +320,8 @@ definitions:
         type: boolean
       merchant_id:
         type: string
+      merchant_name:
+        type: string
       notes:
         type: string
       payment_method:
@@ -320,12 +330,18 @@ definitions:
         type: string
       sms_id:
         type: string
+      sms_message:
+        type: string
       tags:
         type: string
       to_account_id:
         type: string
+      to_account_name:
+        type: string
+      to_account_number:
+        type: string
       type:
-        $ref: "#/definitions/internal_domain_transaction.TxnType"
+        $ref: '#/definitions/internal_domain_transaction.TxnType'
       updated_at:
         type: string
       user_id:
@@ -333,20 +349,37 @@ definitions:
     type: object
   internal_domain_transaction.TxnType:
     enum:
-      - DEBIT
-      - CREDIT
-      - SUBSCRIPTION
-      - INVESTMENT
-      - INCOME
-      - REFUND
+    - DEBIT
+    - CREDIT
+    - SUBSCRIPTION
+    - INVESTMENT
+    - INCOME
+    - REFUND
     type: string
     x-enum-varnames:
-      - TxnTypeDebit
-      - TxnTypeCredit
-      - TxnTypeSubscription
-      - TxnTypeInvestment
-      - TxnTypeIncome
-      - TxnTypeRefund
+    - TxnTypeDebit
+    - TxnTypeCredit
+    - TxnTypeSubscription
+    - TxnTypeInvestment
+    - TxnTypeIncome
+    - TxnTypeRefund
+  internal_domain_transaction.UpdateTxnReq:
+    properties:
+      amount:
+        type: number
+      category_id:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      merchant_id:
+        type: string
+      transaction_date:
+        type: string
+    required:
+    - id
+    type: object
   internal_domain_user.UpdateUserReq:
     properties:
       database_url:
@@ -398,13 +431,13 @@ paths:
     get:
       description: Retrieves all accounts associated with the authenticated user
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/internal_domain_account.Account"
+              $ref: '#/definitions/internal_domain_account.Account'
             type: array
         "401":
           description: Unauthorized
@@ -420,25 +453,25 @@ paths:
             type: object
       summary: Get all accounts for authenticated user
       tags:
-        - Account
+      - Account
     post:
       consumes:
-        - application/json
+      - application/json
       description: Creates a new financial account for the authenticated user
       parameters:
-        - description: Account creation request
-          in: body
-          name: account
-          required: true
-          schema:
-            $ref: "#/definitions/internal_domain_account.CreateAccountReq"
+      - description: Account creation request
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_account.CreateAccountReq'
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: "#/definitions/internal_domain_account.Account"
+            $ref: '#/definitions/internal_domain_account.Account'
         "400":
           description: Bad Request
           schema:
@@ -459,27 +492,26 @@ paths:
             type: object
       summary: Create a new account
       tags:
-        - Account
+      - Account
     put:
       consumes:
-        - application/json
-      description:
-        Updates an existing account's information for the authenticated
+      - application/json
+      description: Updates an existing account's information for the authenticated
         user
       parameters:
-        - description: Account update request
-          in: body
-          name: account
-          required: true
-          schema:
-            $ref: "#/definitions/internal_domain_account.UpdateAccountReq"
+      - description: Account update request
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_account.UpdateAccountReq'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/internal_domain_account.Account"
+            $ref: '#/definitions/internal_domain_account.Account'
         "400":
           description: Bad Request
           schema:
@@ -506,19 +538,19 @@ paths:
             type: object
       summary: Update an existing account
       tags:
-        - Account
+      - Account
   /account/{account_id}:
     delete:
       description: Deletes an existing account for the authenticated user
       parameters:
-        - description: Account ID
-          format: uuid
-          in: path
-          name: account_id
-          required: true
-          type: string
+      - description: Account ID
+        format: uuid
+        in: path
+        name: account_id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: Success
@@ -552,23 +584,23 @@ paths:
             type: object
       summary: Delete an existing account
       tags:
-        - Account
+      - Account
     get:
       description: Retrieves a specific account by its ID for the authenticated user
       parameters:
-        - description: Account ID
-          format: uuid
-          in: path
-          name: account_id
-          required: true
-          type: string
+      - description: Account ID
+        format: uuid
+        in: path
+        name: account_id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/internal_domain_account.Account"
+            $ref: '#/definitions/internal_domain_account.Account'
         "400":
           description: Bad Request
           schema:
@@ -595,17 +627,17 @@ paths:
             type: object
       summary: Get account by ID
       tags:
-        - Account
+      - Account
   /auth/user:
     get:
       description: Returns the current authenticated user's information
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/internal_domain_auth.GetAuthUserResponse"
+            $ref: '#/definitions/internal_domain_auth.GetAuthUserResponse'
         "401":
           description: Unauthorized
           schema:
@@ -614,35 +646,35 @@ paths:
             type: object
       summary: Get authenticated user
       tags:
-        - Auth
+      - Auth
   /health:
     get:
       description: Returns health information about infrastructure dependencies.
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/internal_domain_system.HealthResponse"
+            $ref: '#/definitions/internal_domain_system.HealthResponse'
         "503":
           description: Service Unavailable
           schema:
-            $ref: "#/definitions/internal_domain_system.HealthResponse"
+            $ref: '#/definitions/internal_domain_system.HealthResponse'
       summary: Health status
       tags:
-        - System
+      - System
   /sms:
     get:
       description: Retrieves all SMS logs for the authenticated user
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/internal_domain_sms.SmsLogs"
+              $ref: '#/definitions/internal_domain_sms.SmsLogs'
             type: array
         "401":
           description: Unauthorized
@@ -658,25 +690,25 @@ paths:
             type: object
       summary: Get all SMS logs
       tags:
-        - SMS
+      - SMS
     post:
       consumes:
-        - application/json
+      - application/json
       description: Creates a new SMS log entry
       parameters:
-        - description: SMS creation request
-          in: body
-          name: sms
-          required: true
-          schema:
-            $ref: "#/definitions/internal_domain_sms.CreateSmsReq"
+      - description: SMS creation request
+        in: body
+        name: sms
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_sms.CreateSmsReq'
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: "#/definitions/internal_domain_sms.SmsLogs"
+            $ref: '#/definitions/internal_domain_sms.SmsLogs'
         "400":
           description: Bad Request
           schema:
@@ -697,24 +729,24 @@ paths:
             type: object
       summary: Create a new SMS log
       tags:
-        - SMS
+      - SMS
   /sms/{id}:
     get:
       description: Retrieves a specific SMS log by its ID for the authenticated user
       parameters:
-        - description: SMS ID
-          format: uuid
-          in: path
-          name: id
-          required: true
-          type: string
+      - description: SMS ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/internal_domain_sms.SmsLogs"
+            $ref: '#/definitions/internal_domain_sms.SmsLogs'
         "400":
           description: Bad Request
           schema:
@@ -741,18 +773,18 @@ paths:
             type: object
       summary: Get SMS log by ID
       tags:
-        - SMS
+      - SMS
   /static/bank:
     get:
       description: Retrieves a list of all available banks
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/internal_domain_static.Bank"
+              $ref: '#/definitions/internal_domain_static.Bank'
             type: array
         "401":
           description: Unauthorized
@@ -768,18 +800,18 @@ paths:
             type: object
       summary: Get all banks
       tags:
-        - Static
+      - Static
   /static/categories:
     get:
       description: Retrieves a list of all available transaction categories
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/internal_domain_static.Categories"
+              $ref: '#/definitions/internal_domain_static.Categories'
             type: array
         "401":
           description: Unauthorized
@@ -795,18 +827,18 @@ paths:
             type: object
       summary: Get all categories
       tags:
-        - Static
+      - Static
   /static/merchants:
     get:
       description: Retrieves a list of all available merchants
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/internal_domain_static.Merchants"
+              $ref: '#/definitions/internal_domain_static.Merchants'
             type: array
         "401":
           description: Unauthorized
@@ -822,21 +854,21 @@ paths:
             type: object
       summary: Get all merchants
       tags:
-        - Static
+      - Static
   /transaction:
     delete:
       consumes:
-        - application/json
+      - application/json
       description: Soft deletes multiple transactions for the authenticated user
       parameters:
-        - description: Soft delete request
-          in: body
-          name: transaction
-          required: true
-          schema:
-            $ref: "#/definitions/internal_domain_transaction.SoftDeleteTxnsReq"
+      - description: Soft delete request
+        in: body
+        name: transaction
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_transaction.SoftDeleteTxnsReq'
       produces:
-        - application/json
+      - application/json
       responses:
         "204":
           description: No Content
@@ -860,35 +892,34 @@ paths:
             type: object
       summary: Soft delete transactions
       tags:
-        - Transaction
+      - Transaction
     get:
-      description:
-        Retrieves transactions for the authenticated user with optional
+      description: Retrieves transactions for the authenticated user with optional
         filters
       parameters:
-        - description: Account ID
-          format: uuid
-          in: query
-          name: account_id
-          type: string
-        - description: Category ID
-          format: uuid
-          in: query
-          name: category_id
-          type: string
-        - description: Merchant ID
-          format: uuid
-          in: query
-          name: merchant_id
-          type: string
+      - description: Account ID
+        format: uuid
+        in: query
+        name: account_id
+        type: string
+      - description: Category ID
+        format: uuid
+        in: query
+        name: category_id
+        type: string
+      - description: Merchant ID
+        format: uuid
+        in: query
+        name: merchant_id
+        type: string
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: "#/definitions/internal_domain_transaction.Trasaction"
+              $ref: '#/definitions/internal_domain_transaction.Trasaction'
             type: array
         "400":
           description: Bad Request
@@ -910,25 +941,25 @@ paths:
             type: object
       summary: Get transactions with filters
       tags:
-        - Transaction
+      - Transaction
     post:
       consumes:
-        - application/json
+      - application/json
       description: Creates a new financial transaction for the authenticated user
       parameters:
-        - description: Transaction creation request
-          in: body
-          name: transaction
-          required: true
-          schema:
-            $ref: "#/definitions/internal_domain_transaction.CreateTxnReq"
+      - description: Transaction creation request
+        in: body
+        name: transaction
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_transaction.CreateTxnReq'
       produces:
-        - application/json
+      - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: "#/definitions/internal_domain_transaction.Trasaction"
+            $ref: '#/definitions/internal_domain_transaction.Trasaction'
         "400":
           description: Bad Request
           schema:
@@ -949,27 +980,78 @@ paths:
             type: object
       summary: Create a new transaction
       tags:
-        - Transaction
-  /transaction/image-parse:
-    post:
+      - Transaction
+  /transaction/{id}:
+    put:
       consumes:
-        - multipart/form-data
-      description:
-        Parses transaction information from an uploaded image using AI/OCR
-        for the authenticated user
+      - application/json
+      description: Updates an existing transaction for the authenticated user
       parameters:
-        - description: Transaction image file (JPEG, PNG, GIF, WEBP)
-          in: formData
-          name: image
-          required: true
-          type: file
+      - description: Transaction ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Transaction update request
+        in: body
+        name: transaction
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_transaction.UpdateTxnReq'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/internal_domain_transaction.ParsedTxnRes"
+            $ref: '#/definitions/internal_domain_transaction.Trasaction'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a transaction
+      tags:
+      - Transaction
+  /transaction/image-parse:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Parses transaction information from an uploaded image using AI/OCR
+        for the authenticated user
+      parameters:
+      - description: Transaction image file (JPEG, PNG, GIF, WEBP)
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_transaction.ParsedTxnRes'
         "400":
           description: Bad Request
           schema:
@@ -990,26 +1072,26 @@ paths:
             type: object
       summary: Parse transaction from image
       tags:
-        - Transaction
+      - Transaction
   /user:
     put:
       consumes:
-        - application/json
+      - application/json
       description: Updates the authenticated user's information
       parameters:
-        - description: User update request
-          in: body
-          name: user
-          required: true
-          schema:
-            $ref: "#/definitions/internal_domain_user.UpdateUserReq"
+      - description: User update request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_user.UpdateUserReq'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/internal_domain_user.User"
+            $ref: '#/definitions/internal_domain_user.User'
         "400":
           description: Bad Request
           schema:
@@ -1030,17 +1112,17 @@ paths:
             type: object
       summary: Update user
       tags:
-        - User
+      - User
   /user/generate-api-key:
     get:
       description: Generates a new API key for the authenticated user
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: "#/definitions/internal_domain_user.User"
+            $ref: '#/definitions/internal_domain_user.User'
         "400":
           description: Bad Request
           schema:
@@ -1061,7 +1143,7 @@ paths:
             type: object
       summary: Generate API key
       tags:
-        - User
+      - User
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer" followed by a space and JWT token from Clerk.

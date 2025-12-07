@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 export type internal_domain_transaction_SoftDeleteTxnsReq = {
-  deleted_by?: string;
-  ids: Array<string>;
+    deleted_by?: string;
+    ids: Array<string>;
 };
+

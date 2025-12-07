@@ -97,6 +97,36 @@ func (h *TxnHandler) SoftDeleteTxns(c echo.Context) error {
 	)(c)
 }
 
+// UpdateTxn godoc
+// @Summary Update a transaction
+// @Description Updates an existing transaction for the authenticated user
+// @Tags Transaction
+// @Accept json
+// @Produce json
+// @Name UpdateTxn
+// @Param id path string true "Transaction ID" format(uuid)
+// @Param transaction body UpdateTxnReq true "Transaction update request"
+// @Success 200 {object} Trasaction
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 404 {object} map[string]string "Not Found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /transaction/{id} [put]
+func (h *TxnHandler) UpdateTxn(c echo.Context) error {
+	return handler.Handle(
+		h.base,
+		func(c echo.Context, payload *UpdateTxnReq) (*Trasaction, error) {
+			clerkId := middleware.GetUserID(c)
+			// Get ID from path parameter
+			id := c.Param("id")
+			payload.Id = id
+			return h.service.UpdateTxn(c, payload, clerkId)
+		},
+		http.StatusOK,
+		&UpdateTxnReq{},
+	)(c)
+}
+
 // ParseTxn godoc
 // @Summary Parse transaction from image
 // @Description Parses transaction information from an uploaded image using AI/OCR for the authenticated user

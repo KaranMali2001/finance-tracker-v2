@@ -60,7 +60,6 @@ func (h *UserHandler) GenerateApiKey(c echo.Context) error {
 				ApiKey: nil,
 			}
 			return h.userService.UpdateUserInternal(c, updatePayload, middleware.GetUserID(c))
-
 		},
 		http.StatusOK,
 		&GenerateApiKeyReq{},

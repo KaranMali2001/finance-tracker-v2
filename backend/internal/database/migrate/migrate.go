@@ -39,7 +39,6 @@ func MigrateAndSeed(cfg *config.DatabaseConfig) error {
 	defer db.Close()
 	migrationsDir := filepath.Join("internal", "database", "migrate", "migrations")
 	if err := goose.Up(db, migrationsDir); err != nil {
-
 		return err
 	}
 

@@ -19,6 +19,7 @@ func NewSmsRepository(s *server.Server, q *generated.Queries) *SmsRepository {
 		q: q,
 	}
 }
+
 func (s *SmsRepository) GetSmses(c context.Context, payload *GetSmsesReq, clerkId string) ([]SmsLogs, error) {
 	dbSmsLogs, err := s.q.GetSmses(c, clerkId)
 	if err != nil {
@@ -70,6 +71,7 @@ func (s *SmsRepository) GetSmsById(c context.Context, payload *GetSmsByIdReq, cl
 		LastRetryAt:        sms.LastRetryAt.Time,
 	}, nil
 }
+
 func (s *SmsRepository) CreateSms(c context.Context, payload *CreateSmsReq, clerkId string) (*SmsLogs, error) {
 	params := generated.CreateSmsParams{
 		UserID:     clerkId,

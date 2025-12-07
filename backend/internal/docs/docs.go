@@ -907,6 +907,84 @@ const docTemplate = `{
                 }
             }
         },
+        "/transaction/{id}": {
+            "put": {
+                "description": "Updates an existing transaction for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Transaction"
+                ],
+                "summary": "Update a transaction",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Transaction ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Transaction update request",
+                        "name": "transaction",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_transaction.UpdateTxnReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_transaction.Trasaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/user": {
             "put": {
                 "description": "Updates the authenticated user's information",
@@ -1450,10 +1528,22 @@ const docTemplate = `{
                 "account_id": {
                     "type": "string"
                 },
+                "account_name": {
+                    "type": "string"
+                },
+                "account_number": {
+                    "type": "string"
+                },
+                "account_type": {
+                    "type": "string"
+                },
                 "amount": {
                     "type": "number"
                 },
                 "category_id": {
+                    "type": "string"
+                },
+                "category_name": {
                     "type": "string"
                 },
                 "created_at": {
@@ -1483,6 +1573,9 @@ const docTemplate = `{
                 "merchant_id": {
                     "type": "string"
                 },
+                "merchant_name": {
+                    "type": "string"
+                },
                 "notes": {
                     "type": "string"
                 },
@@ -1495,10 +1588,19 @@ const docTemplate = `{
                 "sms_id": {
                     "type": "string"
                 },
+                "sms_message": {
+                    "type": "string"
+                },
                 "tags": {
                     "type": "string"
                 },
                 "to_account_id": {
+                    "type": "string"
+                },
+                "to_account_name": {
+                    "type": "string"
+                },
+                "to_account_number": {
                     "type": "string"
                 },
                 "type": {
@@ -1530,6 +1632,32 @@ const docTemplate = `{
                 "TxnTypeIncome",
                 "TxnTypeRefund"
             ]
+        },
+        "internal_domain_transaction.UpdateTxnReq": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "merchant_id": {
+                    "type": "string"
+                },
+                "transaction_date": {
+                    "type": "string"
+                }
+            }
         },
         "internal_domain_user.UpdateUserReq": {
             "type": "object",

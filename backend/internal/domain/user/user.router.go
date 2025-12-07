@@ -24,11 +24,12 @@ func NewModule(deps Deps) *Module {
 		handler: handler,
 		service: service,
 	}
-
 }
+
 func (m *Module) GetUserService() *UserService {
 	return m.service
 }
+
 func (m *Module) RegisterRoutes(g *echo.Group) {
 	authMiddleware := middleware.NewAuthMiddleware(m.handler.server).RequireAuth
 	g.PUT("/user", m.handler.UpdateUser, authMiddleware)

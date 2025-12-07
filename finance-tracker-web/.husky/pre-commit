@@ -2,29 +2,46 @@
 
 echo "🔧 Running pre-commit formatting..."
 
+# Get the git root directory (project root)
+GIT_ROOT=$(git rev-parse --show-toplevel)
+
 # Format Go backend code
 echo "📝 Formatting Go files..."
 
-cd ../backend
+# Get list of staged Go files before formatting (relative to git root)
+STAGED_GO_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$' || true)
 
-if command -v gofmt >/dev/null 2>&1; then
-  gofmt -w .
-  echo "✓ Go files formatted with gofmt"
-else
-  echo "⚠️  gofmt not found, skipping Go formatting"
+if [ -n "$STAGED_GO_FILES" ]; then
+  # Format only staged Go files
+  if command -v gofumpt >/dev/null 2>&1; then
+    echo "$STAGED_GO_FILES" | while read -r file; do
+      [ -f "$GIT_ROOT/$file" ] && gofumpt -w "$GIT_ROOT/$file"
+    done
+    echo "✓ Go files formatted with gofumpt"
+  else
+    echo "⚠️  gofumpt not found, install with: go install mvdan.cc/gofumpt@latest"
+  fi
+
+  if command -v goimports >/dev/null 2>&1; then
+    echo "$STAGED_GO_FILES" | while read -r file; do
+      [ -f "$GIT_ROOT/$file" ] && goimports -w "$GIT_ROOT/$file"
+    done
+    echo "✓ Go imports organized with goimports"
+  else
+    echo "⚠️  goimports not found, install with: go install golang.org/x/tools/cmd/goimports@latest"
+  fi
+
+  # Stage the formatted Go files
+  echo "$STAGED_GO_FILES" | while read -r file; do
+    [ -f "$GIT_ROOT/$file" ] && git add "$GIT_ROOT/$file"
+  done
+  echo "✓ Formatted Go files staged"
 fi
 
-if command -v goimports >/dev/null 2>&1; then
-  goimports -w .
-  echo "✓ Go imports organized with goimports"
-else
-  echo "⚠️  goimports not found, install with: go install golang.org/x/tools/cmd/goimports@latest"
-fi
+# Format Next.js/TypeScript/SQL files using lint-staged
+cd "$GIT_ROOT/finance-tracker-web"
 
-# Format Next.js/TypeScript files using lint-staged
-cd ../finance-tracker-web
-
-echo "📝 Formatting Next.js/TypeScript files..."
+echo "📝 Formatting frontend files..."
 
 npx lint-staged
 

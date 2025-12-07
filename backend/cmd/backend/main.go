@@ -62,7 +62,7 @@ func main() {
 		log.Error().Err(err).Msg("failed to start global services")
 	}
 	taskService := tasks.NewTaskService(globalSvcs)
-	//create new job service
+	// create new job service
 	q := queue.NewJobService(log, cfg, taskService)
 
 	if err := q.Start(); err != nil {
@@ -81,9 +81,9 @@ func main() {
 	}
 
 	defer db.Close()
-	//starting db connection
+	// starting db connection
 
-	//registerting all the modules
+	// registerting all the modules
 	queries := generated.New(server.DB.Pool)
 	systemModule := system.NewModule(system.Dependencies{Server: server})
 	authModule := auth.NewModule(auth.Dependencies{

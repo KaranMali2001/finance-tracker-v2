@@ -36,5 +36,4 @@ func (m *Module) RegisterRoutes(g *echo.Group) {
 	authMiddleware := middleware.NewAuthMiddleware(m.handler.server)
 	g.POST("/webhook/clerk", m.handler.CreateUser)
 	g.GET("/auth/user", m.handler.GetAuthUser, authMiddleware.RequireAuth)
-
 }

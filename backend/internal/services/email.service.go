@@ -68,6 +68,7 @@ func (e *EmailService) SendWelcomeEmail(ctx context.Context, userEmail string) e
 	e.logger.Info().Str("Welcome email sent successfully and sent ID is", sent.Id)
 	return nil
 }
+
 func (e *EmailService) buildWelcomeEmailHTML(userEmail string) string {
 	// Extract name from email (part before @) or use a friendly default
 	userName := "there"

@@ -113,15 +113,22 @@ func (s *TxnService) SoftDeleteTxns(c echo.Context, payload *SoftDeleteTxnsReq, 
 		Msg("User Lifetime balence updated successfully ")
 	return nil
 }
+
+func (s *TxnService) UpdateTxn(c echo.Context, payload *UpdateTxnReq, clerkId string) (*Trasaction, error) {
+	log := middleware.GetLogger(c)
+	log.Info().Msgf("Updating Transaction %v for User %v", payload.Id, clerkId)
+	return s.r.UpdateTxn(c.Request().Context(), clerkId, payload)
+}
+
 func (s *TxnService) ParseTxnImage(c echo.Context, payload *ParseTxnImgReq, clerkId string) (*ParsedTxnRes, error) {
 	log := middleware.GetLogger(c)
-	//getting user
+	// getting user
 	currUser, err := s.userSvc.GetUserByClerkId(c, clerkId)
 	if err != nil {
 		log.Error().Err(err).Msg("Error while getting user in ParseTxnImage from userService")
 		return nil, err
 	}
-	//updating the attempt
+	// updating the attempt
 	newAttempt := currUser.TransactionImageParseAttempt + 1
 	newSuccess := currUser.TransactionImageParseSuccess + 1
 	_, err = s.userSvc.UpdateUserInternal(c, &user.UpdateUserInternal{
@@ -131,7 +138,7 @@ func (s *TxnService) ParseTxnImage(c echo.Context, payload *ParseTxnImgReq, cler
 		log.Error().Err(err).Msgf("Error while updating the Attempt of user ID %v", clerkId)
 		return nil, err
 	}
-	//TODO:FallBack to Global Category Object,Same for merchant
+	// TODO:FallBack to Global Category Object,Same for merchant
 	cats, err := s.StaticSvc.GetCategories(c)
 	if err != nil {
 		log.Error().Err(err).Msg("Error while getting Categories from the static service")

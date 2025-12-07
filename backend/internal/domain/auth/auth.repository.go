@@ -30,7 +30,6 @@ func (r *AuthRepository) CreateUser(c context.Context, user *UserCreateRequest) 
 	// r.server.Queue.Client.Enqueue()
 
 	return &UserResponse{
-
 		Email:     userData.Email,
 		IsActive:  utils.BoolToBool(userData.IsActive),
 		ClerkId:   userData.ClerkID,
@@ -38,13 +37,13 @@ func (r *AuthRepository) CreateUser(c context.Context, user *UserCreateRequest) 
 		UpdatedAt: utils.TimestampToTime(userData.UpdatedAt),
 	}, nil
 }
+
 func (r *AuthRepository) GetAuthUser(c context.Context, clerkId string) (*GetAuthUserResponse, error) {
 	user, err := r.queries.GetAuthUser(c, clerkId)
 	if err != nil {
 		return nil, err
 	}
 	return &GetAuthUserResponse{
-
 		Email:                        user.Email,
 		LifetimeIncome:               utils.NumericToFloat64Ptr(user.LifetimeIncome),
 		LifetimeExpense:              utils.NumericToFloat64Ptr(user.LifetimeExpense),

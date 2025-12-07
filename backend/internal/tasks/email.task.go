@@ -17,7 +17,6 @@ type WelcomeEmailPayload struct {
 
 func (ts *TaskService) NewWelcomeEmailTask(userEmail string) (*asynq.Task, error) {
 	payload := WelcomeEmailPayload{
-
 		UserEmail: userEmail,
 	}
 	payloadBytes, err := json.Marshal(payload)
@@ -26,6 +25,7 @@ func (ts *TaskService) NewWelcomeEmailTask(userEmail string) (*asynq.Task, error
 	}
 	return NewTaskWithConfig(TaskWelcomeEmail, payloadBytes)
 }
+
 func (ts *TaskService) HandleWelcomeEmailTask(ctx context.Context, t *asynq.Task, cfg *config.IntegrationConfig, logger *zerolog.Logger) error {
 	var payload WelcomeEmailPayload
 	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
@@ -37,7 +37,6 @@ func (ts *TaskService) HandleWelcomeEmailTask(ctx context.Context, t *asynq.Task
 
 	// Send welcome email
 	err := ts.services.EmailService.SendWelcomeEmail(ctx, payload.UserEmail)
-
 	if err != nil {
 		logger.Error().
 			Err(err).

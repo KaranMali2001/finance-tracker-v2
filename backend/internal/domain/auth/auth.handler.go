@@ -26,8 +26,8 @@ func NewAuthHandler(s *server.Server, service *AuthService) *AuthHandler {
 		service: service,
 	}
 }
-func (h *AuthHandler) CreateUser(c echo.Context) error {
 
+func (h *AuthHandler) CreateUser(c echo.Context) error {
 	body, err := io.ReadAll(c.Request().Body)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to read request body")

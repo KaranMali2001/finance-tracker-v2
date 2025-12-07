@@ -109,6 +109,7 @@ func NewTaskWithConfig(taskType TaskType, payload []byte) (*asynq.Task, error) {
 	opts := NewTaskOptions(config)
 	return asynq.NewTask(string(taskType), payload, opts...), nil
 }
+
 func (ts *TaskService) NewTask(taskType TaskType, payload interface{}) (*asynq.Task, error) {
 	// Marshal payload to JSON
 	payloadBytes, err := json.Marshal(payload)

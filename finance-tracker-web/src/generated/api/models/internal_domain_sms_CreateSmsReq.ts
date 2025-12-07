@@ -3,7 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 export type internal_domain_sms_CreateSmsReq = {
-  raw_message?: string;
-  received_at?: string;
-  sender?: string;
+    raw_message?: string;
+    received_at?: string;
+    sender?: string;
 };
+

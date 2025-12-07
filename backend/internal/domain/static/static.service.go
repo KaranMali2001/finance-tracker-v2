@@ -17,6 +17,7 @@ func NewStaticService(s *server.Server, r *StaticRepository) *StaticService {
 		repo:   r,
 	}
 }
+
 func (s *StaticService) GetBanks(c echo.Context) ([]Bank, error) {
 	logger := middleware.GetLogger(c)
 	banks, err := s.repo.GetBanks(c.Request().Context())

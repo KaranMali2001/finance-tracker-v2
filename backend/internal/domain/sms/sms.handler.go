@@ -61,7 +61,6 @@ func (h *SmsHandler) GetSmsById(c echo.Context) error {
 	return handler.Handle(
 		h.base,
 		func(c echo.Context, payload *GetSmsByIdReq) (*SmsLogs, error) {
-
 			return h.service.GetSmsById(c, payload, middleware.GetUserID(c))
 		},
 		http.StatusOK,

@@ -22,6 +22,7 @@ func NewAuthService(s *server.Server, r *AuthRepository, ts *tasks.TaskService, 
 		TaskService: ts,
 	}
 }
+
 func (s *AuthService) CreateUser(c echo.Context, user *UserCreateRequest) (*UserResponse, error) {
 	logger := middleware.GetLogger(c)
 	logger.Info().Msg("Creating user through clerk webhook")
@@ -43,6 +44,7 @@ func (s *AuthService) CreateUser(c echo.Context, user *UserCreateRequest) (*User
 	logger.Info().Str("SuccessFully Enqueued Welcome Email Job %s", info.ID)
 	return userData, nil
 }
+
 func (s *AuthService) GetAuthUser(c echo.Context, clerkId string) (*GetAuthUserResponse, error) {
 	return s.repository.GetAuthUser(c.Request().Context(), clerkId)
 }

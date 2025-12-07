@@ -16,12 +16,15 @@ func NewSmsService(s *server.Server, r *SmsRepository) *SmsService {
 		r:      r,
 	}
 }
+
 func (s *SmsService) GetSmses(c echo.Context, payload *GetSmsesReq, clerkId string) ([]SmsLogs, error) {
 	return s.r.GetSmses(c.Request().Context(), payload, clerkId)
 }
+
 func (s *SmsService) GetSmsById(c echo.Context, payload *GetSmsByIdReq, clerkId string) (*SmsLogs, error) {
 	return s.r.GetSmsById(c.Request().Context(), payload, clerkId)
 }
+
 func (s *SmsService) CreateSms(c echo.Context, payload *CreateSmsReq, clerkId string) (*SmsLogs, error) {
 	return s.r.CreateSms(c.Request().Context(), payload, clerkId)
 }

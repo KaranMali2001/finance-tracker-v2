@@ -5,6 +5,7 @@ import type {
   internal_domain_transaction_ParsedTxnRes,
   internal_domain_transaction_SoftDeleteTxnsReq,
   internal_domain_transaction_Trasaction,
+  internal_domain_transaction_UpdateTxnReq,
 } from '@/generated/api';
 import { TransactionService } from '@/generated/api';
 import { useAuth } from '@clerk/nextjs';
@@ -86,6 +87,36 @@ export function useDeleteTransactions() {
       },
       showToastOnSuccess: true,
       successMessage: 'Transactions deleted successfully',
+      showToastOnError: true,
+    }
+  );
+}
+
+/**
+ * Update transaction hook
+ * Updates an existing transaction for the authenticated user
+ */
+export function useUpdateTransaction() {
+  const queryClient = useQueryClient();
+
+  return useApiMutation<
+    internal_domain_transaction_Trasaction,
+    internal_domain_transaction_UpdateTxnReq
+  >(
+    (data) => {
+      return TransactionService.putTransaction(data.id, data);
+    },
+    {
+      onSuccess: () => {
+        // Invalidate and refetch transactions list to get fresh data
+        queryClient.invalidateQueries({ queryKey: ['transactions'] });
+        // Invalidate user data (lifetime_income, lifetime_expense, etc.)
+        queryClient.invalidateQueries({ queryKey: ['auth', 'user'] });
+        // Invalidate accounts (account balances may have changed)
+        queryClient.invalidateQueries({ queryKey: ['accounts'] });
+      },
+      showToastOnSuccess: true,
+      successMessage: 'Transaction updated successfully',
       showToastOnError: true,
     }
   );

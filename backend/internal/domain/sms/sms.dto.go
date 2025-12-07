@@ -31,15 +31,16 @@ type CreateSmsReq struct {
 	RawMessage string    `json:"raw_message,omitempty"`
 	ReceivedAt time.Time `json:"received_at,omitempty"`
 }
-type GetSmsesReq struct {
-}
+type GetSmsesReq struct{}
 
 func (u *GetSmsesReq) Validate() error {
 	return nil
 }
+
 func (u *CreateSmsReq) Validate() error {
 	return validator.New().Struct(u)
 }
+
 func (u *GetSmsByIdReq) Validate() error {
 	return validator.New().Struct(u)
 }

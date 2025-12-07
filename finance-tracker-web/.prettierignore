@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+**/node_modules/**
 .pnp
 .pnp.js
 
@@ -14,7 +15,7 @@ dist/
 src/generated/
 ../backend/internal/database/generated/
 
-# Go files (handled by gofmt)
+# Go files (handled by gofmt/gofumpt)
 *.go
 
 # Lock files
@@ -43,4 +44,3 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
-

@@ -64,5 +64,4 @@ func NewRouter(s *server.Server, rootRegistrars []RouteRegistrar, apiRegistrars 
 	}
 
 	return router
-
 }
