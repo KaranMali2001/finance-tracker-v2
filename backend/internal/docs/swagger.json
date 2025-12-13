@@ -693,7 +693,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_domain_transaction.Trasaction"
+                                "$ref": "#/definitions/internal_domain_transaction.Transaction"
                             }
                         }
                     },
@@ -753,7 +753,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_domain_transaction.Trasaction"
+                            "$ref": "#/definitions/internal_domain_transaction.Transaction"
                         }
                     },
                     "400": {
@@ -937,7 +937,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_domain_transaction.Trasaction"
+                            "$ref": "#/definitions/internal_domain_transaction.Transaction"
                         }
                     },
                     "400": {
@@ -1516,7 +1516,7 @@
                 }
             }
         },
-        "internal_domain_transaction.Trasaction": {
+        "internal_domain_transaction.Transaction": {
             "type": "object",
             "properties": {
                 "account_id": {
@@ -1650,6 +1650,9 @@
                 },
                 "transaction_date": {
                     "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/internal_domain_transaction.TxnType"
                 }
             }
         },

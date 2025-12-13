@@ -1,5 +1,5 @@
-import type { CellValueChangedEvent } from 'ag-grid-community';
-import type { AgGridReactProps, ColDef } from 'ag-grid-react';
+import type { CellValueChangedEvent, ColDef } from 'ag-grid-community';
+import type { AgGridReactProps } from 'ag-grid-react';
 
 /**
  * Empty state configuration for DataGrid
@@ -19,7 +19,7 @@ export interface DataGridEmptyState {
  */
 export interface DataGridProps<TData = any> extends Omit<
   AgGridReactProps<TData>,
-  'rowData' | 'columnDefs'
+  'rowData' | 'columnDefs' | 'theme'
 > {
   /**
    * Column definitions for the grid

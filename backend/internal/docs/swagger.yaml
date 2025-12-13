@@ -286,7 +286,7 @@ definitions:
     required:
     - ids
     type: object
-  internal_domain_transaction.Trasaction:
+  internal_domain_transaction.Transaction:
     properties:
       account_id:
         type: string
@@ -377,6 +377,8 @@ definitions:
         type: string
       transaction_date:
         type: string
+      type:
+        $ref: '#/definitions/internal_domain_transaction.TxnType'
     required:
     - id
     type: object
@@ -919,7 +921,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/internal_domain_transaction.Trasaction'
+              $ref: '#/definitions/internal_domain_transaction.Transaction'
             type: array
         "400":
           description: Bad Request
@@ -959,7 +961,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/internal_domain_transaction.Trasaction'
+            $ref: '#/definitions/internal_domain_transaction.Transaction'
         "400":
           description: Bad Request
           schema:
@@ -1005,7 +1007,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_domain_transaction.Trasaction'
+            $ref: '#/definitions/internal_domain_transaction.Transaction'
         "400":
           description: Bad Request
           schema:

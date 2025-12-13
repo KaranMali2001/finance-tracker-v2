@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/static"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/user"
@@ -20,10 +21,11 @@ type Deps struct {
 	UserRepo   *user.UserRepository
 	GeminiSvc  *aiservices.GeminiService
 	StaticRepo *static.StaticRepository
+	Tm         *database.TxManager
 }
 
 func NewTxnModule(deps Deps) *Module {
-	repo := NewTxnRepository(deps.Server, deps.Queries)
+	repo := NewTxnRepository(deps.Server, deps.Queries, deps.Tm)
 	service := NewTxnService(deps.Server, repo, deps.UserRepo, deps.GeminiSvc, deps.StaticRepo)
 	handler := NewTxnHandler(deps.Server, service)
 

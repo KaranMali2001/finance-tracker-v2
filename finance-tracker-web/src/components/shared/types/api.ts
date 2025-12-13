@@ -58,7 +58,7 @@ export interface ApiErrorDetails {
  * Transaction Types - Re-exported from generated API for convenience
  */
 export type {
-  internal_domain_transaction_Trasaction as Transaction,
+  internal_domain_transaction_Transaction as Transaction,
   internal_domain_transaction_CreateTxnReq as CreateTransactionRequest,
   internal_domain_transaction_SoftDeleteTxnsReq as SoftDeleteTransactionsRequest,
 } from '@/generated/api';

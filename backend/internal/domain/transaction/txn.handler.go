@@ -31,7 +31,7 @@ func NewTxnHandler(s *server.Server, service *TxnService) *TxnHandler {
 // @Produce json
 // @Name CreateTxn
 // @Param transaction body CreateTxnReq true "Transaction creation request"
-// @Success 201 {object} Trasaction
+// @Success 201 {object} Transaction
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 500 {object} map[string]string "Internal Server Error"
@@ -39,7 +39,7 @@ func NewTxnHandler(s *server.Server, service *TxnService) *TxnHandler {
 func (h *TxnHandler) CreateTxn(c echo.Context) error {
 	return handler.Handle(
 		h.base,
-		func(c echo.Context, payload *CreateTxnReq) (*Trasaction, error) {
+		func(c echo.Context, payload *CreateTxnReq) (*Transaction, error) {
 			clerkId := middleware.GetUserID(c)
 			return h.service.CreateTxn(c, payload, clerkId)
 		}, http.StatusCreated, &CreateTxnReq{},
@@ -55,7 +55,7 @@ func (h *TxnHandler) CreateTxn(c echo.Context) error {
 // @Param account_id query string false "Account ID" format(uuid)
 // @Param category_id query string false "Category ID" format(uuid)
 // @Param merchant_id query string false "Merchant ID" format(uuid)
-// @Success 200 {array} Trasaction
+// @Success 200 {array} Transaction
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 500 {object} map[string]string "Internal Server Error"
@@ -63,7 +63,7 @@ func (h *TxnHandler) CreateTxn(c echo.Context) error {
 func (h *TxnHandler) GetTxnsWithFilters(c echo.Context) error {
 	return handler.Handle(
 		h.base,
-		func(c echo.Context, payload *GetTxnsWithFiltersReq) ([]*Trasaction, error) {
+		func(c echo.Context, payload *GetTxnsWithFiltersReq) ([]*Transaction, error) {
 			clerkId := middleware.GetUserID(c)
 			return h.service.GetTxnsWithFilters(c, payload, clerkId)
 		},
@@ -106,7 +106,7 @@ func (h *TxnHandler) SoftDeleteTxns(c echo.Context) error {
 // @Name UpdateTxn
 // @Param id path string true "Transaction ID" format(uuid)
 // @Param transaction body UpdateTxnReq true "Transaction update request"
-// @Success 200 {object} Trasaction
+// @Success 200 {object} Transaction
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 404 {object} map[string]string "Not Found"
@@ -115,7 +115,7 @@ func (h *TxnHandler) SoftDeleteTxns(c echo.Context) error {
 func (h *TxnHandler) UpdateTxn(c echo.Context) error {
 	return handler.Handle(
 		h.base,
-		func(c echo.Context, payload *UpdateTxnReq) (*Trasaction, error) {
+		func(c echo.Context, payload *UpdateTxnReq) (*Transaction, error) {
 			clerkId := middleware.GetUserID(c)
 			// Get ID from path parameter
 			id := c.Param("id")

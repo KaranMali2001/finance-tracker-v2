@@ -23,8 +23,8 @@ WORKDIR /app
 # Copy the binary from builder
 COPY --from=builder /app/main .
 
-# Copy migrations directory
-COPY --from=builder /app/internal/database/migrate/migrations ./internal/database/migrate/migrations
+# # Copy migrations directory
+# COPY --from=builder /app/internal/database/migrate/migrations ./internal/database/migrate/migrations
 
 EXPOSE 8080
 

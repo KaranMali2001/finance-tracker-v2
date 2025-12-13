@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { internal_domain_transaction_TxnType } from './internal_domain_transaction_TxnType';
 export type internal_domain_transaction_UpdateTxnReq = {
     amount?: number;
     category_id?: string;
@@ -9,5 +10,6 @@ export type internal_domain_transaction_UpdateTxnReq = {
     id: string;
     merchant_id?: string;
     transaction_date?: string;
+    type?: internal_domain_transaction_TxnType;
 };
 

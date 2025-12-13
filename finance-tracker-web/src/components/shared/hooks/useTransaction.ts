@@ -4,7 +4,7 @@ import type {
   internal_domain_transaction_CreateTxnReq,
   internal_domain_transaction_ParsedTxnRes,
   internal_domain_transaction_SoftDeleteTxnsReq,
-  internal_domain_transaction_Trasaction,
+  internal_domain_transaction_Transaction,
   internal_domain_transaction_UpdateTxnReq,
 } from '@/generated/api';
 import { TransactionService } from '@/generated/api';
@@ -27,7 +27,7 @@ interface TransactionFilters {
 export function useTransactions(filters?: TransactionFilters) {
   const { isLoaded, isSignedIn } = useAuth();
 
-  return useApiQuery<Array<internal_domain_transaction_Trasaction>>(
+  return useApiQuery<Array<internal_domain_transaction_Transaction>>(
     ['transactions', filters?.accountId, filters?.categoryId, filters?.merchantId],
     () =>
       TransactionService.getTransaction(
@@ -50,7 +50,7 @@ export function useCreateTransaction() {
   const queryClient = useQueryClient();
 
   return useApiMutation<
-    internal_domain_transaction_Trasaction,
+    internal_domain_transaction_Transaction,
     internal_domain_transaction_CreateTxnReq
   >((data) => TransactionService.postTransaction(data), {
     onSuccess: () => {
@@ -100,7 +100,7 @@ export function useUpdateTransaction() {
   const queryClient = useQueryClient();
 
   return useApiMutation<
-    internal_domain_transaction_Trasaction,
+    internal_domain_transaction_Transaction,
     internal_domain_transaction_UpdateTxnReq
   >(
     (data) => {

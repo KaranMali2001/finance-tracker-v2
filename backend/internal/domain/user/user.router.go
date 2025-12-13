@@ -1,6 +1,7 @@
 package user
 
 import (
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
@@ -13,12 +14,13 @@ type Module struct {
 	repo    *UserRepository
 }
 type Deps struct {
-	Server  *server.Server
-	Queries *generated.Queries
+	Server     *server.Server
+	Queries    *generated.Queries
+	TxnManager *database.TxManager
 }
 
 func NewModule(deps Deps) *Module {
-	repo := NewUserRepository(deps.Server, deps.Queries)
+	repo := NewUserRepository(deps.Server, deps.Queries, deps.TxnManager)
 	service := NewUserService(deps.Server, repo)
 	handler := NewUserHandler(deps.Server, service)
 	return &Module{

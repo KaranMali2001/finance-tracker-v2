@@ -22,7 +22,7 @@ export type { internal_domain_system_HealthResponse } from './models/internal_do
 export type { internal_domain_transaction_CreateTxnReq } from './models/internal_domain_transaction_CreateTxnReq';
 export type { internal_domain_transaction_ParsedTxnRes } from './models/internal_domain_transaction_ParsedTxnRes';
 export type { internal_domain_transaction_SoftDeleteTxnsReq } from './models/internal_domain_transaction_SoftDeleteTxnsReq';
-export type { internal_domain_transaction_Trasaction } from './models/internal_domain_transaction_Trasaction';
+export type { internal_domain_transaction_Transaction } from './models/internal_domain_transaction_Transaction';
 export { internal_domain_transaction_TxnType } from './models/internal_domain_transaction_TxnType';
 export type { internal_domain_transaction_UpdateTxnReq } from './models/internal_domain_transaction_UpdateTxnReq';
 export type { internal_domain_user_UpdateUserReq } from './models/internal_domain_user_UpdateUserReq';

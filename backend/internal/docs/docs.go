@@ -699,7 +699,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/internal_domain_transaction.Trasaction"
+                                "$ref": "#/definitions/internal_domain_transaction.Transaction"
                             }
                         }
                     },
@@ -759,7 +759,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/internal_domain_transaction.Trasaction"
+                            "$ref": "#/definitions/internal_domain_transaction.Transaction"
                         }
                     },
                     "400": {
@@ -943,7 +943,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_domain_transaction.Trasaction"
+                            "$ref": "#/definitions/internal_domain_transaction.Transaction"
                         }
                     },
                     "400": {
@@ -1522,7 +1522,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_domain_transaction.Trasaction": {
+        "internal_domain_transaction.Transaction": {
             "type": "object",
             "properties": {
                 "account_id": {
@@ -1656,6 +1656,9 @@ const docTemplate = `{
                 },
                 "transaction_date": {
                     "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/internal_domain_transaction.TxnType"
                 }
             }
         },

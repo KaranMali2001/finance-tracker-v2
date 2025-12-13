@@ -18,7 +18,7 @@ const (
 	TxnTypeRefund       TxnType = "REFUND"
 )
 
-type Trasaction struct {
+type Transaction struct {
 	Id              string  `json:"id,omitempty"`
 	UserId          string  `json:"user_id,omitempty"`
 	AccountId       string  `json:"account_id,omitempty"`

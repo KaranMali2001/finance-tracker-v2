@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { internal_domain_transaction_TxnType } from './internal_domain_transaction_TxnType';
-export type internal_domain_transaction_Trasaction = {
+export type internal_domain_transaction_Transaction = {
     account_id?: string;
     account_name?: string;
     account_number?: string;

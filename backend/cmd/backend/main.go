@@ -85,6 +85,7 @@ func main() {
 
 	// registerting all the modules
 	queries := generated.New(server.DB.Pool)
+	databaseTxnManager := database.NewTxManager(server.DB.Pool)
 	systemModule := system.NewModule(system.Dependencies{Server: server})
 	authModule := auth.NewModule(auth.Dependencies{
 		Server:       server,
@@ -93,8 +94,9 @@ func main() {
 		QueueService: q,
 	})
 	userModule := user.NewModule(user.Deps{
-		Server:  server,
-		Queries: queries,
+		Server:     server,
+		Queries:    queries,
+		TxnManager: databaseTxnManager,
 	})
 	accountModule := account.NewAccountModule(account.Deps{
 		Server:  server,
@@ -110,6 +112,7 @@ func main() {
 		UserRepo:   userModule.GetUserRepository(),
 		GeminiSvc:  globalSvcs.GeminiService,
 		StaticRepo: staticModule.GetRepository(),
+		Tm:         databaseTxnManager,
 	})
 	smsModule := sms.NewSmsModule(sms.Deps{
 		Server:  server,

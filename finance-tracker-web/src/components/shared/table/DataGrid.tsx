@@ -4,7 +4,7 @@ import type { ColDef } from 'ag-grid-community';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-quartz.css';
 import { AgGridReact } from 'ag-grid-react';
-import { forwardRef } from 'react';
+import React, { forwardRef } from 'react';
 import { EmptyState } from '../layout/EmptyState';
 import { LoadingState } from '../layout/LoadingState';
 import type { DataGridProps } from '../types/table';
@@ -59,18 +59,13 @@ export const DataGrid = forwardRef<AgGridReact, DataGridProps<any>>(function Dat
 
     return (
       <div className={className} style={{ height }}>
-        <EmptyState
-          title={emptyStateConfig.title}
-          description={emptyStateConfig.description}
-          icon={emptyStateConfig.icon}
-          action={emptyStateConfig.action}
-        />
+        <EmptyState title={emptyStateConfig.title} description={emptyStateConfig.description} />
       </div>
     );
   }
 
   // Merge default column definition with provided one
-  const mergedDefaultColDef: ColDef<TData> = {
+  const mergedDefaultColDef: ColDef = {
     flex: 1,
     minWidth: 100,
     // Apply global editable setting to default column definition
@@ -81,7 +76,7 @@ export const DataGrid = forwardRef<AgGridReact, DataGridProps<any>>(function Dat
 
   return (
     <div className={`${theme} ${className}`} style={{ height, width: '100%' }}>
-      <AgGridReact<TData>
+      <AgGridReact
         ref={ref}
         theme="legacy"
         rowData={data}
@@ -103,6 +98,4 @@ export const DataGrid = forwardRef<AgGridReact, DataGridProps<any>>(function Dat
   );
 }) as <TData = any>(
   props: DataGridProps<TData> & { ref?: React.Ref<AgGridReact> }
-) => JSX.Element;
-
-DataGrid.displayName = 'DataGrid';
+) => React.JSX.Element;

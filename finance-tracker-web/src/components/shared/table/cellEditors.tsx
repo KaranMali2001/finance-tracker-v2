@@ -1,11 +1,11 @@
 'use client';
 
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/shared/dialog';
 import { Dropdown } from '@/components/shared/dropdown';
 import type { DropdownOption } from '@/components/shared/types/dropdown';
@@ -13,11 +13,11 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { ICellEditor, ICellEditorParams } from 'ag-grid-community';
@@ -26,9 +26,16 @@ import { CalendarIcon } from 'lucide-react';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 
 /**
+ * Custom params including the optional onValueChange callback
+ */
+export interface CustomCellEditorParams extends ICellEditorParams {
+  onValueChange?: (value: any) => void;
+}
+
+/**
  * Text Cell Editor - Simple text input
  */
-export const TextCellEditor = forwardRef<ICellEditor, ICellEditorParams>(
+export const TextCellEditor = forwardRef<ICellEditor, CustomCellEditorParams>(
   ({ value, onValueChange, stopEditing }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [inputValue, setInputValue] = useState(value != null ? String(value) : '');
@@ -77,7 +84,7 @@ TextCellEditor.displayName = 'TextCellEditor';
 /**
  * Number Cell Editor - Number input with validation
  */
-export interface NumberCellEditorParams extends ICellEditorParams {
+export interface NumberCellEditorParams extends CustomCellEditorParams {
   min?: number;
   max?: number;
   step?: number;
@@ -158,7 +165,7 @@ NumberCellEditor.displayName = 'NumberCellEditor';
 /**
  * Select Cell Editor - Dropdown select
  */
-export interface SelectCellEditorParams extends ICellEditorParams {
+export interface SelectCellEditorParams extends CustomCellEditorParams {
   options: Array<{ label: string; value: string | number }>;
 }
 
@@ -218,7 +225,7 @@ SelectCellEditor.displayName = 'SelectCellEditor';
 /**
  * Date Cell Editor - Shadcn Calendar
  */
-export interface DateCellEditorParams extends ICellEditorParams {
+export interface DateCellEditorParams extends CustomCellEditorParams {
   min?: string;
   max?: string;
 }
@@ -329,11 +336,7 @@ export const DateCellEditor = forwardRef<ICellEditor, DateCellEditorParams>(
               setIsOpen(true);
             }}
           >
-            {selectedDate ? (
-              format(selectedDate, 'PPP')
-            ) : (
-              <span>Pick a date</span>
-            )}
+            {selectedDate ? format(selectedDate, 'PPP') : <span>Pick a date</span>}
             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
           </Button>
         </DialogTrigger>
@@ -365,7 +368,7 @@ DateCellEditor.displayName = 'DateCellEditor';
 /**
  * Dropdown Cell Editor - Uses the shared Dropdown component
  */
-export interface DropdownCellEditorParams<TValue = string | number> extends ICellEditorParams {
+export interface DropdownCellEditorParams<TValue = string | number> extends CustomCellEditorParams {
   options: DropdownOption<TValue>[];
 }
 
@@ -436,7 +439,7 @@ DropdownCellEditor.displayName = 'DropdownCellEditor';
 /**
  * Boolean Cell Editor - Yes/No dropdown for boolean values
  */
-export const BooleanCellEditor = forwardRef<ICellEditor, ICellEditorParams>(
+export const BooleanCellEditor = forwardRef<ICellEditor, CustomCellEditorParams>(
   ({ value, onValueChange, stopEditing }, ref) => {
     const booleanOptions: DropdownOption<boolean>[] = [
       { value: true, label: 'Yes' },

@@ -1,12 +1,14 @@
 package transaction
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"mime"
 	"mime/multipart"
 	"path/filepath"
 
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/static"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/user"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/handler"
@@ -22,6 +24,7 @@ type TxnService struct {
 	userRepo   *user.UserRepository
 	geminiSvc  *aiservices.GeminiService
 	staticRepo *static.StaticRepository
+	tm         *database.TxManager
 }
 
 func NewTxnService(s *server.Server, r *TxnRepository, userRepo *user.UserRepository, geminiSvc *aiservices.GeminiService, staticRepo *static.StaticRepository) *TxnService {
@@ -34,41 +37,49 @@ func NewTxnService(s *server.Server, r *TxnRepository, userRepo *user.UserReposi
 	}
 }
 
-// TODO -> put this in TXN for atomicity
-func (s *TxnService) CreateTxn(c echo.Context, payload *CreateTxnReq, clerkId string) (*Trasaction, error) {
+func (s *TxnService) CreateTxn(c echo.Context, payload *CreateTxnReq, clerkId string) (*Transaction, error) {
 	log := middleware.GetLogger(c)
 	log.Info().Msgf("Creating New Transaction for User %v", clerkId)
-	txn, err := s.r.CreateTxns(c.Request().Context(), clerkId, payload)
-	if err != nil {
-		return nil, err
-	}
-	userData, err := s.userRepo.GetUserByClerkId(c.Request().Context(), clerkId)
-	if err != nil {
-		return nil, err
-	}
-	updateUserReq := &user.UpdateUserReq{}
+	var result *Transaction
+	err := s.tm.WithTx(c.Request().Context(), func(c context.Context) error {
+		txn, err := s.r.CreateTxns(c, clerkId, payload)
+		if err != nil {
+			return err
+		}
+		result = txn
+		userData, err := s.userRepo.GetUserByClerkId(c, clerkId)
+		if err != nil {
+			return err
+		}
+		updateUserReq := &user.UpdateUserReq{}
 
-	switch txn.Type {
-	case TxnTypeCredit, TxnTypeIncome, TxnTypeRefund, TxnTypeInvestment:
-		newIncome := txn.Amount + userData.LifetimeIncome
-		updateUserReq.LifetimeIncome = &newIncome
-	case TxnTypeDebit, TxnTypeSubscription:
-		newExpense := userData.LifetimeExpense + txn.Amount
-		updateUserReq.LifetimeExpense = &newExpense
-	}
-	if updateUserReq.LifetimeExpense == nil && updateUserReq.LifetimeIncome == nil {
-		return txn, nil
-	}
-	_, err = s.userRepo.UpdateUser(c.Request().Context(), updateUserReq, clerkId)
+		switch txn.Type {
+		case TxnTypeCredit, TxnTypeIncome, TxnTypeRefund, TxnTypeInvestment:
+			newIncome := txn.Amount + userData.LifetimeIncome
+			updateUserReq.LifetimeIncome = &newIncome
+		case TxnTypeDebit, TxnTypeSubscription:
+			newExpense := userData.LifetimeExpense + txn.Amount
+			updateUserReq.LifetimeExpense = &newExpense
+		}
+		if updateUserReq.LifetimeExpense == nil && updateUserReq.LifetimeIncome == nil {
+			return nil
+		}
+		_, err = s.userRepo.UpdateUser(c, updateUserReq, clerkId)
+		if err != nil {
+			return err
+		}
+		return nil
+	}, log)
 	if err != nil {
 		return nil, err
 	}
+
 	log.Info().
 		Msg("User Lifetime balence updated successfully ")
-	return txn, nil
+	return result, nil
 }
 
-func (s *TxnService) GetTxnsWithFilters(c echo.Context, payload *GetTxnsWithFiltersReq, clerkId string) ([]*Trasaction, error) {
+func (s *TxnService) GetTxnsWithFilters(c echo.Context, payload *GetTxnsWithFiltersReq, clerkId string) ([]*Transaction, error) {
 	return s.r.GetTxnsWithFilters(c.Request().Context(), clerkId, payload)
 }
 
@@ -76,45 +87,51 @@ func (s *TxnService) GetTxnsWithFilters(c echo.Context, payload *GetTxnsWithFilt
 func (s *TxnService) SoftDeleteTxns(c echo.Context, payload *SoftDeleteTxnsReq, clerkId string) error {
 	log := middleware.GetLogger(c)
 	log.Info().Msgf("Soft Deleting Transactions %v for User %v", payload.Ids, clerkId)
-	userData, err := s.userRepo.GetUserByClerkId(c.Request().Context(), clerkId)
-	if err != nil {
-		return err
-	}
-	updateUserReq := &user.UpdateUserReq{}
-	totalExpToSubstract := 0.0
-	totalIncToSubstract := 0.0
-	txns, err := s.r.SoftDeleteTxns(c.Request().Context(), clerkId, payload)
-	if err != nil {
-		return err
-	}
-	for _, txn := range txns {
-		switch txn.Type {
-		case TxnTypeCredit, TxnTypeIncome, TxnTypeRefund, TxnTypeInvestment:
-			totalIncToSubstract += txn.Amount
-		case TxnTypeDebit, TxnTypeSubscription:
-			totalExpToSubstract += txn.Amount
-
+	err := s.tm.WithTx(c.Request().Context(), func(c context.Context) error {
+		userData, err := s.userRepo.GetUserByClerkId(c, clerkId)
+		if err != nil {
+			return err
 		}
-	}
-	if totalIncToSubstract == 0 && totalExpToSubstract == 0 {
+		updateUserReq := &user.UpdateUserReq{}
+		totalExpToSubstract := 0.0
+		totalIncToSubstract := 0.0
+		txns, err := s.r.SoftDeleteTxns(c, clerkId, payload)
+		if err != nil {
+			return err
+		}
+		for _, txn := range txns {
+			switch txn.Type {
+			case TxnTypeCredit, TxnTypeIncome, TxnTypeRefund, TxnTypeInvestment:
+				totalIncToSubstract += txn.Amount
+			case TxnTypeDebit, TxnTypeSubscription:
+				totalExpToSubstract += txn.Amount
+
+			}
+		}
+		if totalIncToSubstract == 0 && totalExpToSubstract == 0 {
+			return nil
+		}
+
+		newIncome := userData.LifetimeIncome - totalIncToSubstract
+		newExpense := userData.LifetimeExpense - totalExpToSubstract
+		updateUserReq.LifetimeExpense = &newExpense
+		updateUserReq.LifetimeIncome = &newIncome
+
+		_, err = s.userRepo.UpdateUser(c, updateUserReq, clerkId)
+		if err != nil {
+			return err
+		}
+		log.Info().
+			Msg("User Lifetime balence updated successfully ")
 		return nil
-	}
-
-	newIncome := userData.LifetimeIncome - totalIncToSubstract
-	newExpense := userData.LifetimeExpense - totalExpToSubstract
-	updateUserReq.LifetimeExpense = &newExpense
-	updateUserReq.LifetimeIncome = &newIncome
-
-	_, err = s.userRepo.UpdateUser(c.Request().Context(), updateUserReq, clerkId)
+	}, log)
 	if err != nil {
 		return err
 	}
-	log.Info().
-		Msg("User Lifetime balence updated successfully ")
 	return nil
 }
 
-func (s *TxnService) UpdateTxn(c echo.Context, payload *UpdateTxnReq, clerkId string) (*Trasaction, error) {
+func (s *TxnService) UpdateTxn(c echo.Context, payload *UpdateTxnReq, clerkId string) (*Transaction, error) {
 	log := middleware.GetLogger(c)
 	log.Info().Msgf("Updating Transaction %v for User %v", payload.Id, clerkId)
 	return s.r.UpdateTxn(c.Request().Context(), clerkId, payload)

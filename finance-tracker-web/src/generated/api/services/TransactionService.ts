@@ -5,7 +5,7 @@
 import type { internal_domain_transaction_CreateTxnReq } from '../models/internal_domain_transaction_CreateTxnReq';
 import type { internal_domain_transaction_ParsedTxnRes } from '../models/internal_domain_transaction_ParsedTxnRes';
 import type { internal_domain_transaction_SoftDeleteTxnsReq } from '../models/internal_domain_transaction_SoftDeleteTxnsReq';
-import type { internal_domain_transaction_Trasaction } from '../models/internal_domain_transaction_Trasaction';
+import type { internal_domain_transaction_Transaction } from '../models/internal_domain_transaction_Transaction';
 import type { internal_domain_transaction_UpdateTxnReq } from '../models/internal_domain_transaction_UpdateTxnReq';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -17,14 +17,14 @@ export class TransactionService {
      * @param accountId Account ID
      * @param categoryId Category ID
      * @param merchantId Merchant ID
-     * @returns internal_domain_transaction_Trasaction OK
+     * @returns internal_domain_transaction_Transaction OK
      * @throws ApiError
      */
     public static getTransaction(
         accountId?: string,
         categoryId?: string,
         merchantId?: string,
-    ): CancelablePromise<Array<internal_domain_transaction_Trasaction>> {
+    ): CancelablePromise<Array<internal_domain_transaction_Transaction>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/transaction',
@@ -44,12 +44,12 @@ export class TransactionService {
      * Create a new transaction
      * Creates a new financial transaction for the authenticated user
      * @param transaction Transaction creation request
-     * @returns internal_domain_transaction_Trasaction Created
+     * @returns internal_domain_transaction_Transaction Created
      * @throws ApiError
      */
     public static postTransaction(
         transaction: internal_domain_transaction_CreateTxnReq,
-    ): CancelablePromise<internal_domain_transaction_Trasaction> {
+    ): CancelablePromise<internal_domain_transaction_Transaction> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/transaction',
@@ -110,13 +110,13 @@ export class TransactionService {
      * Updates an existing transaction for the authenticated user
      * @param id Transaction ID
      * @param transaction Transaction update request
-     * @returns internal_domain_transaction_Trasaction OK
+     * @returns internal_domain_transaction_Transaction OK
      * @throws ApiError
      */
     public static putTransaction(
         id: string,
         transaction: internal_domain_transaction_UpdateTxnReq,
-    ): CancelablePromise<internal_domain_transaction_Trasaction> {
+    ): CancelablePromise<internal_domain_transaction_Transaction> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/transaction/{id}',
