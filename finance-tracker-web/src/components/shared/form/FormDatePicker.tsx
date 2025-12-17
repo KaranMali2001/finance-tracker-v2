@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
   FormControl,
@@ -9,27 +10,19 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { format, isAfter, startOfDay } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { FieldPath, FieldValues } from 'react-hook-form';
 import { BaseFormFieldProps } from '../types/form';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/shared/dialog';
-import { isAfter, startOfDay } from 'date-fns';
 
 interface FormDatePickerProps<
   TFieldValues extends FieldValues = FieldValues,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 > extends BaseFormFieldProps<TFieldValues, TName> {
   placeholder?: string;
+  allowFutureDates?: boolean;
 }
 
 function FormDatePicker<
@@ -44,8 +37,8 @@ function FormDatePicker<
   placeholder,
   disabled,
   className,
+  allowFutureDates = false,
 }: FormDatePickerProps<TFieldValues, TName>) {
-  const [isOpen, setIsOpen] = useState(false);
   const today = new Date();
 
   return (
@@ -60,8 +53,8 @@ function FormDatePicker<
               {required && <span className="ml-1 text-red-500">*</span>}
             </FormLabel>
           )}
-          <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger asChild>
+          <Popover>
+            <PopoverTrigger asChild>
               <FormControl>
                 <Button
                   type="button"
@@ -80,38 +73,39 @@ function FormDatePicker<
                   <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                 </Button>
               </FormControl>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Select Date</DialogTitle>
-              </DialogHeader>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={field.value ? new Date(field.value) : undefined}
-                defaultMonth={today}
+                defaultMonth={field.value ? new Date(field.value) : today}
                 onSelect={(date) => {
-                  if (date) {
-                    // Prevent selecting future dates
+                  if (date && !allowFutureDates) {
+                    // Prevent selecting future dates if not allowed
                     const todayStart = startOfDay(today);
                     const selectedDate = startOfDay(date);
                     if (isAfter(selectedDate, todayStart)) {
                       return;
                     }
                   }
-                  field.onChange(date ? date.toISOString() : undefined);
-                  setIsOpen(false);
+                  field.onChange(date ? format(date, 'yyyy-MM-dd') : undefined);
                 }}
                 disabled={(date) => {
-                  // Disable future dates
-                  const todayStart = startOfDay(today);
-                  const checkDate = startOfDay(date);
-                  // Disable if it's a future date or if the component is disabled
-                  return disabled || isAfter(checkDate, todayStart);
+                  if (disabled) {
+                    return true;
+                  }
+                  if (!allowFutureDates) {
+                    // Disable future dates if not allowed
+                    const todayStart = startOfDay(today);
+                    const checkDate = startOfDay(date);
+                    return isAfter(checkDate, todayStart);
+                  }
+                  return false;
                 }}
                 initialFocus
               />
-            </DialogContent>
-          </Dialog>
+            </PopoverContent>
+          </Popover>
           {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
         </FormItem>

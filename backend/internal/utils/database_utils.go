@@ -297,6 +297,26 @@ func DateToTime(d pgtype.Date) time.Time {
 	return d.Time
 }
 
+// TimeToDate converts time.Time to pgtype.Date
+func TimeToDate(t time.Time) pgtype.Date {
+	return pgtype.Date{
+		Time:  t,
+		Valid: true,
+	}
+}
+
+// TimePtrToDate converts *time.Time to pgtype.Date
+// Returns invalid Date if the pointer is nil
+func TimePtrToDate(t *time.Time) pgtype.Date {
+	if t == nil {
+		return pgtype.Date{Valid: false}
+	}
+	return pgtype.Date{
+		Time:  *t,
+		Valid: true,
+	}
+}
+
 func StringPtrToText(s *string) pgtype.Text {
 	if s == nil {
 		return pgtype.Text{Valid: false}
