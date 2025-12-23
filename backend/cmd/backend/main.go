@@ -29,6 +29,7 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/account"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/auth"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/investment"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/sms"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/static"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/system"
@@ -41,6 +42,7 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/services"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
 	"github.com/clerk/clerk-sdk-go/v2"
+	"github.com/hibiken/asynq"
 )
 
 const DefaultContextTimeout = 30
@@ -58,24 +60,7 @@ func main() {
 	// Initialize Clerk SDK with secret key for token validation
 	clerk.SetKey(cfg.Auth.SecretKey)
 	log.Info().Msg("Clerk SDK initialized")
-	globalSvcs, err := services.NewServices(cfg, log)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to start global services")
-	}
-	taskService := tasks.NewTaskService(globalSvcs)
-	// create new job service
-	q := queue.NewJobService(log, cfg, taskService)
-
-	if err := q.Start(); err != nil {
-		log.Error().Err(err).Msg("failed to start Queue services")
-	}
-	if err := migrate.MigrateAndSeed(&cfg.Database); err != nil {
-		log.Fatal().Err(err).Msg("failed to migrate database")
-	}
 	server, err := server.New(cfg, log, loggerService)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create server")
-	}
 	db, err := database.New(cfg, log, loggerService)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create database")
@@ -86,13 +71,39 @@ func main() {
 
 	// registerting all the modules
 	queries := generated.New(server.DB.Pool)
+	globalSvcs, err := services.NewServices(cfg, log)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to start global services")
+	}
+	jobModule := jobs.NewModule(jobs.Deps{
+		Server:  server,
+		Queries: queries,
+	})
+	qClient := asynq.NewClient(asynq.RedisClientOpt{
+		Addr: cfg.Redis.Address,
+	})
+	taskService := tasks.NewTaskService(globalSvcs, jobModule.GetJobRepository(), qClient)
+	// create new job service
+	q := queue.NewJobService(log, cfg, taskService, qClient)
+
+	if err := q.Start(); err != nil {
+		log.Error().Err(err).Msg("failed to start Queue services")
+	}
+	if err := migrate.MigrateAndSeed(&cfg.Database); err != nil {
+		log.Fatal().Err(err).Msg("failed to migrate database")
+	}
+
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create server")
+	}
+
 	databaseTxnManager := database.NewTxManager(server.DB.Pool)
+
 	systemModule := system.NewModule(system.Dependencies{Server: server})
 	authModule := auth.NewModule(auth.Dependencies{
-		Server:       server,
-		Queries:      queries,
-		TaskService:  taskService,
-		QueueService: q,
+		Server:      server,
+		Queries:     queries,
+		TaskService: taskService,
 	})
 	userModule := user.NewModule(user.Deps{
 		Server:     server,
@@ -155,7 +166,7 @@ func main() {
 	<-ctx.Done()
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout*time.Second)
 
-	if err = server.Shutdown(ctx); err != nil {
+	if err = server.Shutdown(ctx, qClient); err != nil {
 		log.Fatal().Err(err).Msg("server forced to shutdown")
 	}
 	stop()

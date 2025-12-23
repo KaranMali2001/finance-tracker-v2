@@ -12,14 +12,16 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
-import { useUser } from '@clerk/nextjs';
-import { MessageSquare, Receipt, Target, User, Wallet } from 'lucide-react';
+import { useClerk, useUser } from '@clerk/nextjs';
+import { LogOut, MessageSquare, Receipt, Target, User, Wallet } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export function DashboardSidebar() {
   const pathname = usePathname();
   const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
+  const router = useRouter();
 
   const navigationItems = [
     {
@@ -81,39 +83,57 @@ export function DashboardSidebar() {
       </SidebarContent>
       <SidebarFooter>
         {isLoaded && user && (
-          <Link
-            href="/dashboard/profile"
-            className={cn(
-              'flex items-center gap-2 rounded-md p-2 transition-colors',
-              'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
-              pathname === '/dashboard/profile' &&
-                'bg-sidebar-accent text-sidebar-accent-foreground',
-              'group-data-[collapsible=icon]:justify-center'
-            )}
-            title={user.fullName || user.emailAddresses[0]?.emailAddress || 'Profile'}
-          >
-            {user.imageUrl ? (
-              <img
-                src={user.imageUrl}
-                alt={user.fullName || user.emailAddresses[0]?.emailAddress || 'Profile'}
-                className="h-8 w-8 rounded-full"
-              />
-            ) : (
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground">
-                {(user.fullName || user.emailAddresses[0]?.emailAddress || 'U')
-                  .charAt(0)
-                  .toUpperCase()}
+          <>
+            <Link
+              href="/dashboard/profile"
+              className={cn(
+                'flex items-center gap-2 rounded-md p-2 transition-colors',
+                'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                pathname === '/dashboard/profile' &&
+                  'bg-sidebar-accent text-sidebar-accent-foreground',
+                'group-data-[collapsible=icon]:justify-center'
+              )}
+              title={user.fullName || user.emailAddresses[0]?.emailAddress || 'Profile'}
+            >
+              {user.imageUrl ? (
+                <img
+                  src={user.imageUrl}
+                  alt={user.fullName || user.emailAddresses[0]?.emailAddress || 'Profile'}
+                  className="h-8 w-8 rounded-full"
+                />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground">
+                  {(user.fullName || user.emailAddresses[0]?.emailAddress || 'U')
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+              )}
+              <div className="flex min-w-0 flex-1 flex-col group-data-[collapsible=icon]:hidden">
+                <span className="truncate text-sm font-medium">
+                  {user.fullName || user.emailAddresses[0]?.emailAddress || 'User'}
+                </span>
+                <span className="truncate text-xs text-sidebar-foreground/70">
+                  {user.emailAddresses[0]?.emailAddress}
+                </span>
               </div>
-            )}
-            <div className="flex min-w-0 flex-1 flex-col group-data-[collapsible=icon]:hidden">
-              <span className="truncate text-sm font-medium">
-                {user.fullName || user.emailAddresses[0]?.emailAddress || 'User'}
-              </span>
-              <span className="truncate text-xs text-sidebar-foreground/70">
-                {user.emailAddresses[0]?.emailAddress}
-              </span>
-            </div>
-          </Link>
+            </Link>
+            <button
+              onClick={() => {
+                signOut();
+                router.push('/sign-in');
+              }}
+              className={cn(
+                'flex items-center gap-2 rounded-md p-2 transition-colors w-full',
+                'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                'group-data-[collapsible=icon]:justify-center',
+                'text-sidebar-foreground'
+              )}
+              title="Logout"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="group-data-[collapsible=icon]:hidden">Logout</span>
+            </button>
+          </>
         )}
       </SidebarFooter>
     </Sidebar>

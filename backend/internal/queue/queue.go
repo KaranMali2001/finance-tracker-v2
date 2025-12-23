@@ -17,12 +17,8 @@ type JobService struct {
 	tasks  *tasks.TaskService
 }
 
-func NewJobService(logger *zerolog.Logger, cfg *config.Config, tasks *tasks.TaskService) *JobService {
+func NewJobService(logger *zerolog.Logger, cfg *config.Config, tasks *tasks.TaskService, client *asynq.Client) *JobService {
 	redisAddr := cfg.Redis.Address
-
-	client := asynq.NewClient(asynq.RedisClientOpt{
-		Addr: redisAddr,
-	})
 
 	server := asynq.NewServer(
 		asynq.RedisClientOpt{Addr: redisAddr},

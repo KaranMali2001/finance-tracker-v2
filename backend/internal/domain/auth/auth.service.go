@@ -1,21 +1,20 @@
 package auth
 
 import (
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/queue"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
 	"github.com/labstack/echo/v4"
 )
 
 type AuthService struct {
-	server       *server.Server
-	repository   *AuthRepository
-	TaskService  *tasks.TaskService
-	QueueService *queue.JobService
+	server      *server.Server
+	repository  *AuthRepository
+	TaskService *tasks.TaskService
 }
 
-func NewAuthService(s *server.Server, r *AuthRepository, ts *tasks.TaskService, qs *queue.JobService) *AuthService {
+func NewAuthService(s *server.Server, r *AuthRepository, ts *tasks.TaskService) *AuthService {
 	return &AuthService{
 		server:      s,
 		repository:  r,
@@ -37,11 +36,11 @@ func (s *AuthService) CreateUser(c echo.Context, user *UserCreateRequest) (*User
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to create new email task")
 	}
-	info, err := s.QueueService.Client.EnqueueContext(c.Request().Context(), task)
+	err = s.TaskService.EnqueueTask(c.Request().Context(), task, userData.Id, logger, jobs.JobTypeWELCOMEEMAIL)
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to Enqueue the Welcome Email Job")
 	}
-	logger.Info().Str("SuccessFully Enqueued Welcome Email Job %s", info.ID)
+	logger.Info().Msg("SuccessFully Enqueued Welcome Email Job")
 	return userData, nil
 }
 

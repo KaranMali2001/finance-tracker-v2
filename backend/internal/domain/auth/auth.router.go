@@ -25,7 +25,7 @@ type Dependencies struct {
 
 func NewModule(deps Dependencies) *Module {
 	repo := NewAuthRepository(deps.Server, deps.Queries)
-	service := NewAuthService(deps.Server, repo, deps.TaskService, deps.QueueService)
+	service := NewAuthService(deps.Server, repo, deps.TaskService)
 	handler := NewAuthHandler(deps.Server, service)
 
 	return &Module{handler: handler}

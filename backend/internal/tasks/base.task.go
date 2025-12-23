@@ -1,12 +1,15 @@
 package tasks
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/services"
 	"github.com/hibiken/asynq"
+	"github.com/rs/zerolog"
 )
 
 type TaskType string
@@ -67,15 +70,19 @@ var TaskRegistry = map[TaskType]TaskConfig{
 }
 
 type TaskService struct {
-	registry map[TaskType]TaskConfig
-	services *services.Services
+	registry      map[TaskType]TaskConfig
+	services      *services.Services
+	jobRepository *jobs.JobRepository
+	client        *asynq.Client
 }
 
 // NewTaskService creates a new TaskService instance
-func NewTaskService(services *services.Services) *TaskService {
+func NewTaskService(services *services.Services, jobRepository *jobs.JobRepository, client *asynq.Client) *TaskService {
 	return &TaskService{
-		registry: TaskRegistry,
-		services: services,
+		registry:      TaskRegistry,
+		services:      services,
+		jobRepository: jobRepository,
+		client:        client,
 	}
 }
 
@@ -110,7 +117,29 @@ func NewTaskWithConfig(taskType TaskType, payload []byte) (*asynq.Task, error) {
 	return asynq.NewTask(string(taskType), payload, opts...), nil
 }
 
-func (ts *TaskService) NewTask(taskType TaskType, payload interface{}) (*asynq.Task, error) {
+func (ts *TaskService) EnqueueTask(ctx context.Context, task *asynq.Task, userId string, logger *zerolog.Logger, jobType jobs.JobType) error {
+	info, err := ts.client.EnqueueContext(ctx, task)
+	if err != nil {
+		return fmt.Errorf("failed to enqueue task: %w", err)
+	}
+	job, err := ts.jobRepository.CreateNewJob(ctx, &jobs.CreateJob{
+		UserId:    userId,
+		JobType:   jobType,
+		JobId:     info.ID,
+		Payload:   task.Payload(),
+		Attempts:  0,
+		QueueName: "default",
+		Metadata:  nil,
+		Status:    jobs.JobStatusPending,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create job: %w", err)
+	}
+	logger.Info().Str("SuccessFully Created Job %s", job.JobId).Msg("Job created successfully")
+	return nil
+}
+
+func (ts *TaskService) NewTask(taskType TaskType, payload any, userId string, logger *zerolog.Logger) (*asynq.Task, error) {
 	// Marshal payload to JSON
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
@@ -118,5 +147,10 @@ func (ts *TaskService) NewTask(taskType TaskType, payload interface{}) (*asynq.T
 	}
 
 	// Use existing NewTaskWithConfig to create task with proper config
-	return NewTaskWithConfig(taskType, payloadBytes)
+	task, err := NewTaskWithConfig(taskType, payloadBytes)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create task: %w", err)
+	}
+
+	return task, nil
 }

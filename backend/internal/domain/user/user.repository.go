@@ -21,6 +21,23 @@ func NewUserRepository(s *server.Server, queries *generated.Queries, tm *databas
 	}
 }
 
+func userFromDb(user *generated.User) *User {
+	return &User{
+		Email:                        user.Email,
+		LifetimeIncome:               utils.NumericToFloat64(user.LifetimeIncome),
+		LifetimeExpense:              utils.NumericToFloat64(user.LifetimeExpense),
+		UseLlmParsing:                utils.BoolToBool(user.UseLlmParsing),
+		IsActive:                     utils.BoolToBool(user.IsActive),
+		DatabaseUrl:                  utils.TextToString(user.DatabaseUrl),
+		CreatedAt:                    utils.TimestampToTime(user.CreatedAt),
+		UpdatedAt:                    utils.TimestampToTime(user.UpdatedAt),
+		TransactionImageParseAttempt: utils.Int4ToUint(user.TransactionImageParseAttempts),
+		TransactionImageParseSuccess: utils.Int4ToUint(user.TransactionImageParseSuccesses),
+		ApiKey:                       utils.TextToString(user.ApiKey),
+		QrString:                     utils.TextToString(user.QrString),
+	}
+}
+
 func (r *UserRepository) UpdateUser(c context.Context, updateUser *UpdateUserReq, clerkId string) (*User, error) {
 	queries := r.queries
 	if tx := r.tm.GetTx(c); tx != nil {
@@ -38,19 +55,7 @@ func (r *UserRepository) UpdateUser(c context.Context, updateUser *UpdateUserReq
 		return nil, err
 	}
 
-	return &User{
-		Email:           u.Email,
-		IsActive:        utils.BoolToBool(u.IsActive),
-		ClerkId:         u.ClerkID,
-		LifetimeExpense: utils.NumericToFloat64(u.LifetimeExpense),
-		LifetimeIncome:  utils.NumericToFloat64(u.LifetimeIncome),
-		DatabaseUrl:     utils.TextToString(u.DatabaseUrl),
-		UseLlmParsing:   utils.BoolToBool(u.UseLlmParsing),
-		CreatedAt:       utils.TimestampToTime(u.CreatedAt),
-		UpdatedAt:       utils.TimestampToTime(u.UpdatedAt),
-		ApiKey:          utils.TextToString(u.ApiKey),
-		QrString:        utils.TextToString(u.QrString),
-	}, nil
+	return userFromDb(&u), nil
 }
 
 func (r *UserRepository) GetUserByClerkId(c context.Context, clerkId string) (*User, error) {
@@ -62,20 +67,7 @@ func (r *UserRepository) GetUserByClerkId(c context.Context, clerkId string) (*U
 	if err != nil {
 		return nil, err
 	}
-	return &User{
-		Email:                        user.Email,
-		LifetimeIncome:               utils.NumericToFloat64(user.LifetimeIncome),
-		LifetimeExpense:              utils.NumericToFloat64(user.LifetimeExpense),
-		UseLlmParsing:                utils.BoolToBool(user.UseLlmParsing),
-		IsActive:                     utils.BoolToBool(user.IsActive),
-		DatabaseUrl:                  utils.TextToString(user.DatabaseUrl),
-		CreatedAt:                    utils.TimestampToTime(user.CreatedAt),
-		UpdatedAt:                    utils.TimestampToTime(user.UpdatedAt),
-		TransactionImageParseAttempt: utils.Int4ToUint(user.TransactionImageParseAttempts),
-		TransactionImageParseSuccess: utils.Int4ToUint(user.TransactionImageParseSuccesses),
-		ApiKey:                       utils.TextToString(user.ApiKey),
-		QrString:                     utils.TextToString(user.QrString),
-	}, nil
+	return userFromDb(&user), nil
 }
 
 func (r *UserRepository) UpdateUserInternal(c context.Context, payload *UpdateUserInternal, clerkId string) (*User, error) {
@@ -94,20 +86,7 @@ func (r *UserRepository) UpdateUserInternal(c context.Context, payload *UpdateUs
 	if err != nil {
 		return nil, err
 	}
-	return &User{
-		Email:                        user.Email,
-		LifetimeIncome:               utils.NumericToFloat64(user.LifetimeIncome),
-		LifetimeExpense:              utils.NumericToFloat64(user.LifetimeExpense),
-		UseLlmParsing:                utils.BoolToBool(user.UseLlmParsing),
-		IsActive:                     utils.BoolToBool(user.IsActive),
-		DatabaseUrl:                  utils.TextToString(user.DatabaseUrl),
-		CreatedAt:                    utils.TimestampToTime(user.CreatedAt),
-		UpdatedAt:                    utils.TimestampToTime(user.UpdatedAt),
-		TransactionImageParseAttempt: utils.Int4ToUint(user.TransactionImageParseAttempts),
-		TransactionImageParseSuccess: utils.Int4ToUint(user.TransactionImageParseSuccesses),
-		ApiKey:                       utils.TextToString(user.ApiKey),
-		QrString:                     utils.TextToString(user.QrString),
-	}, nil
+	return userFromDb(&user), nil
 }
 
 func (r *UserRepository) GetUserByApiKey(c context.Context, apiKey string) (*User, error) {
@@ -119,18 +98,5 @@ func (r *UserRepository) GetUserByApiKey(c context.Context, apiKey string) (*Use
 	if err != nil {
 		return nil, err
 	}
-	return &User{
-		Email:                        user.Email,
-		LifetimeIncome:               utils.NumericToFloat64(user.LifetimeIncome),
-		LifetimeExpense:              utils.NumericToFloat64(user.LifetimeExpense),
-		UseLlmParsing:                utils.BoolToBool(user.UseLlmParsing),
-		IsActive:                     utils.BoolToBool(user.IsActive),
-		DatabaseUrl:                  utils.TextToString(user.DatabaseUrl),
-		CreatedAt:                    utils.TimestampToTime(user.CreatedAt),
-		UpdatedAt:                    utils.TimestampToTime(user.UpdatedAt),
-		TransactionImageParseAttempt: utils.Int4ToUint(user.TransactionImageParseAttempts),
-		TransactionImageParseSuccess: utils.Int4ToUint(user.TransactionImageParseSuccesses),
-		ApiKey:                       utils.TextToString(user.ApiKey),
-		QrString:                     utils.TextToString(user.QrString),
-	}, nil
+	return userFromDb(&user), nil
 }

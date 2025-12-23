@@ -20,6 +20,24 @@ func NewSmsRepository(s *server.Server, q *generated.Queries) *SmsRepository {
 	}
 }
 
+func SmsFromDB(s generated.SmsLog) *SmsLogs {
+	return &SmsLogs{
+		Id:                 utils.UUIDToString(s.ID),
+		Sender:             s.Sender,
+		RawMessage:         s.RawMessage,
+		ReceivedAt:         s.ReceivedAt.Time,
+		ParsingStatus:      s.ParsingStatus.String,
+		ErrorMessage:       utils.TextToStringPtr(s.ErrorMessage),
+		RetryCount:         uint8(utils.Int4ToInt(s.RetryCount)),
+		LlmParsed:          s.LlmParsed.Bool,
+		LlmParsedAttempted: s.LlmParseAttempted.Bool,
+		LlmResponse:        utils.TextToStringPtr(s.LlmResponse),
+		CreatedAt:          s.CreatedAt.Time,
+		UpdatedAt:          s.UpdatedAt.Time,
+		LastRetryAt:        s.LastRetryAt.Time,
+	}
+}
+
 func (s *SmsRepository) GetSmses(c context.Context, payload *GetSmsesReq, clerkId string) ([]SmsLogs, error) {
 	dbSmsLogs, err := s.q.GetSmses(c, clerkId)
 	if err != nil {
@@ -27,21 +45,7 @@ func (s *SmsRepository) GetSmses(c context.Context, payload *GetSmsesReq, clerkI
 	}
 	smsLogs := make([]SmsLogs, len(dbSmsLogs))
 	for i, sms := range dbSmsLogs {
-		smsLogs[i] = SmsLogs{
-			Id:                 utils.UUIDToString(sms.ID),
-			Sender:             sms.Sender,
-			RawMessage:         sms.RawMessage,
-			ReceivedAt:         sms.ReceivedAt.Time,
-			ParsingStatus:      sms.ParsingStatus.String,
-			ErrorMessage:       utils.TextToStringPtr(sms.ErrorMessage),
-			RetryCount:         uint8(utils.Int4ToInt(sms.RetryCount)),
-			LlmParsed:          sms.LlmParsed.Bool,
-			LlmParsedAttempted: sms.LlmParseAttempted.Bool,
-			LlmResponse:        utils.TextToStringPtr(sms.LlmResponse),
-			CreatedAt:          sms.CreatedAt.Time,
-			UpdatedAt:          sms.UpdatedAt.Time,
-			LastRetryAt:        sms.LastRetryAt.Time,
-		}
+		smsLogs[i] = *SmsFromDB(sms)
 	}
 	return smsLogs, nil
 }
@@ -55,21 +59,7 @@ func (s *SmsRepository) GetSmsById(c context.Context, payload *GetSmsByIdReq, cl
 	if err != nil {
 		return nil, err
 	}
-	return &SmsLogs{
-		Id:                 utils.UUIDToString(sms.ID),
-		Sender:             sms.Sender,
-		RawMessage:         sms.RawMessage,
-		ReceivedAt:         sms.ReceivedAt.Time,
-		ParsingStatus:      sms.ParsingStatus.String,
-		ErrorMessage:       utils.TextToStringPtr(sms.ErrorMessage),
-		RetryCount:         uint8(utils.Int4ToInt(sms.RetryCount)),
-		LlmParsed:          sms.LlmParsed.Bool,
-		LlmParsedAttempted: sms.LlmParseAttempted.Bool,
-		LlmResponse:        utils.TextToStringPtr(sms.LlmResponse),
-		CreatedAt:          sms.CreatedAt.Time,
-		UpdatedAt:          sms.UpdatedAt.Time,
-		LastRetryAt:        sms.LastRetryAt.Time,
-	}, nil
+	return SmsFromDB(sms), nil
 }
 
 func (s *SmsRepository) CreateSms(c context.Context, payload *CreateSmsReq, clerkId string) (*SmsLogs, error) {
@@ -84,19 +74,5 @@ func (s *SmsRepository) CreateSms(c context.Context, payload *CreateSmsReq, cler
 	if err != nil {
 		return nil, err
 	}
-	return &SmsLogs{
-		Id:                 utils.UUIDToString(sms.ID),
-		Sender:             sms.Sender,
-		RawMessage:         sms.RawMessage,
-		ReceivedAt:         sms.ReceivedAt.Time,
-		ParsingStatus:      sms.ParsingStatus.String,
-		ErrorMessage:       utils.TextToStringPtr(sms.ErrorMessage),
-		RetryCount:         uint8(utils.Int4ToInt(sms.RetryCount)),
-		LlmParsed:          sms.LlmParsed.Bool,
-		LlmParsedAttempted: sms.LlmParseAttempted.Bool,
-		LlmResponse:        utils.TextToStringPtr(sms.LlmResponse),
-		CreatedAt:          sms.CreatedAt.Time,
-		UpdatedAt:          sms.UpdatedAt.Time,
-		LastRetryAt:        sms.LastRetryAt.Time,
-	}, nil
+	return SmsFromDB(sms), nil
 }

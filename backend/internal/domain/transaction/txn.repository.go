@@ -26,6 +26,30 @@ func NewTxnRepository(s *server.Server, q *generated.Queries, tm *database.TxMan
 	}
 }
 
+func txnFromDb(t *generated.Transaction) *Transaction {
+	return &Transaction{
+		Id: utils.UUIDToString(t.ID),
+
+		UserId:          t.UserID,
+		AccountId:       utils.UUIDToString(t.AccountID),
+		ToAccountId:     utils.UUIDToStringPtr(t.ToAccountID),
+		CategoryId:      utils.UUIDToStringPtr(t.CategoryID),
+		MerchantId:      utils.UUIDToStringPtr(t.MerchantID),
+		Type:            TxnType(t.Type),
+		Amount:          utils.NumericToFloat64(t.Amount),
+		Description:     utils.TextToStringPtr(t.Description),
+		Notes:           utils.TextToStringPtr(t.Notes),
+		Tags:            utils.TextToStringPtr(t.Tags),
+		SmsId:           utils.UUIDToStringPtr(t.SmsID),
+		PaymentMethod:   utils.TextToStringPtr(t.PaymentMethod),
+		ReferenceNumber: utils.TextToStringPtr(t.ReferenceNumber),
+		IsRecurring:     utils.BoolToBool(t.IsRecurring),
+
+		CreatedAt: utils.TimestampToTime(t.CreatedAt),
+		UpdatedAt: utils.TimestampToTime(t.UpdatedAt),
+	}
+}
+
 func (r *TxnRepository) CreateTxns(c context.Context, clerkId string, payload *CreateTxnReq) (*Transaction, error) {
 	// Default to today's date if TransactionDate is not provided
 	queries := r.queries
@@ -53,26 +77,7 @@ func (r *TxnRepository) CreateTxns(c context.Context, clerkId string, payload *C
 		return nil, err
 	}
 
-	return &Transaction{
-		Id:              utils.UUIDToString(dbTxn.ID),
-		UserId:          dbTxn.UserID,
-		AccountId:       utils.UUIDToString(dbTxn.AccountID),
-		ToAccountId:     utils.UUIDToStringPtr(dbTxn.ToAccountID),
-		CategoryId:      utils.UUIDToStringPtr(dbTxn.CategoryID),
-		MerchantId:      utils.UUIDToStringPtr(dbTxn.MerchantID),
-		Type:            TxnType(dbTxn.Type),
-		Amount:          utils.NumericToFloat64(dbTxn.Amount),
-		Description:     utils.TextToStringPtr(dbTxn.Description),
-		Notes:           utils.TextToStringPtr(dbTxn.Notes),
-		Tags:            utils.TextToStringPtr(dbTxn.Tags),
-		SmsId:           utils.UUIDToStringPtr(dbTxn.SmsID),
-		PaymentMethod:   utils.TextToStringPtr(dbTxn.PaymentMethod),
-		ReferenceNumber: utils.TextToStringPtr(dbTxn.ReferenceNumber),
-		IsRecurring:     utils.BoolToBool(dbTxn.IsRecurring),
-
-		CreatedAt: utils.TimestampToTime(dbTxn.CreatedAt),
-		UpdatedAt: utils.TimestampToTime(dbTxn.UpdatedAt),
-	}, nil
+	return txnFromDb(&dbTxn), nil
 }
 
 func (r *TxnRepository) GetTxnsWithFilters(c context.Context, clerkId string, filters *GetTxnsWithFiltersReq) ([]*Transaction, error) {
@@ -94,8 +99,7 @@ func (r *TxnRepository) GetTxnsWithFilters(c context.Context, clerkId string, fi
 	txns := make([]*Transaction, len(dbTxns))
 	for i, dbTxn := range dbTxns {
 		txns[i] = &Transaction{
-			Id: utils.UUIDToString(dbTxn.ID),
-
+			Id:            utils.UUIDToString(dbTxn.ID),
 			AccountId:     utils.UUIDToString(dbTxn.AccountID),
 			AccountNumber: utils.TextToString(dbTxn.AccountNumber),
 			AccountName:   utils.TextToString(dbTxn.AccountName),
@@ -150,25 +154,7 @@ func (r *TxnRepository) SoftDeleteTxns(c context.Context, clerkId string, payloa
 	}
 	txns := make([]*Transaction, len(dbTxns))
 	for i, dbTxn := range dbTxns {
-		txns[i] = &Transaction{
-			Id:              utils.UUIDToString(dbTxn.ID),
-			UserId:          dbTxn.UserID,
-			AccountId:       utils.UUIDToString(dbTxn.AccountID),
-			ToAccountId:     utils.UUIDToStringPtr(dbTxn.ToAccountID),
-			CategoryId:      utils.UUIDToStringPtr(dbTxn.CategoryID),
-			MerchantId:      utils.UUIDToStringPtr(dbTxn.MerchantID),
-			Type:            TxnType(dbTxn.Type),
-			Amount:          utils.NumericToFloat64(dbTxn.Amount),
-			Description:     utils.TextToStringPtr(dbTxn.Description),
-			Notes:           utils.TextToStringPtr(dbTxn.Notes),
-			Tags:            utils.TextToStringPtr(dbTxn.Tags),
-			SmsId:           utils.UUIDToStringPtr(dbTxn.SmsID),
-			PaymentMethod:   utils.TextToStringPtr(dbTxn.PaymentMethod),
-			ReferenceNumber: utils.TextToStringPtr(dbTxn.ReferenceNumber),
-			IsRecurring:     utils.BoolToBool(dbTxn.IsRecurring),
-			CreatedAt:       utils.TimestampToTime(dbTxn.CreatedAt),
-			UpdatedAt:       utils.TimestampToTime(dbTxn.UpdatedAt),
-		}
+		txns[i] = txnFromDb(&dbTxn)
 	}
 	return txns, nil
 }

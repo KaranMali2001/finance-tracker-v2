@@ -23,6 +23,20 @@ func NewInvestMentRepository(q *generated.Queries, tm *database.TxManager) *Inve
 	}
 }
 
+func goalFromDb(goal *generated.Goal) *Goal {
+	return &Goal{
+		Id:            utils.UUIDToUUID(goal.ID),
+		Name:          goal.Name,
+		Status:        utils.TextToString(goal.Status),
+		TargetAmount:  utils.NumericToFloat64(goal.TargetAmount),
+		TargetDate:    utils.DateToTime(goal.TargetDate),
+		Priority:      uint8(utils.Int4ToInt(goal.Priority)),
+		CurrentAmount: utils.NumericToFloat64(goal.CurrentAmount),
+		CreatedAt:     utils.TimestampToTime(goal.CreatedAt),
+		AchievedAt:    utils.TimestampToTime(goal.AchievedAt),
+	}
+}
+
 func (r *InvestmentRepository) CreateNewGoal(c context.Context, payload *CreateGoalReq, clerkId string) (*Goal, error) {
 	queries := r.queries
 	if tx := r.tm.GetTx(c); tx != nil {
@@ -64,17 +78,7 @@ func (r *InvestmentRepository) CreateNewGoal(c context.Context, payload *CreateG
 	if err != nil {
 		return nil, err
 	}
-	return &Goal{
-		Id:            utils.UUIDToUUID(goal.ID),
-		Name:          goal.Name,
-		Status:        utils.TextToString(goal.Status),
-		TargetAmount:  utils.NumericToFloat64(goal.TargetAmount),
-		TargetDate:    utils.DateToTime(goal.TargetDate),
-		Priority:      uint8(utils.Int4ToInt(goal.Priority)),
-		CurrentAmount: utils.NumericToFloat64(goal.CurrentAmount),
-		CreatedAt:     utils.TimestampToTime(goal.CreatedAt),
-		AchievedAt:    utils.TimestampToTime(goal.AchievedAt),
-	}, nil
+	return goalFromDb(&goal), nil
 }
 
 func (r *InvestmentRepository) GetGoalsWithFilter(c context.Context, params *GetGoalsWithFilter, clerkID string) ([]Goal, error) {
@@ -128,19 +132,8 @@ func (r *InvestmentRepository) GetGoalsWithFilter(c context.Context, params *Get
 
 	goals := make([]Goal, 0, len(rows))
 
-	for _, row := range rows {
-		goals = append(goals, Goal{
-			Id:            utils.UUIDToUUID(row.ID),
-			Name:          row.Name,
-			TargetAmount:  utils.NumericToFloat64(row.TargetAmount),
-			CurrentAmount: utils.NumericToFloat64(row.CurrentAmount),
-			TargetDate:    utils.DateToTime(row.TargetDate),
-			Status:        utils.TextToString(row.Status),
-			Priority:      uint8(utils.Int4ToInt(row.Priority)),
-			CreatedAt:     utils.TimestampToTime(row.CreatedAt),
-			UpdatedAt:     utils.TimestampToTime(row.UpdatedAt),
-			AchievedAt:    utils.TimestampToTime(row.AchievedAt),
-		})
+	for i, row := range rows {
+		goals[i] = *goalFromDb(&row)
 	}
 
 	return goals, nil
@@ -158,17 +151,7 @@ func (r *InvestmentRepository) GetGoalById(c context.Context, param *GetGoalById
 	if err != nil {
 		return nil, err
 	}
-	return &Goal{
-		Id:            utils.UUIDToUUID(goal.ID),
-		Name:          goal.Name,
-		Status:        utils.TextToString(goal.Status),
-		TargetAmount:  utils.NumericToFloat64(goal.TargetAmount),
-		TargetDate:    utils.DateToTime(goal.TargetDate),
-		Priority:      uint8(utils.Int4ToInt(goal.Priority)),
-		CurrentAmount: utils.NumericToFloat64(goal.CurrentAmount),
-		CreatedAt:     utils.TimestampToTime(goal.CreatedAt),
-		AchievedAt:    utils.TimestampToTime(goal.AchievedAt),
-	}, nil
+	return goalFromDb(&goal), nil
 }
 
 func (r *InvestmentRepository) UpdateGoal(
@@ -247,19 +230,5 @@ func (r *InvestmentRepository) UpdateGoal(
 		return nil, err
 	}
 
-	goal := &Goal{
-		Id: utils.UUIDToUUID(row.ID),
-
-		Name:          row.Name,
-		TargetAmount:  utils.NumericToFloat64(row.TargetAmount),
-		CurrentAmount: utils.NumericToFloat64(row.CurrentAmount),
-		TargetDate:    utils.DateToTime(row.TargetDate),
-		Status:        utils.TextToString(row.Status),
-
-		Priority:   uint8(utils.Int4ToInt(row.Priority)),
-		CreatedAt:  utils.TimestampToTime(row.CreatedAt),
-		AchievedAt: utils.TimestampToTime(row.AchievedAt),
-	}
-
-	return goal, nil
+	return goalFromDb(&row), nil
 }

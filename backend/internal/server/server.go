@@ -10,6 +10,7 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/config"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/logger"
+	"github.com/hibiken/asynq"
 	"github.com/newrelic/go-agent/v3/integrations/nrredis-v9"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
@@ -84,13 +85,20 @@ func (s *Server) Start() error {
 	return s.httpServer.ListenAndServe()
 }
 
-func (s *Server) Shutdown(ctx context.Context) error {
+func (s *Server) Shutdown(ctx context.Context, qClient *asynq.Client) error {
 	if err := s.httpServer.Shutdown(ctx); err != nil {
 		return fmt.Errorf("failed to shutdown HTTP server: %w", err)
 	}
 
 	if err := s.DB.Close(); err != nil {
 		return fmt.Errorf("failed to close database connection: %w", err)
+	}
+	if err := qClient.Close(); err != nil {
+		return fmt.Errorf("failed to close queue client: %w", err)
+	}
+
+	if err := s.Redis.Close(); err != nil {
+		return fmt.Errorf("failed to close redis client: %w", err)
 	}
 
 	return nil

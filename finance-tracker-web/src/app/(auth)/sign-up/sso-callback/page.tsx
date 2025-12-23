@@ -42,7 +42,7 @@ export default function SSOCallback() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            Welcome To Auto Blog
+            Welcome To Finance Tracker
           </motion.h2>
           <div className="flex justify-center mb-6">
             <LoadingSpinner />

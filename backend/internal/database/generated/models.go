@@ -17,6 +17,7 @@ const (
 	JobStatusPending    JobStatus = "pending"
 	JobStatusProcessing JobStatus = "processing"
 	JobStatusFailed     JobStatus = "failed"
+	JobStatusCompleted  JobStatus = "completed"
 )
 
 func (e *JobStatus) Scan(src interface{}) error {
@@ -260,7 +261,7 @@ type Job struct {
 	ID             pgtype.UUID
 	UserID         pgtype.Text
 	JobType        NullJobType
-	JobID          pgtype.UUID
+	JobID          pgtype.Text
 	Status         NullJobStatus
 	Payload        []byte
 	Result         []byte
