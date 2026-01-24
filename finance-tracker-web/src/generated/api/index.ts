@@ -15,6 +15,8 @@ export type { internal_domain_auth_GetAuthUserResponse } from './models/internal
 export type { internal_domain_investment_CreateGoalReq } from './models/internal_domain_investment_CreateGoalReq';
 export type { internal_domain_investment_Goal } from './models/internal_domain_investment_Goal';
 export type { internal_domain_investment_UpdateGoals } from './models/internal_domain_investment_UpdateGoals';
+export type { internal_domain_reconciliation_ParsedTxns } from './models/internal_domain_reconciliation_ParsedTxns';
+export { internal_domain_reconciliation_TxnType } from './models/internal_domain_reconciliation_TxnType';
 export type { internal_domain_sms_CreateSmsReq } from './models/internal_domain_sms_CreateSmsReq';
 export type { internal_domain_sms_SmsLogs } from './models/internal_domain_sms_SmsLogs';
 export type { internal_domain_static_Bank } from './models/internal_domain_static_Bank';
@@ -34,6 +36,7 @@ export type { internal_domain_user_User } from './models/internal_domain_user_Us
 export { AccountService } from './services/AccountService';
 export { AuthService } from './services/AuthService';
 export { InvestmentService } from './services/InvestmentService';
+export { ReconciliationService } from './services/ReconciliationService';
 export { SmsService } from './services/SmsService';
 export { StaticService } from './services/StaticService';
 export { SystemService } from './services/SystemService';

@@ -180,6 +180,41 @@ definitions:
     required:
     - id
     type: object
+  internal_domain_reconciliation.ParsedTxns:
+    properties:
+      account_id:
+        type: string
+      amount:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      is_duplicate:
+        type: boolean
+      raw_row_hash:
+        type: string
+      reference_number:
+        type: string
+      row_number:
+        type: integer
+      txn_date:
+        type: string
+      type:
+        $ref: '#/definitions/internal_domain_reconciliation.TxnType'
+      updated_at:
+        type: string
+      upload_id:
+        type: string
+    type: object
+  internal_domain_reconciliation.TxnType:
+    enum:
+    - CREDIT
+    - DEBIT
+    type: string
+    x-enum-varnames:
+    - CREDIT
+    - DEBIT
   internal_domain_sms.CreateSmsReq:
     properties:
       raw_message:
@@ -935,6 +970,75 @@ paths:
       summary: Update an investment goal
       tags:
       - Investment
+  /reconciliation/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a bank statement Excel file and starts reconciliation processing
+      parameters:
+      - description: Bank statement Excel file (.xls, .xlsx)
+        in: formData
+        name: statement
+        required: true
+        type: file
+      - description: Statement period start
+        format: date-time
+        in: formData
+        name: statement_period_start
+        required: true
+        type: string
+      - description: Statement period end
+        format: date-time
+        in: formData
+        name: statement_period_end
+        required: true
+        type: string
+      - description: Account ID
+        format: uuid
+        in: formData
+        name: account_id
+        required: true
+        type: string
+      - description: User ID (Clerk ID)
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      - description: Original file name
+        in: formData
+        name: file_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            items:
+              $ref: '#/definitions/internal_domain_reconciliation.ParsedTxns'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Upload bank statement for reconciliation
+      tags:
+      - Reconciliation
   /sms:
     get:
       description: Retrieves all SMS logs for the authenticated user

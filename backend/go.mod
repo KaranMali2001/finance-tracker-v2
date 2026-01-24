@@ -29,6 +29,7 @@ require (
 	github.com/svix/svix-webhooks v1.81.0
 	github.com/swaggo/echo-swagger v1.4.1
 	github.com/swaggo/swag v1.16.6
+	github.com/xuri/excelize/v2 v2.10.0
 	golang.org/x/text v0.31.0
 	golang.org/x/time v0.11.0
 	google.golang.org/genai v1.36.0
@@ -72,12 +73,17 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/newrelic/go-agent/v3/integrations/logcontext-v2/nrwriter v1.0.2 // indirect
+	github.com/richardlehane/mscfb v1.0.4 // indirect
+	github.com/richardlehane/msoleps v1.0.4 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/spf13/cast v1.7.0 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
+	github.com/tiendc/go-deepcopy v1.7.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
+	github.com/xuri/efp v0.0.1 // indirect
+	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.44.0 // indirect

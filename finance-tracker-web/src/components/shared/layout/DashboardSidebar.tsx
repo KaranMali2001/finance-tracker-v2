@@ -13,7 +13,15 @@ import {
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { useClerk, useUser } from '@clerk/nextjs';
-import { LogOut, MessageSquare, Receipt, Target, User, Wallet } from 'lucide-react';
+import {
+  FileSpreadsheet,
+  LogOut,
+  MessageSquare,
+  Receipt,
+  Target,
+  User,
+  Wallet,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -33,6 +41,11 @@ export function DashboardSidebar() {
       title: 'Transactions',
       url: '/dashboard/transactions',
       icon: Receipt,
+    },
+    {
+      title: 'Reconciliation',
+      url: '/dashboard/reconciliation',
+      icon: FileSpreadsheet,
     },
     {
       title: 'Investments',
