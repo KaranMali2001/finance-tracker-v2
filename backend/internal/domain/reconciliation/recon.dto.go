@@ -15,11 +15,11 @@ const (
 )
 
 type ParseExcelReq struct {
-	StatementPeriodStart time.Time `json:"statement_period_start" validate:"required"`
-	StatementPeriodEnd   time.Time `json:"statement_period_end" validate:"required"`
-	AccountId            uuid.UUID `json:"account_id" validate:"required"`
-	UserId               string    `json:"user_id" validate:"required"`
-	FileName             string    `json:"file_name" validate:"required"`
+	StatementPeriodStart time.Time `json:"statement_period_start" form:"statement_period_start" validate:"required"`
+	StatementPeriodEnd   time.Time `json:"statement_period_end" form:"statement_period_end" validate:"required"`
+	AccountId            uuid.UUID `json:"account_id" form:"account_id" validate:"required"`
+	UserId               string    `json:"user_id" form:"user_id" validate:"required"`
+	FileName             string    `json:"file_name" form:"file_name" validate:"required"`
 }
 
 func (p *ParseExcelReq) Validate() error {

@@ -62,7 +62,7 @@ export function ReconciliationUploadForm() {
       <div className="space-y-2">
         <div className="text-lg font-semibold">Upload bank statement</div>
         <div className="text-sm text-muted-foreground">
-          Upload an Excel file (.xls / .xlsx) to test the reconciliation flow.
+          Upload a statement file (.xlsx / .csv) to test the reconciliation flow.
         </div>
       </div>
 
@@ -97,7 +97,7 @@ export function ReconciliationUploadForm() {
             <input
               id="recon-statement-input"
               type="file"
-              accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              accept=".xlsx,.csv,text/csv,application/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               className="hidden"
               onChange={(event) => {
                 const file = event.target.files?.[0] || null;

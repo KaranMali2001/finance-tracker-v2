@@ -292,6 +292,8 @@ var (
 	AllowedExcelTypes = map[string]bool{
 		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true, // .xlsx
 		"application/vnd.ms-excel": true, // .xls
+		"text/csv": true, // .csv
+		"application/csv": true, // .csv (non-standard but common)
 		// Some clients may upload Excel with a generic content type.
 		"application/octet-stream": true,
 	}
@@ -299,6 +301,7 @@ var (
 	AllowedExcelExtensions = map[string]bool{
 		".xlsx": true,
 		".xls":  true,
+		".csv":  true,
 	}
 )
 
