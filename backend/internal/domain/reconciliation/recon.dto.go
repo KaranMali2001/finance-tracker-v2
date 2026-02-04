@@ -14,6 +14,13 @@ const (
 	DEBIT  TxnType = "DEBIT"
 )
 
+type UploadStatus string
+
+const (
+	UploadStatusProcessing UploadStatus = "processing"
+	UploadStatusUploaded   UploadStatus = "UPLOADED"
+)
+
 type ParseExcelReq struct {
 	StatementPeriodStart time.Time `json:"statement_period_start" form:"statement_period_start" validate:"required"`
 	StatementPeriodEnd   time.Time `json:"statement_period_end" form:"statement_period_end" validate:"required"`
@@ -31,12 +38,32 @@ type ParsedTxns struct {
 	AccountId       uuid.UUID  `json:"account_id"`
 	TxnDate         time.Time  `json:"txn_date"`
 	Description     *string    `json:"description"`
-	Amount          uint32     `json:"amount"`
+	Amount          float64    `json:"amount"`
 	Type            TxnType    `json:"type"`
 	ReferenceNumber *string    `json:"reference_number"`
 	RawRowHash      *string    `json:"raw_row_hash"`
 	RowNumber       uint32     `json:"row_number"`
 	IsDuplicate     *bool      `json:"is_duplicate"`
-	CreatedAt       *time.Time `json:"created_at"`
-	UpdatedAt       *time.Time `json:"updated_at"`
+	CreatedAt       *time.Time `json:"created_at,omitempty"`
+	UpdatedAt       *time.Time `json:"updated_at,omitempty"`
+}
+type ParseError struct {
+	Row   int                    `json:"row"`
+	Error string                 `json:"error"`
+	Data  map[string]interface{} `json:"data"`
+}
+type UploadSummary struct {
+	TotalRows     int          `json:"total_rows"`
+	DuplicateRows int          `json:"duplicate_rows"`
+	ErrorRows     int          `json:"error_rows"`
+	ValidRows     int          `json:"valid_rows"`
+	Errors        []ParseError `json:"errors"`
+}
+
+type UploadStatementRes struct {
+	UploadId uuid.UUID     `json:"upload_id"`
+	JobId    uuid.UUID     `json:"job_id"`
+	Status   string        `json:"status"`
+	Summary  UploadSummary `json:"summary"`
+	Txns     []ParsedTxns  `json:"txns"`
 }

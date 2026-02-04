@@ -17,7 +17,8 @@ type Deps struct {
 }
 
 func NewReconiliationModule(deps Deps) *Module {
-	service := NewReconService(deps.Server)
+	repo := NewReconRepository(deps.Queries)
+	service := NewReconService(deps.Server, repo)
 	handler := NewReconHandler(deps.Server, service)
 
 	return &Module{

@@ -36,7 +36,7 @@ func NewReconHandler(s *server.Server, svc *ReconService) *ReconHandler {
 // @Param account_id formData string true "Account ID" format(uuid)
 // @Param user_id formData string true "User ID (Clerk ID)"
 // @Param file_name formData string true "Original file name"
-// @Success 202 {array} ParsedTxns
+// @Success 202 {object} UploadStatementRes
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 500 {object} map[string]string "Internal Server Error"

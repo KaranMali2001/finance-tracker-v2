@@ -18,7 +18,7 @@ INSERT INTO transactions(
 ) VALUES (
    $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15
 )
-RETURNING id, user_id, account_id, to_account_id, category_id, merchant_id, type, amount, description, notes, tags, transaction_date, sms_id, payment_method, reference_number, is_recurring, is_excluded, is_cash, deleted_at, deleted_by, created_at, updated_at
+RETURNING id, user_id, account_id, to_account_id, category_id, merchant_id, type, amount, description, notes, tags, transaction_date, sms_id, payment_method, reference_number, is_recurring, is_excluded, is_cash, deleted_at, deleted_by, created_at, updated_at, source, reconciliation_status, reconciled_by, reconciled_at, statement_txn_id
 `
 
 type CreateTxnParams struct {
@@ -81,6 +81,11 @@ func (q *Queries) CreateTxn(ctx context.Context, arg CreateTxnParams) (Transacti
 		&i.DeletedBy,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Source,
+		&i.ReconciliationStatus,
+		&i.ReconciledBy,
+		&i.ReconciledAt,
+		&i.StatementTxnID,
 	)
 	return i, err
 }
@@ -233,7 +238,7 @@ UPDATE transactions
 SET (deleted_at, deleted_by) = ($1, $2)
 WHERE user_id = $3
   AND id = ANY($4::uuid[])
-RETURNING id, user_id, account_id, to_account_id, category_id, merchant_id, type, amount, description, notes, tags, transaction_date, sms_id, payment_method, reference_number, is_recurring, is_excluded, is_cash, deleted_at, deleted_by, created_at, updated_at
+RETURNING id, user_id, account_id, to_account_id, category_id, merchant_id, type, amount, description, notes, tags, transaction_date, sms_id, payment_method, reference_number, is_recurring, is_excluded, is_cash, deleted_at, deleted_by, created_at, updated_at, source, reconciliation_status, reconciled_by, reconciled_at, statement_txn_id
 `
 
 type SoftDeleteTxnsParams struct {
@@ -280,6 +285,11 @@ func (q *Queries) SoftDeleteTxns(ctx context.Context, arg SoftDeleteTxnsParams) 
 			&i.DeletedBy,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Source,
+			&i.ReconciliationStatus,
+			&i.ReconciledBy,
+			&i.ReconciledAt,
+			&i.StatementTxnID,
 		); err != nil {
 			return nil, err
 		}
