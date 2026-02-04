@@ -67,3 +67,46 @@ type UploadStatementRes struct {
 	Summary  UploadSummary `json:"summary"`
 	Txns     []ParsedTxns  `json:"txns"`
 }
+
+// UploadListItem is a single row in the list of bank statement uploads.
+type UploadListItem struct {
+	ID                   uuid.UUID  `json:"id"`
+	AccountID            uuid.UUID  `json:"account_id"`
+	FileName             string     `json:"file_name"`
+	UploadStatus         string     `json:"upload_status"`
+	ProcessingStatus     string     `json:"processing_status"`
+	StatementPeriodStart *time.Time `json:"statement_period_start,omitempty"`
+	StatementPeriodEnd   *time.Time `json:"statement_period_end,omitempty"`
+	CreatedAt            *time.Time `json:"created_at,omitempty"`
+}
+
+// UploadDetail is the full detail for a single upload (by ID).
+type UploadDetail struct {
+	UploadListItem
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+}
+
+// ListUploadsReq is used for listing uploads (no body/path params; user from auth).
+type ListUploadsReq struct{}
+
+func (ListUploadsReq) Validate() error {
+	return nil
+}
+
+// GetUploadByIDReq is used for fetching a single upload by ID.
+type GetUploadByIDReq struct {
+	UploadId uuid.UUID `param:"upload_id" validate:"required"`
+}
+
+func (r *GetUploadByIDReq) Validate() error {
+	return validator.New().Struct(r)
+}
+
+// DeleteUploadReq is used for deleting an upload by ID.
+type DeleteUploadReq struct {
+	UploadId uuid.UUID `param:"upload_id" validate:"required"`
+}
+
+func (r *DeleteUploadReq) Validate() error {
+	return validator.New().Struct(r)
+}

@@ -16,7 +16,12 @@ export type { internal_domain_investment_CreateGoalReq } from './models/internal
 export type { internal_domain_investment_Goal } from './models/internal_domain_investment_Goal';
 export type { internal_domain_investment_UpdateGoals } from './models/internal_domain_investment_UpdateGoals';
 export type { internal_domain_reconciliation_ParsedTxns } from './models/internal_domain_reconciliation_ParsedTxns';
+export type { internal_domain_reconciliation_ParseError } from './models/internal_domain_reconciliation_ParseError';
 export { internal_domain_reconciliation_TxnType } from './models/internal_domain_reconciliation_TxnType';
+export type { internal_domain_reconciliation_UploadDetail } from './models/internal_domain_reconciliation_UploadDetail';
+export type { internal_domain_reconciliation_UploadListItem } from './models/internal_domain_reconciliation_UploadListItem';
+export type { internal_domain_reconciliation_UploadStatementRes } from './models/internal_domain_reconciliation_UploadStatementRes';
+export type { internal_domain_reconciliation_UploadSummary } from './models/internal_domain_reconciliation_UploadSummary';
 export type { internal_domain_sms_CreateSmsReq } from './models/internal_domain_sms_CreateSmsReq';
 export type { internal_domain_sms_SmsLogs } from './models/internal_domain_sms_SmsLogs';
 export type { internal_domain_static_Bank } from './models/internal_domain_static_Bank';

@@ -1,11 +1,13 @@
 package reconciliation
 
 import (
+	"context"
 	"fmt"
 	"mime/multipart"
 	"path/filepath"
 	"strings"
 
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/errs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/handler"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
@@ -27,13 +29,38 @@ const (
 type ReconService struct {
 	server *server.Server
 	repo   *ReconRepository
+	tm     *database.TxManager
 }
 
-func NewReconService(s *server.Server, repo *ReconRepository) *ReconService {
+func NewReconService(s *server.Server, repo *ReconRepository, tm *database.TxManager) *ReconService {
 	return &ReconService{
 		server: s,
 		repo:   repo,
+		tm:     tm,
 	}
+}
+
+func (s *ReconService) ListUploads(c echo.Context, payload *ListUploadsReq, clerkId string) ([]UploadListItem, error) {
+	return s.repo.ListUploadsByUser(c.Request().Context(), clerkId)
+}
+
+func (s *ReconService) GetUploadByID(c echo.Context, payload *GetUploadByIDReq, clerkId string) (*UploadDetail, error) {
+	return s.repo.GetUploadByID(c.Request().Context(), payload, clerkId)
+}
+
+func (s *ReconService) DeleteUpload(c echo.Context, payload *DeleteUploadReq, clerkId string) error {
+	if s.tm == nil {
+		return fmt.Errorf("tx manager not configured")
+	}
+	ctx := c.Request().Context()
+	_, err := s.repo.GetUploadByID(ctx, &GetUploadByIDReq{UploadId: payload.UploadId}, clerkId)
+	if err != nil {
+		return err
+	}
+	log := middleware.GetLogger(c)
+	return s.tm.WithTx(ctx, func(ctx context.Context) error {
+		return s.repo.DeleteUpload(ctx, payload.UploadId, clerkId)
+	}, log)
 }
 
 func (s *ReconService) ParseAndProcessStatement(c echo.Context, payload *ParseExcelReq) (*UploadStatementRes, error) {
@@ -166,7 +193,8 @@ func parseXlsxRows(r interface {
 			continue
 		}
 
-		hash := RowHash(txnDate, amount, drCr)
+		desc := strings.TrimSpace(SafeCell(row, colDescription))
+		hash := RowHash(txnDate, amount, drCr, desc)
 		txnType := DEBIT
 		if drCr == "CR" {
 			txnType = CREDIT
@@ -176,7 +204,7 @@ func parseXlsxRows(r interface {
 			UploadId:        uploadID,
 			AccountId:       accountID,
 			TxnDate:         txnDate,
-			Description:     PtrString(strings.TrimSpace(SafeCell(row, colDescription))),
+			Description:     PtrString(desc),
 			Amount:          amount,
 			Type:            txnType,
 			ReferenceNumber: PtrString(strings.TrimSpace(SafeCell(row, colChqRefNo))),

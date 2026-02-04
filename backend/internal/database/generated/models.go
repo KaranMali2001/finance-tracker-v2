@@ -615,7 +615,7 @@ type StatementTransaction struct {
 	ID              pgtype.UUID
 	UploadID        pgtype.UUID
 	AccountID       pgtype.UUID
-	TransactionDate pgtype.Date
+	TransactionDate pgtype.Timestamptz
 	Description     pgtype.Text
 	Amount          pgtype.Numeric
 	Type            string

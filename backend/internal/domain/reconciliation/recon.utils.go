@@ -11,11 +11,11 @@ import (
 )
 
 // RowHash builds a deterministic hash for duplicate detection.
-// Uses: transaction date (as-is), amount, and Dr/Cr.
-func RowHash(transactionDate time.Time, amount float64, drCr string) string {
+// Uses: transaction date (as-is), amount, Dr/Cr, and description (when available).
+func RowHash(transactionDate time.Time, amount float64, drCr string, description string) string {
 	dateStr := transactionDate.Format(time.RFC3339)
 	amountStr := fmt.Sprintf("%.2f", amount)
-	sum := dateStr + "|" + amountStr + "|" + drCr
+	sum := dateStr + "|" + amountStr + "|" + drCr + "|" + description
 	h := sha256.Sum256([]byte(sum))
 	return hex.EncodeToString(h[:])
 }
@@ -53,6 +53,9 @@ func ParseExcelDate(row []string, col int) (time.Time, error) {
 	if t, err := time.Parse("2006-01-02 15:04:05", v); err == nil {
 		return t, nil
 	}
+	if t, err := time.Parse("02-01-2006 15:04:05", v); err == nil {
+		return t, nil
+	}
 	if t, err := time.Parse("02-01-2006", v); err == nil {
 		return t, nil
 	}
@@ -62,6 +65,10 @@ func ParseExcelDate(row []string, col int) (time.Time, error) {
 	var f float64
 	if _, err := fmt.Sscanf(v, "%f", &f); err == nil && f > 0 {
 		t, _ := excelize.ExcelDateToTime(f, false)
+		// Reject Excel serial dates that fall before 1990 (e.g. day-of-month 14 parsed as serial 14 => 1900-01-14).
+		if t.Year() < 1990 {
+			return time.Time{}, fmt.Errorf("date out of range (got year %d): %s", t.Year(), v)
+		}
 		return t, nil
 	}
 	return time.Time{}, fmt.Errorf("unparseable date: %s", v)

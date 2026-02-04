@@ -68,7 +68,7 @@ export default function InvestmentsPage() {
       <PageShell
         title="Investment Goals"
         description="Track and manage your investment goals"
-        actionBar={
+        actions={
           <Button onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
             Create Goal
@@ -112,7 +112,7 @@ export default function InvestmentsPage() {
     <PageShell
       title="Investment Goals"
       description="Track and manage your investment goals"
-      actionBar={
+      actions={
         <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Create Goal

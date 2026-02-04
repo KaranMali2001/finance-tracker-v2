@@ -13,17 +13,9 @@ import (
 
 const createBankStatementUpload = `-- name: CreateBankStatementUpload :one
 INSERT INTO bank_statement_uploads (
-    user_id,
-    account_id,
-    file_name,
-    file_type,
-    file_size,
-    statement_period_start,
-    statement_period_end,
-    upload_status
-) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8
-)
+    user_id, account_id, file_name, file_type, file_size,
+    statement_period_start, statement_period_end, upload_status
+) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING id
 `
 
@@ -54,55 +46,130 @@ func (q *Queries) CreateBankStatementUpload(ctx context.Context, arg CreateBankS
 	return id, err
 }
 
-const insertStatementTransaction = `-- name: InsertStatementTransaction :one
-INSERT INTO statement_transactions (
-    upload_id,
-    account_id,
-    transaction_date,
-    description,
-    amount,
-    type,
-    balance,
-    reference_number,
-    raw_row_hash,
-    row_number,
-    is_duplicate
-) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
-)
-ON CONFLICT (upload_id, raw_row_hash) DO NOTHING
-RETURNING raw_row_hash
+const deleteBankStatementUploadByID = `-- name: DeleteBankStatementUploadByID :exec
+DELETE FROM bank_statement_uploads WHERE id = $1 AND user_id = $2
 `
 
-type InsertStatementTransactionParams struct {
-	UploadID        pgtype.UUID
-	AccountID       pgtype.UUID
-	TransactionDate pgtype.Date
-	Description     pgtype.Text
-	Amount          pgtype.Numeric
-	Type            string
-	Balance         pgtype.Numeric
-	ReferenceNumber pgtype.Text
-	RawRowHash      string
-	RowNumber       int32
-	IsDuplicate     pgtype.Bool
+type DeleteBankStatementUploadByIDParams struct {
+	ID     pgtype.UUID
+	UserID string
 }
 
-func (q *Queries) InsertStatementTransaction(ctx context.Context, arg InsertStatementTransactionParams) (string, error) {
-	row := q.db.QueryRow(ctx, insertStatementTransaction,
-		arg.UploadID,
-		arg.AccountID,
-		arg.TransactionDate,
-		arg.Description,
-		arg.Amount,
-		arg.Type,
-		arg.Balance,
-		arg.ReferenceNumber,
-		arg.RawRowHash,
-		arg.RowNumber,
-		arg.IsDuplicate,
+// Delete the bank statement upload (must run after the above in same tx).
+func (q *Queries) DeleteBankStatementUploadByID(ctx context.Context, arg DeleteBankStatementUploadByIDParams) error {
+	_, err := q.db.Exec(ctx, deleteBankStatementUploadByID, arg.ID, arg.UserID)
+	return err
+}
+
+const deleteStatementTransactionsByUploadID = `-- name: DeleteStatementTransactionsByUploadID :exec
+DELETE FROM statement_transactions WHERE upload_id = $1
+`
+
+// Delete statement transactions for this upload.
+func (q *Queries) DeleteStatementTransactionsByUploadID(ctx context.Context, uploadID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteStatementTransactionsByUploadID, uploadID)
+	return err
+}
+
+const deleteTransactionReconciliationByUploadID = `-- name: DeleteTransactionReconciliationByUploadID :exec
+DELETE FROM transaction_reconciliation WHERE upload_id = $1
+`
+
+// Delete reconciliation rows for this upload.
+func (q *Queries) DeleteTransactionReconciliationByUploadID(ctx context.Context, uploadID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteTransactionReconciliationByUploadID, uploadID)
+	return err
+}
+
+const getBankStatementUploadByID = `-- name: GetBankStatementUploadByID :one
+SELECT id, user_id, account_id, file_name, upload_status, processing_status,
+       statement_period_start, statement_period_end, created_at, updated_at
+FROM bank_statement_uploads
+WHERE id = $1 AND user_id = $2
+`
+
+type GetBankStatementUploadByIDParams struct {
+	ID     pgtype.UUID
+	UserID string
+}
+
+type GetBankStatementUploadByIDRow struct {
+	ID                   pgtype.UUID
+	UserID               string
+	AccountID            pgtype.UUID
+	FileName             string
+	UploadStatus         pgtype.Text
+	ProcessingStatus     NullUploadProcessingStatus
+	StatementPeriodStart pgtype.Date
+	StatementPeriodEnd   pgtype.Date
+	CreatedAt            pgtype.Timestamp
+	UpdatedAt            pgtype.Timestamp
+}
+
+func (q *Queries) GetBankStatementUploadByID(ctx context.Context, arg GetBankStatementUploadByIDParams) (GetBankStatementUploadByIDRow, error) {
+	row := q.db.QueryRow(ctx, getBankStatementUploadByID, arg.ID, arg.UserID)
+	var i GetBankStatementUploadByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.AccountID,
+		&i.FileName,
+		&i.UploadStatus,
+		&i.ProcessingStatus,
+		&i.StatementPeriodStart,
+		&i.StatementPeriodEnd,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
-	var raw_row_hash string
-	err := row.Scan(&raw_row_hash)
-	return raw_row_hash, err
+	return i, err
+}
+
+const listBankStatementUploadsByUser = `-- name: ListBankStatementUploadsByUser :many
+SELECT id, user_id, account_id, file_name, upload_status, processing_status,
+       statement_period_start, statement_period_end, created_at
+FROM bank_statement_uploads
+WHERE user_id = $1
+ORDER BY created_at DESC
+`
+
+type ListBankStatementUploadsByUserRow struct {
+	ID                   pgtype.UUID
+	UserID               string
+	AccountID            pgtype.UUID
+	FileName             string
+	UploadStatus         pgtype.Text
+	ProcessingStatus     NullUploadProcessingStatus
+	StatementPeriodStart pgtype.Date
+	StatementPeriodEnd   pgtype.Date
+	CreatedAt            pgtype.Timestamp
+}
+
+func (q *Queries) ListBankStatementUploadsByUser(ctx context.Context, userID string) ([]ListBankStatementUploadsByUserRow, error) {
+	rows, err := q.db.Query(ctx, listBankStatementUploadsByUser, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListBankStatementUploadsByUserRow
+	for rows.Next() {
+		var i ListBankStatementUploadsByUserRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.AccountID,
+			&i.FileName,
+			&i.UploadStatus,
+			&i.ProcessingStatus,
+			&i.StatementPeriodStart,
+			&i.StatementPeriodEnd,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

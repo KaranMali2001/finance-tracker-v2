@@ -3,9 +3,10 @@
 import { useAccounts } from '@/components/shared/hooks/useAccount';
 import { useUploadReconciliationStatement } from '@/components/shared/hooks/useReconciliation';
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
@@ -13,15 +14,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { internal_domain_reconciliation_ParsedTxns } from '@/generated/api';
+import type { internal_domain_reconciliation_UploadStatementRes } from '@/generated/api';
 import { useAuth } from '@clerk/nextjs';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { cn } from '@/lib/utils';
 
-function toIsoString(value: string): string {
-  return new Date(value).toISOString();
+export interface ReconciliationUploadFormProps {
+  onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export function ReconciliationUploadForm() {
+export function ReconciliationUploadForm({
+  onSuccess,
+  onCancel,
+}: ReconciliationUploadFormProps = {}) {
   const { userId } = useAuth();
   const {
     data: accounts,
@@ -32,9 +40,9 @@ export function ReconciliationUploadForm() {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [accountId, setAccountId] = useState<string>('');
-  const [statementPeriodStart, setStatementPeriodStart] = useState<string>('');
-  const [statementPeriodEnd, setStatementPeriodEnd] = useState<string>('');
-  const [result, setResult] = useState<Array<internal_domain_reconciliation_ParsedTxns> | null>(
+  const [statementPeriodStart, setStatementPeriodStart] = useState<Date | undefined>(undefined);
+  const [statementPeriodEnd, setStatementPeriodEnd] = useState<Date | undefined>(undefined);
+  const [result, setResult] = useState<internal_domain_reconciliation_UploadStatementRes | null>(
     null
   );
 
@@ -53,8 +61,8 @@ export function ReconciliationUploadForm() {
     !!userId &&
     !!selectedFile &&
     !!accountId &&
-    !!statementPeriodStart &&
-    !!statementPeriodEnd &&
+    statementPeriodStart != null &&
+    statementPeriodEnd != null &&
     !upload.isPending;
 
   return (
@@ -129,26 +137,68 @@ export function ReconciliationUploadForm() {
 
         <div className="space-y-2">
           <Label htmlFor="recon-start">Statement period start</Label>
-          <Input
-            id="recon-start"
-            type="datetime-local"
-            value={statementPeriodStart}
-            onChange={(e) => {
-              setStatementPeriodStart(e.target.value);
-            }}
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="recon-start"
+                type="button"
+                variant="outline"
+                className={cn(
+                  'w-full justify-start text-left font-normal',
+                  statementPeriodStart == null && 'text-muted-foreground'
+                )}
+                disabled={upload.isPending}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                {statementPeriodStart ? (
+                  format(statementPeriodStart, 'dd / MM / yyyy')
+                ) : (
+                  <span>dd / mm / yyyy</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={statementPeriodStart}
+                onSelect={setStatementPeriodStart}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="recon-end">Statement period end</Label>
-          <Input
-            id="recon-end"
-            type="datetime-local"
-            value={statementPeriodEnd}
-            onChange={(e) => {
-              setStatementPeriodEnd(e.target.value);
-            }}
-          />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                id="recon-end"
+                type="button"
+                variant="outline"
+                className={cn(
+                  'w-full justify-start text-left font-normal',
+                  statementPeriodEnd == null && 'text-muted-foreground'
+                )}
+                disabled={upload.isPending}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                {statementPeriodEnd ? (
+                  format(statementPeriodEnd, 'dd / MM / yyyy')
+                ) : (
+                  <span>dd / mm / yyyy</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={statementPeriodEnd}
+                onSelect={setStatementPeriodEnd}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
@@ -166,14 +216,15 @@ export function ReconciliationUploadForm() {
 
             const res = await upload.mutateAsync({
               statement: selectedFile,
-              statementPeriodStart: toIsoString(statementPeriodStart),
-              statementPeriodEnd: toIsoString(statementPeriodEnd),
+              statementPeriodStart: statementPeriodStart.toISOString(),
+              statementPeriodEnd: statementPeriodEnd.toISOString(),
               accountId,
               userId,
               fileName: selectedFile.name,
             });
 
             setResult(res);
+            onSuccess?.();
           }}
           disabled={!canSubmit}
         >
@@ -186,9 +237,10 @@ export function ReconciliationUploadForm() {
           onClick={() => {
             setSelectedFile(null);
             setAccountId('');
-            setStatementPeriodStart('');
-            setStatementPeriodEnd('');
+            setStatementPeriodStart(undefined);
+            setStatementPeriodEnd(undefined);
             setResult(null);
+            onCancel?.();
           }}
           disabled={upload.isPending}
         >
@@ -197,11 +249,58 @@ export function ReconciliationUploadForm() {
       </div>
 
       {result && (
-        <div className="space-y-2">
-          <div className="text-sm font-medium">Response</div>
-          <pre className="max-h-[420px] overflow-auto rounded-md bg-muted p-3 text-xs">
-            {JSON.stringify(result, null, 2)}
-          </pre>
+        <div className="space-y-4">
+          <div className="text-sm font-medium">Result</div>
+          <div className="grid gap-2 text-sm">
+            {result.upload_id && (
+              <div>
+                <span className="text-muted-foreground">Upload ID:</span>{' '}
+                <span className="font-mono">{result.upload_id}</span>
+              </div>
+            )}
+            {result.status && (
+              <div>
+                <span className="text-muted-foreground">Status:</span> {result.status}
+              </div>
+            )}
+            {result.summary && (
+              <div className="flex flex-wrap gap-4 rounded-md bg-muted p-3">
+                <span>Total: {result.summary.total_rows ?? 0}</span>
+                <span>Valid: {result.summary.valid_rows ?? 0}</span>
+                <span>Duplicates: {result.summary.duplicate_rows ?? 0}</span>
+                <span>Errors: {result.summary.error_rows ?? 0}</span>
+              </div>
+            )}
+          </div>
+          {result.txns && result.txns.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-sm font-medium">Transactions ({result.txns.length})</div>
+              <pre className="max-h-[320px] overflow-auto rounded-md bg-muted p-3 text-xs">
+                {JSON.stringify(result.txns, null, 2)}
+              </pre>
+            </div>
+          )}
+          {result.summary?.errors && result.summary.errors.length > 0 && (
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-destructive">
+                Parse errors ({result.summary.errors.length})
+              </div>
+              <ul className="max-h-[240px] overflow-y-auto rounded-md border border-destructive/30 bg-destructive/5 p-2 list-none space-y-1.5">
+                {result.summary.errors.map((err, idx) => (
+                  <li
+                    key={idx}
+                    className="rounded-md bg-destructive/10 px-3 py-2 text-xs text-foreground border border-destructive/20"
+                  >
+                    {err.row != null && <span className="font-medium">Row {err.row}: </span>}
+                    {err.error ??
+                      (typeof err.data === 'string'
+                        ? err.data
+                        : JSON.stringify(err.data ?? 'Unknown error'))}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
     </Card>

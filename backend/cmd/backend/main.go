@@ -137,8 +137,9 @@ func main() {
 		Tm:      databaseTxnManager,
 	})
 	reconciliationModule := reconciliation.NewReconiliationModule(reconciliation.Deps{
-		Server:  server,
-		Queries: queries,
+		Server:     server,
+		Queries:    queries,
+		TxnManager: databaseTxnManager,
 	})
 
 	log.Info().
