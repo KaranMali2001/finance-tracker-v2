@@ -27,13 +27,14 @@ type TxnService struct {
 	tm         *database.TxManager
 }
 
-func NewTxnService(s *server.Server, r *TxnRepository, userRepo *user.UserRepository, geminiSvc *aiservices.GeminiService, staticRepo *static.StaticRepository) *TxnService {
+func NewTxnService(s *server.Server, r *TxnRepository, userRepo *user.UserRepository, geminiSvc *aiservices.GeminiService, staticRepo *static.StaticRepository, tm *database.TxManager) *TxnService {
 	return &TxnService{
 		s:          s,
 		r:          r,
 		userRepo:   userRepo,
 		geminiSvc:  geminiSvc,
 		staticRepo: staticRepo,
+		tm:         tm,
 	}
 }
 

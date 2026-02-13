@@ -26,7 +26,7 @@ type Deps struct {
 
 func NewTxnModule(deps Deps) *Module {
 	repo := NewTxnRepository(deps.Server, deps.Queries, deps.Tm)
-	service := NewTxnService(deps.Server, repo, deps.UserRepo, deps.GeminiSvc, deps.StaticRepo)
+	service := NewTxnService(deps.Server, repo, deps.UserRepo, deps.GeminiSvc, deps.StaticRepo, deps.Tm)
 	handler := NewTxnHandler(deps.Server, service)
 
 	return &Module{
