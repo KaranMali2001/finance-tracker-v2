@@ -16,12 +16,6 @@ export default function PasswordComponent({ email }: { email: string }) {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'system');
-    root.classList.add('dark');
-  }, []);
-
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isLoaded) return;
@@ -52,35 +46,43 @@ export default function PasswordComponent({ email }: { email: string }) {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen w-full relative bg-black">
-      {/* Pearl Mist Background with Top Glow */}
+    <div className="flex items-center justify-center min-h-screen w-full relative bg-gradient-to-br from-stone-50 via-amber-50/40 to-stone-100">
+      {/* Subtle Pattern Overlay */}
       <div
-        className="absolute inset-0 z-0"
+        className="absolute inset-0 z-0 opacity-[0.03]"
         style={{
-          background:
-            'radial-gradient(ellipse 50% 35% at 50% 0%, rgba(226, 232, 240, 0.12), transparent 60%), #000000',
+          backgroundImage: `radial-gradient(circle at 1px 1px, oklch(0.30 0.015 45) 1px, transparent 0)`,
+          backgroundSize: '40px 40px',
         }}
       />
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative z-10 w-full max-w-md p-8 space-y-6 bg-background/80 backdrop-blur-sm border border-border/50 text-foreground rounded-lg shadow-xl"
+        className="luxury-card relative z-10 w-full max-w-md p-10 space-y-6 bg-white border border-stone-200 rounded-xl shadow-xl"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-2">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleGoBack}
-            className="flex items-center text-muted-foreground hover:text-foreground"
+            className="flex items-center text-stone-600 hover:text-amber-700 -ml-2"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Go Back
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Back
           </Button>
         </div>
 
-        <form onSubmit={handlePasswordLogin} className="space-y-4">
-          <div className="space-y-2">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-stone-800 mb-1">Enter Password</h2>
+          <p className="text-sm text-stone-600">Sign in to {email}</p>
+        </div>
+
+        <form onSubmit={handlePasswordLogin} className="space-y-5">
+          <div>
+            <label htmlFor="password" className="block text-sm font-semibold text-stone-700 mb-2">
+              Password
+            </label>
             <div className="relative">
               <Input
                 id="password"
@@ -89,20 +91,20 @@ export default function PasswordComponent({ email }: { email: string }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
-                className="pr-10"
+                className="pr-12 h-11"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+                className="absolute inset-y-0 right-0 flex items-center pr-4 text-stone-500 hover:text-amber-700 transition-colors"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? 'Logging in...' : 'Login'}
+          <Button type="submit" disabled={isLoading} className="w-full h-11">
+            {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
         </form>
 
@@ -112,7 +114,7 @@ export default function PasswordComponent({ email }: { email: string }) {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="flex items-center p-4 text-red-400 bg-red-950/50 border border-red-800/50 rounded-lg"
+              className="flex items-center p-3 text-red-700 bg-red-50 border border-red-200 rounded-lg"
               role="alert"
             >
               <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
@@ -121,8 +123,11 @@ export default function PasswordComponent({ email }: { email: string }) {
           </div>
         )}
 
-        <div className="text-center">
-          <Button variant="link" className="text-sm text-primary hover:text-primary/80">
+        <div className="text-center pt-2">
+          <Button
+            variant="link"
+            className="text-sm text-amber-700 hover:text-amber-800 font-medium"
+          >
             Forgot password?
           </Button>
         </div>

@@ -21,7 +21,13 @@ import { AccountCreateForm } from '../../../../components/accountComponents/Acco
 
 // ─── Types ────────────────────────────────────────────
 
-type ThemeId = 'glass-luxe' | 'midnight-pro' | 'warm-earth' | 'crisp-minimal' | 'bold-gradient';
+type ThemeId =
+  | 'wealth-reserve'
+  | 'glass-luxe'
+  | 'midnight-pro'
+  | 'warm-earth'
+  | 'crisp-minimal'
+  | 'bold-gradient';
 type Account = internal_domain_account_Account;
 
 interface ThemeConfig {
@@ -34,6 +40,12 @@ interface ThemeConfig {
 // ─── Theme Configuration ──────────────────────────────
 
 const THEMES: ThemeConfig[] = [
+  {
+    id: 'wealth-reserve',
+    name: 'Wealth Reserve',
+    description: 'Elegant gold & brown luxury',
+    preview: 'from-amber-600 to-yellow-600',
+  },
   {
     id: 'glass-luxe',
     name: 'Glass Luxe',
@@ -175,6 +187,90 @@ function ThemeSelector({
         })}
       </div>
     </div>
+  );
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// THEME 0: WEALTH RESERVE
+// Gold & brown luxury, old-money sophistication
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function WealthReserveCard({ account }: { account: Account }) {
+  return (
+    <Card
+      className={cn(
+        'luxury-card group relative overflow-hidden rounded-xl p-0 gap-0',
+        'bg-white border-stone-200',
+        'shadow-sm transition-all duration-400',
+        'hover:shadow-lg hover:-translate-y-1',
+        'h-full min-h-[180px]'
+      )}
+    >
+      <div className="relative p-6 h-full flex flex-col">
+        <div className="mb-4 flex items-start justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-amber-600 to-yellow-600 shadow-md shadow-amber-600/20">
+              <Wallet className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-stone-800">{account.account_name}</h3>
+                {account.is_primary && (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 border border-amber-300/60">
+                    Primary
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-stone-500">{account.account_type || 'Account'}</p>
+            </div>
+          </div>
+          <ArrowUpRight className="h-4 w-4 text-stone-400 opacity-0 transition-opacity group-hover:opacity-100" />
+        </div>
+
+        <div className="space-y-2">
+          {account.bank && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-stone-500">Bank</span>
+              <span className="font-medium text-stone-700">{account.bank.name}</span>
+            </div>
+          )}
+          {account.account_number && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-stone-500">Account</span>
+              <span className="font-mono text-sm text-stone-600">{account.account_number}</span>
+            </div>
+          )}
+          {account.current_balence !== undefined && (
+            <div className="flex items-center justify-between border-t border-stone-200 pt-3 mt-1">
+              <span className="text-sm text-stone-500">Balance</span>
+              <span className="text-xl font-bold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
+                {formatRupees(account.current_balence)}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function WealthReserveAddCard({ onClick }: { onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="w-full text-left cursor-pointer">
+      <Card
+        className={cn(
+          'group flex min-h-[180px] flex-col items-center justify-center rounded-xl p-0 gap-0',
+          'border-2 border-dashed border-stone-300 bg-white',
+          'transition-all duration-300 hover:bg-amber-50/30 hover:border-amber-600/50'
+        )}
+      >
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-600/20 to-yellow-600/20 transition-all group-hover:from-amber-600/30 group-hover:to-yellow-600/30">
+          <Plus className="h-6 w-6 text-amber-700" />
+        </div>
+        <h3 className="mt-3 font-semibold text-stone-700">Add Account</h3>
+        <p className="mt-1 text-xs text-stone-500">Create a new account</p>
+      </Card>
+    </button>
   );
 }
 
@@ -647,7 +743,6 @@ function BoldGradientAddCard({ onClick }: { onClick: () => void }) {
 export default function AccountsPage() {
   const { data: accounts, isLoading, error, refetch, isFetching } = useAccounts();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [selectedTheme, setSelectedTheme] = useState<ThemeId>('glass-luxe');
 
   if (isLoading || isFetching || accounts === undefined) {
     return (
@@ -695,70 +790,55 @@ export default function AccountsPage() {
     );
   }
 
-  const renderCard = (account: Account, index: number) => {
-    switch (selectedTheme) {
-      case 'glass-luxe':
-        return <GlassLuxeCard account={account} />;
-      case 'midnight-pro':
-        return <MidnightProCard account={account} index={index} />;
-      case 'warm-earth':
-        return <WarmEarthCard account={account} />;
-      case 'crisp-minimal':
-        return <CrispMinimalCard account={account} />;
-      case 'bold-gradient':
-        return <BoldGradientCard account={account} index={index} />;
-    }
+  const renderCard = (account: Account) => {
+    return <WealthReserveCard account={account} />;
   };
 
   const renderAddCard = () => {
-    const onClick = () => setIsCreateDialogOpen(true);
-    switch (selectedTheme) {
-      case 'glass-luxe':
-        return <GlassLuxeAddCard onClick={onClick} />;
-      case 'midnight-pro':
-        return <MidnightProAddCard onClick={onClick} />;
-      case 'warm-earth':
-        return <WarmEarthAddCard onClick={onClick} />;
-      case 'crisp-minimal':
-        return <CrispMinimalAddCard onClick={onClick} />;
-      case 'bold-gradient':
-        return <BoldGradientAddCard onClick={onClick} />;
-    }
+    return <WealthReserveAddCard onClick={() => setIsCreateDialogOpen(true)} />;
   };
 
   const totalBalance = accounts.reduce((sum, acc) => sum + (acc.current_balence || 0), 0);
 
   return (
     <PageShell title="Accounts" description="View and manage your financial accounts">
-      <ThemeSelector selected={selectedTheme} onChange={setSelectedTheme} />
-
-      <Separator />
-
-      {/* Summary stats */}
-      <div className="flex items-center gap-6">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Total Balance
-          </p>
-          <p className="text-2xl font-bold tracking-tight">{formatRupees(totalBalance)}</p>
-        </div>
-        <Separator orientation="vertical" className="h-10" />
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Accounts
-          </p>
-          <p className="text-2xl font-bold tracking-tight">{accounts.length}</p>
+      {/* Summary Section */}
+      <div className="space-y-4">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-stone-700">
+          <span className="h-1 w-1 rounded-full bg-gradient-to-r from-amber-600 to-yellow-600" />
+          Overview
+        </h3>
+        <div className="flex items-center gap-6">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Total Balance
+            </p>
+            <p className="text-2xl font-bold tracking-tight">{formatRupees(totalBalance)}</p>
+          </div>
+          <Separator orientation="vertical" className="h-10" />
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Accounts
+            </p>
+            <p className="text-2xl font-bold tracking-tight">{accounts.length}</p>
+          </div>
         </div>
       </div>
 
-      {/* Cards grid */}
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {renderAddCard()}
-        {accounts.map((account, index) => (
-          <Link key={account.id} href={`/dashboard/accounts/${account.id}`}>
-            {renderCard(account, index)}
-          </Link>
-        ))}
+      {/* Accounts Grid Section */}
+      <div className="space-y-4">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-stone-700">
+          <span className="h-1 w-1 rounded-full bg-gradient-to-r from-amber-600 to-yellow-600" />
+          Your Accounts
+        </h3>
+        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {renderAddCard()}
+          {accounts.map((account) => (
+            <Link key={account.id} href={`/dashboard/accounts/${account.id}`}>
+              {renderCard(account)}
+            </Link>
+          ))}
+        </div>
       </div>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>

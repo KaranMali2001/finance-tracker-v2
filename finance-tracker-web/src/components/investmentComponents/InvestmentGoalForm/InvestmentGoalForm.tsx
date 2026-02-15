@@ -144,7 +144,7 @@ export function InvestmentGoalForm({
         target_date: '',
         current_amount: undefined,
         status: '',
-        priority: '',
+        priority: undefined,
       };
     }
 
@@ -167,8 +167,8 @@ export function InvestmentGoalForm({
       status: initialValues.status || '',
       priority:
         initialValues.priority !== undefined && initialValues.priority !== null
-          ? String(initialValues.priority)
-          : '',
+          ? initialValues.priority
+          : undefined,
     };
   }, [initialValues]);
 

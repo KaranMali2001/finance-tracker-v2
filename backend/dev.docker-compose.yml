@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   postgres:
-    image: postgres
+    image: postgres:17
     container_name: finance-tracker-postgres
     restart: unless-stopped
     networks:
@@ -38,16 +38,16 @@ services:
       timeout: 5s
       retries: 5
 
-  adminer:
-    image: adminer:latest
-    container_name: finance-tracker-adminer
-    networks:
-      - finance-tracker-network
-    restart: unless-stopped
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
+  # adminer:
+  #   image: adminer:latest
+  #   container_name: finance-tracker-adminer
+  #   networks:
+  #     - finance-tracker-network
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - postgres
 
   # backend:
   #   build:
