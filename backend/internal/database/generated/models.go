@@ -99,6 +99,182 @@ func (ns NullJobType) Value() (driver.Value, error) {
 	return string(ns.JobType), nil
 }
 
+type ReconciliationActor string
+
+const (
+	ReconciliationActorSYSTEM ReconciliationActor = "SYSTEM"
+	ReconciliationActorUSER   ReconciliationActor = "USER"
+)
+
+func (e *ReconciliationActor) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ReconciliationActor(s)
+	case string:
+		*e = ReconciliationActor(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ReconciliationActor: %T", src)
+	}
+	return nil
+}
+
+type NullReconciliationActor struct {
+	ReconciliationActor ReconciliationActor
+	Valid               bool // Valid is true if ReconciliationActor is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullReconciliationActor) Scan(value interface{}) error {
+	if value == nil {
+		ns.ReconciliationActor, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ReconciliationActor.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullReconciliationActor) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ReconciliationActor), nil
+}
+
+type ReconciliationResultType string
+
+const (
+	ReconciliationResultTypeHIGHCONFIDENCEMATCH ReconciliationResultType = "HIGH_CONFIDENCE_MATCH"
+	ReconciliationResultTypeLOWCONFIDENCEMATCH  ReconciliationResultType = "LOW_CONFIDENCE_MATCH"
+	ReconciliationResultTypeMISSINGINAPP        ReconciliationResultType = "MISSING_IN_APP"
+	ReconciliationResultTypeNOTINSTATEMENT      ReconciliationResultType = "NOT_IN_STATEMENT"
+	ReconciliationResultTypeMANUALLYMATCHED     ReconciliationResultType = "MANUALLY_MATCHED"
+	ReconciliationResultTypeCASHTRANSACTION     ReconciliationResultType = "CASH_TRANSACTION"
+)
+
+func (e *ReconciliationResultType) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ReconciliationResultType(s)
+	case string:
+		*e = ReconciliationResultType(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ReconciliationResultType: %T", src)
+	}
+	return nil
+}
+
+type NullReconciliationResultType struct {
+	ReconciliationResultType ReconciliationResultType
+	Valid                    bool // Valid is true if ReconciliationResultType is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullReconciliationResultType) Scan(value interface{}) error {
+	if value == nil {
+		ns.ReconciliationResultType, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ReconciliationResultType.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullReconciliationResultType) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ReconciliationResultType), nil
+}
+
+type TransactionReconciliationStatus string
+
+const (
+	TransactionReconciliationStatusUNRECONCILED  TransactionReconciliationStatus = "UNRECONCILED"
+	TransactionReconciliationStatusAUTOVERIFIED  TransactionReconciliationStatus = "AUTO_VERIFIED"
+	TransactionReconciliationStatusPENDINGREVIEW TransactionReconciliationStatus = "PENDING_REVIEW"
+	TransactionReconciliationStatusUSERVERIFIED  TransactionReconciliationStatus = "USER_VERIFIED"
+	TransactionReconciliationStatusREJECTED      TransactionReconciliationStatus = "REJECTED"
+)
+
+func (e *TransactionReconciliationStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TransactionReconciliationStatus(s)
+	case string:
+		*e = TransactionReconciliationStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TransactionReconciliationStatus: %T", src)
+	}
+	return nil
+}
+
+type NullTransactionReconciliationStatus struct {
+	TransactionReconciliationStatus TransactionReconciliationStatus
+	Valid                           bool // Valid is true if TransactionReconciliationStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullTransactionReconciliationStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.TransactionReconciliationStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TransactionReconciliationStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullTransactionReconciliationStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TransactionReconciliationStatus), nil
+}
+
+type TransactionSource string
+
+const (
+	TransactionSourceSMS           TransactionSource = "SMS"
+	TransactionSourceMANUAL        TransactionSource = "MANUAL"
+	TransactionSourceSTATEMENTAUTO TransactionSource = "STATEMENT_AUTO"
+)
+
+func (e *TransactionSource) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = TransactionSource(s)
+	case string:
+		*e = TransactionSource(s)
+	default:
+		return fmt.Errorf("unsupported scan type for TransactionSource: %T", src)
+	}
+	return nil
+}
+
+type NullTransactionSource struct {
+	TransactionSource TransactionSource
+	Valid             bool // Valid is true if TransactionSource is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullTransactionSource) Scan(value interface{}) error {
+	if value == nil {
+		ns.TransactionSource, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.TransactionSource.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullTransactionSource) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.TransactionSource), nil
+}
+
 type TxnType string
 
 const (
@@ -145,6 +321,51 @@ func (ns NullTxnType) Value() (driver.Value, error) {
 	return string(ns.TxnType), nil
 }
 
+type UploadProcessingStatus string
+
+const (
+	UploadProcessingStatusUPLOADED   UploadProcessingStatus = "UPLOADED"
+	UploadProcessingStatusPROCESSING UploadProcessingStatus = "PROCESSING"
+	UploadProcessingStatusCOMPLETED  UploadProcessingStatus = "COMPLETED"
+	UploadProcessingStatusFAILED     UploadProcessingStatus = "FAILED"
+	UploadProcessingStatusCANCELLED  UploadProcessingStatus = "CANCELLED"
+)
+
+func (e *UploadProcessingStatus) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UploadProcessingStatus(s)
+	case string:
+		*e = UploadProcessingStatus(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UploadProcessingStatus: %T", src)
+	}
+	return nil
+}
+
+type NullUploadProcessingStatus struct {
+	UploadProcessingStatus UploadProcessingStatus
+	Valid                  bool // Valid is true if UploadProcessingStatus is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUploadProcessingStatus) Scan(value interface{}) error {
+	if value == nil {
+		ns.UploadProcessingStatus, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UploadProcessingStatus.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUploadProcessingStatus) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UploadProcessingStatus), nil
+}
+
 type Account struct {
 	ID             pgtype.UUID
 	UserID         string
@@ -187,7 +408,6 @@ type BankStatementUpload struct {
 	UserID                 string
 	AccountID              pgtype.UUID
 	FileName               string
-	FileUrl                pgtype.Text
 	FileType               pgtype.Text
 	FileSize               pgtype.Int4
 	StatementPeriodStart   pgtype.Date
@@ -202,6 +422,14 @@ type BankStatementUpload struct {
 	ErrorMessage           pgtype.Text
 	CreatedAt              pgtype.Timestamp
 	UpdatedAt              pgtype.Timestamp
+	// Current processing state of the upload
+	ProcessingStatus NullUploadProcessingStatus
+	DuplicateRows    pgtype.Int4
+	ErrorRows        pgtype.Int4
+	ValidRows        pgtype.Int4
+	// Array of parsing errors: [{"row": 23, "error": "Invalid date", "data": {...}}]
+	ParsingErrors []byte
+	JobID         pgtype.UUID
 }
 
 type Category struct {
@@ -387,7 +615,7 @@ type StatementTransaction struct {
 	ID              pgtype.UUID
 	UploadID        pgtype.UUID
 	AccountID       pgtype.UUID
-	TransactionDate pgtype.Date
+	TransactionDate pgtype.Timestamptz
 	Description     pgtype.Text
 	Amount          pgtype.Numeric
 	Type            string
@@ -396,31 +624,41 @@ type StatementTransaction struct {
 	RawData         []byte
 	CreatedAt       pgtype.Timestamp
 	UpdatedAt       pgtype.Timestamp
+	// SHA256 hash of (date + amount + description + reference_number + row_position) for duplicate detection
+	RawRowHash string
+	// Original position in Excel file (1-based)
+	RowNumber   int32
+	IsDuplicate pgtype.Bool
 }
 
 type Transaction struct {
-	ID              pgtype.UUID
-	UserID          string
-	AccountID       pgtype.UUID
-	ToAccountID     pgtype.UUID
-	CategoryID      pgtype.UUID
-	MerchantID      pgtype.UUID
-	Type            TxnType
-	Amount          pgtype.Numeric
-	Description     pgtype.Text
-	Notes           pgtype.Text
-	Tags            pgtype.Text
-	TransactionDate pgtype.Timestamp
-	SmsID           pgtype.UUID
-	PaymentMethod   pgtype.Text
-	ReferenceNumber pgtype.Text
-	IsRecurring     pgtype.Bool
-	IsExcluded      pgtype.Bool
-	IsCash          pgtype.Bool
-	DeletedAt       pgtype.Timestamp
-	DeletedBy       pgtype.Text
-	CreatedAt       pgtype.Timestamp
-	UpdatedAt       pgtype.Timestamp
+	ID                   pgtype.UUID
+	UserID               string
+	AccountID            pgtype.UUID
+	ToAccountID          pgtype.UUID
+	CategoryID           pgtype.UUID
+	MerchantID           pgtype.UUID
+	Type                 TxnType
+	Amount               pgtype.Numeric
+	Description          pgtype.Text
+	Notes                pgtype.Text
+	Tags                 pgtype.Text
+	TransactionDate      pgtype.Timestamp
+	SmsID                pgtype.UUID
+	PaymentMethod        pgtype.Text
+	ReferenceNumber      pgtype.Text
+	IsRecurring          pgtype.Bool
+	IsExcluded           pgtype.Bool
+	IsCash               pgtype.Bool
+	DeletedAt            pgtype.Timestamp
+	DeletedBy            pgtype.Text
+	CreatedAt            pgtype.Timestamp
+	UpdatedAt            pgtype.Timestamp
+	Source               NullTransactionSource
+	ReconciliationStatus NullTransactionReconciliationStatus
+	ReconciledBy         NullReconciliationActor
+	ReconciledAt         pgtype.Timestamp
+	StatementTxnID       pgtype.UUID
 }
 
 type TransactionAttachment struct {
@@ -444,7 +682,7 @@ type TransactionReconciliation struct {
 	UploadID               pgtype.UUID
 	StatementTransactionID pgtype.UUID
 	AppTransactionID       pgtype.UUID
-	ReconciliationStatus   string
+	MatchStatus            string
 	ConfidenceScore        pgtype.Numeric
 	AmountDifference       pgtype.Numeric
 	DateDifference         pgtype.Int4
@@ -453,6 +691,14 @@ type TransactionReconciliation struct {
 	Notes                  pgtype.Text
 	CreatedAt              pgtype.Timestamp
 	UpdatedAt              pgtype.Timestamp
+	// Type of reconciliation result
+	ResultType ReconciliationResultType
+	// JSON object explaining why match occurred: {"date_match": true, "amount_match": true, "description_similarity": 0.85}
+	MatchSignals []byte
+	// Reference to transaction auto-created from this statement txn
+	AutoCreatedTxnID pgtype.UUID
+	ReviewedBy       NullReconciliationActor
+	ReviewedAt       pgtype.Timestamp
 }
 
 type User struct {
@@ -470,6 +716,8 @@ type User struct {
 	TransactionImageParseSuccesses pgtype.Int4
 	ApiKey                         pgtype.Text
 	QrString                       pgtype.Text
+	// Confidence threshold (0-100) for auto-verification. Default: 70
+	ReconciliationThreshold pgtype.Int4
 }
 
 type UserNotification struct {

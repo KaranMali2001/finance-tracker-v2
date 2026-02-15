@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '@/components/shared/dialog';
 import { useInvestmentGoals } from '@/components/shared/hooks/useInvestment';
-import { EmptyState, ErrorState, LoadingState, PageShell } from '@/components/shared/layout';
+import { EmptyState, ErrorState, PageShell } from '@/components/shared/layout';
 import { formatDate, formatRupees } from '@/components/shared/utils';
 import { Button } from '@/components/ui/button';
 import { Plus, Target } from 'lucide-react';

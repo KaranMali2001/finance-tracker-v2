@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { useClerk, useUser } from '@clerk/nextjs';
 import {
   ChevronLeft,
+  FileSpreadsheet,
   Landmark,
   LogOut,
   MessageSquare,
@@ -44,6 +45,11 @@ export function DashboardSidebar() {
       title: 'Transactions',
       url: '/dashboard/transactions',
       icon: Receipt,
+    },
+    {
+      title: 'Reconciliation',
+      url: '/dashboard/reconciliation',
+      icon: FileSpreadsheet,
     },
     {
       title: 'Investments',

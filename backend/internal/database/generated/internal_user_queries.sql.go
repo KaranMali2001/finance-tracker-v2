@@ -18,7 +18,7 @@ UPDATE users SET
  api_key=COALESCE($3,api_key),
  qr_string=COALESCE($4,qr_string)
 WHERE clerk_id=$5
-RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string
+RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string, reconciliation_threshold
 `
 
 type UpdateUserInternalParams struct {
@@ -53,6 +53,7 @@ func (q *Queries) UpdateUserInternal(ctx context.Context, arg UpdateUserInternal
 		&i.TransactionImageParseSuccesses,
 		&i.ApiKey,
 		&i.QrString,
+		&i.ReconciliationThreshold,
 	)
 	return i, err
 }
