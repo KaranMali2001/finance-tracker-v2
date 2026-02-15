@@ -79,6 +79,7 @@ function FormDatePicker<
                 mode="single"
                 selected={field.value ? new Date(field.value) : undefined}
                 defaultMonth={field.value ? new Date(field.value) : today}
+                showOutsideDays={false}
                 onSelect={(date) => {
                   if (date && !allowFutureDates) {
                     // Prevent selecting future dates if not allowed

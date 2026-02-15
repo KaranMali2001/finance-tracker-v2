@@ -10,11 +10,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { useClerk, useUser } from '@clerk/nextjs';
 import {
+  ChevronLeft,
   FileSpreadsheet,
+  Landmark,
   LogOut,
   MessageSquare,
   Receipt,
@@ -30,6 +33,7 @@ export function DashboardSidebar() {
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
   const router = useRouter();
+  const { toggleSidebar } = useSidebar();
 
   const navigationItems = [
     {
@@ -67,10 +71,30 @@ export function DashboardSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2">
-          <h2 className="text-lg font-semibold text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-            Finance Tracker
-          </h2>
+        <div className="flex items-center justify-between px-2 py-1">
+          <button
+            onClick={toggleSidebar}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-600 to-yellow-600 shadow-md shadow-amber-600/20 flex-shrink-0">
+              <Landmark className="h-4 w-4 text-white" />
+            </div>
+            <div className="group-data-[collapsible=icon]:hidden">
+              <h2
+                className="text-lg font-bold bg-gradient-to-r from-amber-700 to-yellow-700 bg-clip-text text-transparent"
+                style={{ fontFamily: 'Playfair Display, serif' }}
+              >
+                Wealth Reserve
+              </h2>
+            </div>
+          </button>
+          <button
+            onClick={toggleSidebar}
+            className="group-data-[collapsible=icon]:hidden h-8 w-8 flex items-center justify-center hover:bg-amber-50 hover:text-amber-700 rounded-md transition-colors -mr-1"
+            aria-label="Toggle sidebar"
+          >
+            <ChevronLeft className="h-5 w-5 text-stone-600" />
+          </button>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -83,7 +107,8 @@ export function DashboardSidebar() {
                 return (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
-                      <Link href={item.url}>
+                      <Link href={item.url} className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>

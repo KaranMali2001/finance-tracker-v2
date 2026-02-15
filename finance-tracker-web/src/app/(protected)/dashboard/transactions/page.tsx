@@ -3,103 +3,111 @@
 import { ConfirmDialog } from '@/components/shared/dialog';
 import { useAccounts } from '@/components/shared/hooks/useAccount';
 import { useCategories, useMerchants } from '@/components/shared/hooks/useStatic';
-import {
-  useDeleteTransactions,
-  useTransactions,
-  useUpdateTransaction,
-} from '@/components/shared/hooks/useTransaction';
+import { useDeleteTransactions, useTransactions } from '@/components/shared/hooks/useTransaction';
 import { ErrorState, PageShell } from '@/components/shared/layout';
-import {
-  BooleanCellEditor,
-  DataGrid,
-  DateCellEditor,
-  DropdownCellEditor,
-  NumberCellEditor,
-  RowActions,
-  SelectCellEditor,
-} from '@/components/shared/table';
 import type { Transaction } from '@/components/shared/types';
 import { formatDate, formatRupees, getTypeColor } from '@/components/shared/utils';
 import { Button } from '@/components/ui/button';
-import type {
-  internal_domain_transaction_TxnType,
-  internal_domain_transaction_UpdateTxnReq,
-} from '@/generated/api';
-import { internal_domain_transaction_TxnType as TxnType } from '@/generated/api';
-import type { CellValueChangedEvent, ColDef } from 'ag-grid-community';
-import { AgGridReact } from 'ag-grid-react';
-import { startOfDay } from 'date-fns';
-import { Edit, ExternalLink, Plus, Receipt, X } from 'lucide-react';
+import { Filter, Plus, Receipt, Search, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
+
+interface TransactionFilters {
+  accountId?: string;
+  categoryId?: string;
+  merchantId?: string;
+  type?: string;
+  search?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}
 
 export default function TransactionsPage() {
-  const { data: transactions, isLoading, error, refetch, isFetching } = useTransactions();
+  const { data: transactions, isLoading, error, refetch } = useTransactions();
   const { data: categories } = useCategories();
   const { data: merchants } = useMerchants();
   const { data: accounts } = useAccounts();
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
   const { mutate: deleteTransactions, isPending: isDeleting } = useDeleteTransactions();
-  const { mutate: updateTransaction } = useUpdateTransaction();
   const router = useRouter();
-  const gridApiRef = useRef<AgGridReact<Transaction>>(null);
 
-  // State for tracking row modifications
-  const [originalRows, setOriginalRows] = useState<Map<string, Transaction>>(new Map());
-  const [modifiedRowIds, setModifiedRowIds] = useState<Set<string>>(new Set());
-  const [savingRowIds, setSavingRowIds] = useState<Set<string>>(new Set());
+  const [filters, setFilters] = useState<TransactionFilters>({});
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
-  // Prepare category options
-  const categoryOptions = useMemo(() => {
-    if (!categories) {
-      return [];
+  // Filter and paginate transactions
+  const { filteredTransactions, totalPages } = useMemo(() => {
+    if (!transactions) {
+      return { filteredTransactions: [], totalPages: 0 };
     }
-    return categories
-      .filter((category) => category.id && category.name)
-      .map((category) => ({
-        value: category.id!,
-        label: category.name!,
-      }));
-  }, [categories]);
 
-  // Prepare merchant options
-  const merchantOptions = useMemo(() => {
-    if (!merchants) {
-      return [];
+    let filtered: Transaction[] = [...transactions];
+
+    // Apply filters
+    if (filters.accountId) {
+      filtered = filtered.filter((txn) => txn.account_id === filters.accountId);
     }
-    return merchants
-      .filter((merchant) => merchant.id && merchant.name)
-      .map((merchant) => ({
-        value: merchant.id!,
-        label: merchant.name!,
-      }));
-  }, [merchants]);
-
-  // Prepare type options from enum
-  const typeOptions = useMemo(() => {
-    return Object.values(TxnType).map((type) => ({
-      value: type,
-      label: type,
-    }));
-  }, []);
-
-  // Prepare account options
-  const accountOptions = useMemo(() => {
-    if (!accounts) {
-      return [];
+    if (filters.categoryId) {
+      filtered = filtered.filter((txn) => txn.category_id === filters.categoryId);
     }
-    return accounts
-      .filter((account) => account.id)
-      .map((account) => ({
-        value: account.id!,
-        label: account.account_number
-          ? `${account.account_name || 'Account'} (${account.account_number})`
-          : account.account_name || 'Account',
-      }));
-  }, [accounts]);
+    if (filters.merchantId) {
+      filtered = filtered.filter((txn) => txn.merchant_id === filters.merchantId);
+    }
+    if (filters.type) {
+      filtered = filtered.filter((txn) => txn.type === filters.type);
+    }
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(
+        (txn) =>
+          txn.description?.toLowerCase().includes(searchLower) ||
+          txn.account_name?.toLowerCase().includes(searchLower) ||
+          txn.category_name?.toLowerCase().includes(searchLower) ||
+          txn.merchant_name?.toLowerCase().includes(searchLower)
+      );
+    }
+    if (filters.dateFrom) {
+      filtered = filtered.filter((txn) => {
+        const txnDate = (txn as any).transaction_date || txn.created_at;
+        return txnDate && txnDate >= filters.dateFrom!;
+      });
+    }
+    if (filters.dateTo) {
+      filtered = filtered.filter((txn) => {
+        const txnDate = (txn as any).transaction_date || txn.created_at;
+        return txnDate && txnDate <= filters.dateTo!;
+      });
+    }
+
+    // Sort by date descending (most recent first)
+    filtered.sort((a, b) => {
+      const dateA = (a as any).transaction_date || a.created_at || '';
+      const dateB = (b as any).transaction_date || b.created_at || '';
+      return dateB.localeCompare(dateA);
+    });
+
+    const total = Math.ceil(filtered.length / pageSize);
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    const paginated = filtered.slice(start, end);
+
+    return {
+      filteredTransactions: paginated,
+      totalPages: total || 1,
+    };
+  }, [transactions, filters, page, pageSize]);
+
+  const handleFilterChange = (newFilters: TransactionFilters) => {
+    setFilters(newFilters);
+    setPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setFilters({});
+    setPage(1);
+  };
 
   const handleDeleteClick = (transaction: Transaction) => {
     setTransactionToDelete(transaction);
@@ -125,556 +133,14 @@ export default function TransactionsPage() {
     setTransactionToDelete(null);
   };
 
-  // Store original row data when edit mode is enabled
-  useEffect(() => {
-    if (isEditMode && transactions) {
-      const originalMap = new Map<string, Transaction>();
-      transactions.forEach((txn) => {
-        if (txn.id) {
-          // Deep clone to avoid reference issues
-          originalMap.set(txn.id, { ...txn });
-        }
-      });
-      setOriginalRows(originalMap);
-      setModifiedRowIds(new Set());
-    } else {
-      // Clear state when edit mode is disabled
-      setOriginalRows(new Map());
-      setModifiedRowIds(new Set());
-      setSavingRowIds(new Set());
-    }
-  }, [isEditMode, transactions]);
-
-  const handleCellValueChanged = useCallback(
-    (event: CellValueChangedEvent<Transaction>) => {
-      if (!event.data?.id || !isEditMode) {
-        return;
-      }
-
-      // Track that this row has been modified
-      setModifiedRowIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(event.data!.id!);
-        return newSet;
-      });
-
-      // Note: We don't save automatically - user must click save button
-    },
-    [isEditMode]
-  );
-
-  // Helper function to build update payload from row data
-  const buildUpdatePayload = useCallback(
-    (rowData: Transaction): internal_domain_transaction_UpdateTxnReq => {
-      const payload: internal_domain_transaction_UpdateTxnReq = {
-        id: rowData.id!,
-      };
-
-      // Map all editable fields to payload
-      if (rowData.amount !== undefined) {
-        payload.amount = rowData.amount;
-      }
-      if (rowData.category_id !== undefined) {
-        payload.category_id = rowData.category_id;
-      }
-      if (rowData.merchant_id !== undefined) {
-        payload.merchant_id = rowData.merchant_id;
-      }
-      if (rowData.description !== undefined) {
-        payload.description = rowData.description;
-      }
-      if ((rowData as any).transaction_date !== undefined) {
-        payload.transaction_date = (rowData as any).transaction_date;
-      }
-
-      // Note: These fields may not be supported by backend UpdateTxnReq yet
-      const extendedPayload = payload as any;
-      if (rowData.type !== undefined) {
-        extendedPayload.type = rowData.type;
-      }
-      if (rowData.account_id !== undefined) {
-        extendedPayload.account_id = rowData.account_id;
-      }
-      if (rowData.is_recurring !== undefined) {
-        extendedPayload.is_recurring = rowData.is_recurring;
-      }
-      if (rowData.is_cash !== undefined) {
-        extendedPayload.is_cash = rowData.is_cash;
-      }
-
-      return payload;
-    },
-    []
-  );
-
-  // Handle saving a single row
-  const handleRowSave = useCallback(
-    (rowId: string) => {
-      if (!gridApiRef.current) {
-        return;
-      }
-
-      // Get current row data from grid
-      let rowData: Transaction | undefined;
-      gridApiRef.current?.api?.forEachNode((node) => {
-        if (node.data?.id === rowId) {
-          rowData = node.data;
-        }
-      });
-
-      if (!rowData || !rowData.id) {
-        return;
-      }
-
-      // Mark as saving
-      setSavingRowIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(rowId);
-        return newSet;
-      });
-
-      // Build update payload
-      const payload = buildUpdatePayload(rowData);
-
-      // Update transaction
-      updateTransaction(payload, {
-        onSuccess: (updatedTransaction) => {
-          // Remove from modified and saving sets
-          setModifiedRowIds((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(rowId);
-            return newSet;
-          });
-          setSavingRowIds((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(rowId);
-            return newSet;
-          });
-
-          // Update original rows with new data
-          if (updatedTransaction.id) {
-            setOriginalRows((prev) => {
-              const newMap = new Map(prev);
-              newMap.set(updatedTransaction.id!, { ...updatedTransaction });
-              return newMap;
-            });
-          }
-        },
-        onError: () => {
-          // Remove from saving set but keep in modified set
-          setSavingRowIds((prev) => {
-            const newSet = new Set(prev);
-            newSet.delete(rowId);
-            return newSet;
-          });
-        },
-      });
-    },
-    [updateTransaction, buildUpdatePayload]
-  );
-
-  // Handle canceling changes for a single row
-  const handleRowCancel = useCallback(
-    (rowId: string) => {
-      // Get original row data
-      const originalRow = originalRows.get(rowId);
-      if (!originalRow || !gridApiRef.current?.api) {
-        return;
-      }
-
-      // Restore original data in the grid
-      gridApiRef.current.api.forEachNode((node) => {
-        if (node.data?.id === rowId) {
-          // Update the node data with original values
-          Object.assign(node.data, originalRow);
-          // Refresh the row to reflect changes
-          gridApiRef.current?.api?.refreshCells({
-            rowNodes: [node],
-            force: true,
-          });
-        }
-      });
-
-      // Remove from modified set
-      setModifiedRowIds((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(rowId);
-        return newSet;
-      });
-    },
-    [originalRows]
-  );
-
-  const columnDefs = useMemo<ColDef<Transaction>[]>(
-    () => [
-      {
-        field: 'id',
-        headerName: 'ID',
-        width: 100,
-        sortable: true,
-        filter: true,
-        hide: true, // Hide from display but keep for reference
-        cellRenderer: (params: { value?: string }) => {
-          if (!params.value) {
-            return 'N/A';
-          }
-          return <span className="font-mono text-xs">{params.value.substring(0, 8)}...</span>;
-        },
-      },
-      {
-        field: 'type',
-        headerName: 'Type',
-        width: 120,
-        sortable: true,
-        filter: true,
-        editable: isEditMode,
-        cellEditor: DropdownCellEditor,
-        cellEditorParams: {
-          options: typeOptions,
-        },
-        valueGetter: (params) => {
-          return params.data?.type || undefined;
-        },
-        valueSetter: (params) => {
-          if (params.data) {
-            params.data.type = (params.newValue as internal_domain_transaction_TxnType) || undefined;
-            return true;
-          }
-          return false;
-        },
-        cellRenderer: (params: { value?: string }) => {
-          if (!params.value) {
-            return 'N/A';
-          }
-          return (
-            <span
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getTypeColor(params.value)}`}
-            >
-              {params.value}
-            </span>
-          );
-        },
-      },
-      {
-        field: 'amount',
-        headerName: 'Amount',
-        width: 150,
-        sortable: true,
-        filter: true,
-        editable: isEditMode,
-        cellEditor: NumberCellEditor,
-        cellEditorParams: {
-          min: 0,
-          step: 0.01,
-        },
-        valueParser: (params) => {
-          const value = parseFloat(params.newValue);
-          return isNaN(value) ? null : value;
-        },
-        cellRenderer: (params: { value?: number }) => {
-          if (params.value === undefined || params.value === null) {
-            return 'N/A';
-          }
-          return <span className="font-semibold">{formatRupees(params.value)}</span>;
-        },
-        comparator: (valueA, valueB) => {
-          const a = valueA ?? 0;
-          const b = valueB ?? 0;
-          return a - b;
-        },
-      },
-      {
-        field: 'description',
-        headerName: 'Description',
-        width: 250,
-        sortable: true,
-        filter: true,
-        editable: false,
-        cellRenderer: (params: { value?: string }) => {
-          return params.value || 'N/A';
-        },
-      },
-      {
-        field: 'account_id',
-        headerName: 'Account',
-        width: 180,
-        sortable: true,
-        filter: true,
-        editable: isEditMode,
-        cellEditor: DropdownCellEditor,
-        cellEditorParams: {
-          options: accountOptions,
-        },
-        valueGetter: (params) => {
-          return params.data?.account_id || undefined;
-        },
-        valueSetter: (params) => {
-          if (params.data) {
-            params.data.account_id = (params.newValue as string) || undefined;
-            // Update account_name and account_number when account_id changes
-            const selectedAccount = accounts?.find((acc) => acc.id === params.newValue);
-            if (selectedAccount) {
-              params.data.account_name = selectedAccount.account_name ?? undefined;
-              params.data.account_number = selectedAccount.account_number ?? undefined;
-            }
-            return true;
-          }
-          return false;
-        },
-        cellRenderer: (params: { data?: Transaction; value?: string }) => {
-          if (!params.value || !params.data) {
-            return 'N/A';
-          }
-          const accountName = params.data.account_name || 'Account';
-          const accountNumber = params.data.account_number;
-          const displayText = accountNumber ? `${accountName} (${accountNumber})` : accountName;
-
-          if (isEditMode) {
-            return <span>{displayText}</span>;
-          }
-
-          return (
-            <Link
-              href={`/dashboard/accounts/${params.value}`}
-              className="group inline-flex items-center gap-1.5 text-primary hover:underline"
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent row selection
-              }}
-            >
-              <span>{displayText}</span>
-              <ExternalLink className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
-            </Link>
-          );
-        },
-      },
-      {
-        field: 'category_id',
-        headerName: 'Category',
-        width: 150,
-        sortable: true,
-        filter: true,
-        editable: isEditMode,
-        cellEditor: SelectCellEditor,
-        cellEditorParams: {
-          options: categoryOptions,
-        },
-        valueGetter: (params) => {
-          // Return category_id for editing
-          return params.data?.category_id || null;
-        },
-        valueSetter: (params) => {
-          // Update category_id when value changes
-          if (params.data) {
-            params.data.category_id = params.newValue || null;
-            // Update category_name immediately when category_id changes
-            const selectedCategory = categories?.find((cat) => cat.id === params.newValue);
-            if (selectedCategory && selectedCategory.name) {
-              params.data.category_name = selectedCategory.name;
-            } else {
-              params.data.category_name = undefined;
-            }
-            return true;
-          }
-          return false;
-        },
-        cellRenderer: (params: { data?: Transaction }) => {
-          // Display category_name for viewing
-          return params.data?.category_name || 'N/A';
-        },
-      },
-      {
-        field: 'merchant_id',
-        headerName: 'Merchant',
-        width: 150,
-        sortable: true,
-        filter: true,
-        editable: isEditMode,
-        cellEditor: SelectCellEditor,
-        cellEditorParams: {
-          options: merchantOptions,
-        },
-        valueGetter: (params) => {
-          // Return merchant_id for editing
-          return params.data?.merchant_id || null;
-        },
-        valueSetter: (params) => {
-          // Update merchant_id when value changes
-          if (params.data) {
-            params.data.merchant_id = params.newValue || null;
-            // Update merchant_name immediately when merchant_id changes
-            const selectedMerchant = merchants?.find((merchant) => merchant.id === params.newValue);
-            if (selectedMerchant && selectedMerchant.name) {
-              params.data.merchant_name = selectedMerchant.name;
-            } else {
-              params.data.merchant_name = undefined;
-            }
-            return true;
-          }
-          return false;
-        },
-        cellRenderer: (params: { data?: Transaction }) => {
-          // Display merchant_name for viewing
-          return params.data?.merchant_name || 'N/A';
-        },
-      },
-      {
-        field: 'payment_method',
-        headerName: 'Payment Method',
-        width: 150,
-        sortable: true,
-        filter: true,
-        editable: false,
-      },
-      {
-        field: 'reference_number',
-        headerName: 'Reference',
-        width: 150,
-        sortable: true,
-        filter: true,
-        editable: false,
-      },
-      {
-        headerName: 'Date',
-        width: 150,
-        sortable: true,
-        filter: true,
-        editable: isEditMode,
-        cellEditor: DateCellEditor,
-        cellEditorParams: {
-          max: startOfDay(new Date()).toISOString().split('T')[0], // Prevent future dates
-        },
-        valueGetter: (params) => {
-          // Access transaction_date from data since it's not in the type definition
-          // Fallback to created_at if transaction_date is not available
-          return (params.data as any)?.transaction_date || params.data?.created_at;
-        },
-        valueSetter: (params) => {
-          // Update transaction_date when value changes
-          if (params.data) {
-            (params.data as any).transaction_date = params.newValue || null;
-            return true;
-          }
-          return false;
-        },
-        cellRenderer: (params: { value?: string; data?: Transaction }) => {
-          const dateValue =
-            params.value || (params.data as any)?.transaction_date || params.data?.created_at;
-          if (!dateValue) {
-            return 'N/A';
-          }
-          return formatDate(dateValue);
-        },
-        comparator: (valueA, valueB) => {
-          const a = valueA ? new Date(valueA).getTime() : 0;
-          const b = valueB ? new Date(valueB).getTime() : 0;
-          return a - b;
-        },
-      },
-      {
-        field: 'is_recurring',
-        headerName: 'Recurring',
-        width: 100,
-        sortable: true,
-        filter: true,
-        editable: isEditMode,
-        cellEditor: BooleanCellEditor,
-        valueGetter: (params) => {
-          return params.data?.is_recurring ?? false;
-        },
-        valueSetter: (params) => {
-          if (params.data) {
-            params.data.is_recurring = params.newValue as boolean;
-            return true;
-          }
-          return false;
-        },
-        cellRenderer: (params: { value?: boolean }) => {
-          return params.value ? 'Yes' : 'No';
-        },
-      },
-      {
-        field: 'is_cash',
-        headerName: 'Cash',
-        width: 100,
-        sortable: true,
-        filter: true,
-        editable: isEditMode,
-        cellEditor: BooleanCellEditor,
-        valueGetter: (params) => {
-          return params.data?.is_cash ?? false;
-        },
-        valueSetter: (params) => {
-          if (params.data) {
-            params.data.is_cash = params.newValue as boolean;
-            return true;
-          }
-          return false;
-        },
-        cellRenderer: (params: { value?: boolean }) => {
-          return params.value ? 'Yes' : 'No';
-        },
-      },
-      {
-        headerName: 'Actions',
-        width: 120,
-        sortable: false,
-        filter: false,
-        editable: false, // Explicitly prevent editing
-        cellRenderer: (params: { data?: Transaction }) => {
-          if (!params.data?.id) {
-            return null;
-          }
-
-          const rowId = params.data.id;
-          const isModified = modifiedRowIds.has(rowId);
-          const isSaving = savingRowIds.has(rowId);
-
-          return (
-            <RowActions
-              isEditMode={isEditMode}
-              isModified={isModified}
-              onSave={() => {
-                handleRowSave(rowId);
-              }}
-              onCancel={() => {
-                handleRowCancel(rowId);
-              }}
-              onDelete={() => {
-                handleDeleteClick(params.data!);
-              }}
-              isSaving={isSaving}
-              showDelete={!isEditMode || !isModified}
-              isDeleting={isDeleting}
-            />
-          );
-        },
-      },
-    ],
-    [
-      isDeleting,
-      isEditMode,
-      categoryOptions,
-      merchantOptions,
-      typeOptions,
-      accountOptions,
-      accounts,
-      categories,
-      merchants,
-      modifiedRowIds,
-      savingRowIds,
-      handleRowSave,
-      handleRowCancel,
-      handleDeleteClick,
-    ]
-  );
-
-  const defaultColDef = useMemo<ColDef<Transaction>>(
-    () => ({
-      flex: 1,
-      minWidth: 100,
-    }),
-    []
-  );
+  const hasActiveFilters =
+    filters.accountId ||
+    filters.categoryId ||
+    filters.merchantId ||
+    filters.type ||
+    filters.search ||
+    filters.dateFrom ||
+    filters.dateTo;
 
   if (error) {
     return (
@@ -684,81 +150,267 @@ export default function TransactionsPage() {
     );
   }
 
-  return (
-    <div className="flex flex-1 flex-col min-h-0">
-      <PageShell
-        title="Transactions"
-        description="View and manage your financial transactions"
-        actions={
-          <div className="flex gap-2">
-            {isEditMode ? (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsEditMode(false);
-                }}
-              >
-                <X className="mr-2 h-4 w-4" />
-                Cancel Edit
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsEditMode(true);
-                }}
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Mode
-              </Button>
-            )}
-            <Button asChild>
-              <Link href="/dashboard/transactions/new">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Transaction
-              </Link>
-            </Button>
+  if (isLoading) {
+    return (
+      <PageShell title="Transactions" description="View and manage your financial transactions">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-amber-600 border-t-transparent mx-auto mb-4" />
+            <p className="text-sm font-medium text-stone-600">Loading transactions...</p>
           </div>
-        }
-        className="flex flex-col flex-1 min-h-0"
-      >
-        <div className="flex-1 min-h-0">
-          <DataGrid<Transaction>
-            ref={gridApiRef}
-            columns={columnDefs}
-            data={transactions || []}
-            loading={isLoading || isFetching || transactions === undefined}
-            defaultColDef={defaultColDef}
-            height="100%"
-            editable={isEditMode}
-            onCellValueChanged={handleCellValueChanged}
-            stopEditingWhenCellsLoseFocus={true}
-            enterNavigatesVerticallyAfterEdit={true}
-            singleClickEdit={true}
-            getRowStyle={(params) => {
-              // Highlight rows with unsaved changes
-              if (params.data?.id && modifiedRowIds.has(params.data.id)) {
-                return {
-                  backgroundColor: '#fefce8', // yellow-50
-                  borderLeft: '4px solid #facc15', // yellow-400
-                };
-              }
-              return undefined;
-            }}
-            emptyState={{
-              title: 'No transactions found',
-              description: 'Get started by creating your first transaction to track your finances.',
-              icon: Receipt,
-              action: {
-                label: 'Create Transaction',
-                onClick: () => {
-                  router.push('/dashboard/transactions/new');
-                },
-              },
-            }}
-          />
         </div>
       </PageShell>
+    );
+  }
+
+  return (
+    <PageShell
+      title="Transaction Ledger"
+      description="Your complete financial transaction history"
+      actions={
+        <Button asChild>
+          <Link href="/dashboard/transactions/new">
+            <Plus className="mr-2 h-4 w-4" />
+            New Transaction
+          </Link>
+        </Button>
+      }
+    >
+      {/* Filters Section */}
+      <div className="mb-6 p-4 rounded-xl border border-stone-200 bg-white shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-amber-600" />
+            <span className="text-sm font-semibold text-stone-800">Filters</span>
+          </div>
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={handleClearFilters}
+              className="text-xs font-medium text-stone-600 hover:text-amber-700 transition-colors"
+            >
+              <X className="h-3 w-3 inline mr-1" />
+              Clear all
+            </button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-4 gap-3">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-500" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={filters.search || ''}
+              onChange={(e) => handleFilterChange({ ...filters, search: e.target.value })}
+              className="w-full pl-10 pr-3 py-2 text-sm rounded-lg border border-stone-300 bg-white text-stone-900 placeholder:text-stone-400 focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-600/20 transition-all"
+            />
+          </div>
+
+          {/* Account Filter */}
+          <select
+            value={filters.accountId || ''}
+            onChange={(e) =>
+              handleFilterChange({ ...filters, accountId: e.target.value || undefined })
+            }
+            className="px-3 py-2 text-sm rounded-lg border border-stone-300 bg-white text-stone-900 focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-600/20 transition-all"
+          >
+            <option value="">All Accounts</option>
+            {accounts?.map((account) => (
+              <option key={account.id} value={account.id}>
+                {account.account_name || 'Unnamed'}
+              </option>
+            ))}
+          </select>
+
+          {/* Category Filter */}
+          <select
+            value={filters.categoryId || ''}
+            onChange={(e) =>
+              handleFilterChange({ ...filters, categoryId: e.target.value || undefined })
+            }
+            className="px-3 py-2 text-sm rounded-lg border border-stone-300 bg-white text-stone-900 focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-600/20 transition-all"
+          >
+            <option value="">All Categories</option>
+            {categories?.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name || 'Unnamed'}
+              </option>
+            ))}
+          </select>
+
+          {/* Type Filter */}
+          <select
+            value={filters.type || ''}
+            onChange={(e) => handleFilterChange({ ...filters, type: e.target.value || undefined })}
+            className="px-3 py-2 text-sm rounded-lg border border-stone-300 bg-white text-stone-900 focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-600/20 transition-all"
+          >
+            <option value="">All Types</option>
+            <option value="DEBIT">Debit</option>
+            <option value="CREDIT">Credit</option>
+            <option value="INCOME">Income</option>
+            <option value="SUBSCRIPTION">Subscription</option>
+            <option value="INVESTMENT">Investment</option>
+            <option value="REFUND">Refund</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Transactions Table */}
+      <div className="rounded-xl border border-stone-200 overflow-hidden bg-white shadow-sm">
+        {/* Table Header */}
+        <div className="grid grid-cols-12 gap-4 px-6 py-3 text-xs font-semibold border-b bg-stone-50 border-stone-200 text-stone-600">
+          <div className="col-span-2">DATE</div>
+          <div className="col-span-3">DESCRIPTION</div>
+          <div className="col-span-2">ACCOUNT</div>
+          <div className="col-span-2">CATEGORY</div>
+          <div className="col-span-1">TYPE</div>
+          <div className="col-span-2 text-right">AMOUNT</div>
+        </div>
+
+        {/* Table Body */}
+        <div className="divide-y divide-stone-100">
+          {filteredTransactions.length > 0 ? (
+            filteredTransactions.map((txn, index) => (
+              <div
+                key={txn.id}
+                className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-amber-50/50 border-stone-100 transition-all duration-200 hover:translate-x-1 elegant-fade group"
+                style={{ animationDelay: `${index * 0.03}s` }}
+              >
+                <div className="col-span-2 text-sm font-mono text-stone-700">
+                  {formatDate((txn as any).transaction_date || txn.created_at || '')}
+                </div>
+                <div className="col-span-3 text-sm font-medium text-stone-900 truncate">
+                  {txn.description || 'No description'}
+                </div>
+                <div className="col-span-2 text-sm text-stone-600">{txn.account_name || 'N/A'}</div>
+                <div className="col-span-2 text-sm text-stone-600">
+                  {txn.category_name || 'Uncategorized'}
+                </div>
+                <div className="col-span-1">
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getTypeColor(txn.type || '')}`}
+                  >
+                    {txn.type || 'N/A'}
+                  </span>
+                </div>
+                <div className="col-span-2 flex items-center justify-end gap-2">
+                  <span
+                    className={`text-sm font-bold font-mono ${
+                      txn.type === 'INCOME'
+                        ? 'text-emerald-600'
+                        : txn.type === 'DEBIT'
+                          ? 'text-rose-600'
+                          : 'text-stone-700'
+                    }`}
+                  >
+                    {txn.type === 'INCOME' || txn.type === 'CREDIT'
+                      ? '+'
+                      : txn.type === 'DEBIT'
+                        ? '-'
+                        : ''}
+                    {formatRupees(txn.amount || 0)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteClick(txn)}
+                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-md hover:bg-red-50 text-stone-400 hover:text-red-600 transition-all"
+                    title="Delete transaction"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="py-12 text-center">
+              <Receipt className="h-12 w-12 text-stone-300 mx-auto mb-4" />
+              <p className="text-sm text-stone-500 mb-4">
+                {hasActiveFilters ? 'No transactions match your filters' : 'No transactions found'}
+              </p>
+              {!hasActiveFilters && (
+                <Button
+                  onClick={() => router.push('/dashboard/transactions/new')}
+                  variant="outline"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Transaction
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-stone-600">Rows per page:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
+              className="px-3 py-1.5 text-sm rounded-lg border border-stone-300 bg-white text-stone-900 focus:border-amber-600 focus:outline-none focus:ring-1 focus:ring-amber-600 transition-colors"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage(page - 1)}
+              disabled={page === 1}
+              className={`p-2 rounded-lg transition-all ${
+                page === 1
+                  ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                  : 'bg-white text-stone-900 hover:bg-amber-600 hover:text-white border border-stone-300'
+              }`}
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+
+            <span className="text-sm text-stone-700">
+              Page {page} of {totalPages}
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setPage(page + 1)}
+              disabled={page === totalPages}
+              className={`p-2 rounded-lg transition-all ${
+                page === totalPages
+                  ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                  : 'bg-white text-stone-900 hover:bg-amber-600 hover:text-white border border-stone-300'
+              }`}
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <ConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
@@ -774,6 +426,6 @@ export default function TransactionsPage() {
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
-    </div>
+    </PageShell>
   );
 }

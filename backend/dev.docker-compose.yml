@@ -38,6 +38,16 @@ services:
       timeout: 5s
       retries: 5
 
+  # adminer:
+  #   image: adminer:latest
+  #   container_name: finance-tracker-adminer
+  #   networks:
+  #     - finance-tracker-network
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - postgres
   chartdb:
     image: ghcr.io/chartdb/chartdb:latest
     container_name: finance-tracker-chartdb
