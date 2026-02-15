@@ -1,115 +1,190 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* ═══════════════════════════════════════════════════════════
+   WEALTH RESERVE - REFINED HERITAGE LUXURY
+   A sophisticated design system for financial excellence
+
+   Design Philosophy:
+   - Old-money elegance, not nouveau-riche flash
+   - Warm gold that shimmers like precious metal
+   - Stone neutrals that breathe with natural warmth
+   - Serif typography for gravitas, sans-serif for clarity
+   - Shadows that feel atmospheric, not heavy
+   ═══════════════════════════════════════════════════════════ */
+
 @custom-variant dark (&:is(.dark *));
 
+/* ───────────────────────────────────────────────────────────
+   FOUNDATION COLOR PALETTE
+   ─────────────────────────────────────────────────────────── */
+
 :root {
-  --background: oklch(0.9779 0.0042 56.3756);
-  --foreground: oklch(0.2178 0 0);
-  --card: oklch(0.9779 0.0042 56.3756);
-  --card-foreground: oklch(0.2178 0 0);
-  --popover: oklch(0.9779 0.0042 56.3756);
-  --popover-foreground: oklch(0.2178 0 0);
-  --primary: oklch(0.465 0.147 24.9381);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.9625 0.0385 89.0943);
-  --secondary-foreground: oklch(0.4847 0.1022 75.1153);
-  --muted: oklch(0.9431 0.0068 53.4442);
-  --muted-foreground: oklch(0.4444 0.0096 73.639);
-  --accent: oklch(0.9619 0.058 95.6174);
-  --accent-foreground: oklch(0.3958 0.1331 25.723);
-  --destructive: oklch(0.4437 0.1613 26.8994);
+  /* Primary Palette - Precious Metals */
+  --gold-50: oklch(0.97 0.015 75); /* Champagne mist */
+  --gold-100: oklch(0.94 0.028 72); /* Light gold leaf */
+  --gold-200: oklch(0.88 0.052 70); /* Soft bullion */
+  --gold-300: oklch(0.82 0.078 68); /* Warm gold */
+  --gold-400: oklch(0.76 0.095 72); /* Signature gold #d9b364 */
+  --gold-500: oklch(0.68 0.105 68); /* Deep gold */
+  --gold-600: oklch(0.6 0.11 65); /* Antique gold */
+  --gold-700: oklch(0.52 0.105 62); /* Old gold */
+  --gold-800: oklch(0.44 0.09 60); /* Bronze gold */
+  --gold-900: oklch(0.36 0.07 58); /* Darkest gold */
+
+  /* Neutral Foundation - Warm Stone */
+  --stone-50: oklch(0.985 0.003 56); /* Alabaster */
+  --stone-100: oklch(0.96 0.006 56); /* Cream stone */
+  --stone-200: oklch(0.93 0.01 56); /* Soft stone */
+  --stone-300: oklch(0.88 0.014 56); /* Light stone */
+  --stone-400: oklch(0.7 0.016 56); /* Medium stone */
+  --stone-500: oklch(0.58 0.014 56); /* Stone */
+  --stone-600: oklch(0.5 0.012 56); /* Deep stone */
+  --stone-700: oklch(0.42 0.01 56); /* Dark stone */
+  --stone-800: oklch(0.3 0.015 50); /* Charcoal stone */
+  --stone-900: oklch(0.22 0.012 48); /* Onyx */
+
+  /* Accent Palette - Warm Amber */
+  --amber-50: oklch(0.96 0.025 85); /* Soft amber glow */
+  --amber-100: oklch(0.92 0.045 85); /* Light amber */
+  --amber-500: oklch(0.72 0.14 70); /* Rich amber */
+  --amber-600: oklch(0.65 0.15 68); /* Deep amber */
+  --amber-700: oklch(0.55 0.145 65); /* Dark amber */
+
+  /* ───────────────────────────────────────────────────────────
+     SEMANTIC TOKEN SYSTEM
+     ─────────────────────────────────────────────────────────── */
+
+  /* Surfaces & Backgrounds */
+  --background: var(--stone-50);
+  --foreground: var(--stone-800);
+
+  --card: oklch(1 0 0); /* Pure white for premium feel */
+  --card-foreground: var(--stone-800);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--stone-800);
+
+  /* Brand Colors */
+  --primary: var(--gold-400); /* Signature Wealth Reserve gold */
+  --primary-foreground: oklch(0.98 0.004 56);
+
+  --secondary: var(--gold-600); /* Deeper gold accent */
+  --secondary-foreground: oklch(0.98 0.004 56);
+
+  /* Utility Colors */
+  --muted: var(--stone-100);
+  --muted-foreground: var(--stone-600);
+
+  --accent: var(--amber-100);
+  --accent-foreground: var(--amber-700);
+
+  --destructive: oklch(0.55 0.18 25); /* Warm red-brown */
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.9355 0.0324 80.9937);
-  --input: oklch(0.9355 0.0324 80.9937);
-  --ring: oklch(0.465 0.147 24.9381);
-  --chart-1: oklch(0.5054 0.1905 27.5181);
-  --chart-2: oklch(0.465 0.147 24.9381);
-  --chart-3: oklch(0.3958 0.1331 25.723);
-  --chart-4: oklch(0.5553 0.1455 48.9975);
-  --chart-5: oklch(0.4732 0.1247 46.2007);
-  --sidebar: oklch(0.9431 0.0068 53.4442);
-  --sidebar-foreground: oklch(0.2178 0 0);
-  --sidebar-primary: oklch(0.465 0.147 24.9381);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.9619 0.058 95.6174);
-  --sidebar-accent-foreground: oklch(0.3958 0.1331 25.723);
-  --sidebar-border: oklch(0.9355 0.0324 80.9937);
-  --sidebar-ring: oklch(0.465 0.147 24.9381);
-  --font-sans: Poppins, sans-serif;
-  --font-serif: Libre Baskerville, serif;
-  --font-mono: IBM Plex Mono, monospace;
-  --radius: 0.375rem;
-  --shadow-x: 1px;
-  --shadow-y: 1px;
-  --shadow-blur: 16px;
-  --shadow-spread: -2px;
-  --shadow-opacity: 0.12;
-  --shadow-color: hsl(0 63% 18%);
-  --shadow-2xs: 1px 1px 16px -2px hsl(0 63% 18% / 0.06);
-  --shadow-xs: 1px 1px 16px -2px hsl(0 63% 18% / 0.06);
-  --shadow-sm: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 1px 2px -3px hsl(0 63% 18% / 0.12);
-  --shadow: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 1px 2px -3px hsl(0 63% 18% / 0.12);
-  --shadow-md: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 2px 4px -3px hsl(0 63% 18% / 0.12);
-  --shadow-lg: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 4px 6px -3px hsl(0 63% 18% / 0.12);
-  --shadow-xl: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 8px 10px -3px hsl(0 63% 18% / 0.12);
-  --shadow-2xl: 1px 1px 16px -2px hsl(0 63% 18% / 0.3);
+
+  /* Interactive Elements */
+  --border: var(--stone-200);
+  --input: var(--stone-200);
+  --ring: var(--gold-400);
+
+  /* Data Visualization - Diverse yet harmonious */
+  --chart-1: oklch(0.76 0.095 72); /* Gold */
+  --chart-2: oklch(0.62 0.18 25); /* Terracotta */
+  --chart-3: oklch(0.68 0.16 142); /* Sage green */
+  --chart-4: oklch(0.58 0.145 230); /* Navy blue */
+  --chart-5: oklch(0.72 0.12 320); /* Dusty purple */
+
+  /* Sidebar Navigation */
+  --sidebar: var(--stone-50);
+  --sidebar-foreground: var(--stone-800);
+  --sidebar-primary: var(--gold-400);
+  --sidebar-primary-foreground: oklch(0.98 0.004 56);
+  --sidebar-accent: var(--amber-50);
+  --sidebar-accent-foreground: var(--amber-700);
+  --sidebar-border: var(--stone-300);
+  --sidebar-ring: var(--gold-400);
+
+  /* ───────────────────────────────────────────────────────────
+     TYPOGRAPHY SYSTEM
+     ─────────────────────────────────────────────────────────── */
+
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+
+  /* ───────────────────────────────────────────────────────────
+     SPATIAL SYSTEM
+     ─────────────────────────────────────────────────────────── */
+
+  --radius: 0.5rem; /* Base: 8px */
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+
+  /* ───────────────────────────────────────────────────────────
+     SHADOW SYSTEM - Warm, Atmospheric Depth
+     ─────────────────────────────────────────────────────────── */
+
+  --shadow-color: oklch(0.5 0.08 60); /* Warm brown shadow base */
+  --shadow-2xs: 0 1px 8px -2px oklch(0.5 0.08 60 / 0.04);
+  --shadow-xs: 0 2px 12px -3px oklch(0.5 0.08 60 / 0.06);
+  --shadow-sm: 0 2px 16px -4px oklch(0.5 0.08 60 / 0.08), 0 1px 3px -2px oklch(0.5 0.08 60 / 0.08);
+  --shadow: 0 4px 20px -4px oklch(0.5 0.08 60 / 0.1), 0 2px 6px -2px oklch(0.5 0.08 60 / 0.06);
+  --shadow-md: 0 6px 24px -4px oklch(0.5 0.08 60 / 0.12), 0 3px 8px -2px oklch(0.5 0.08 60 / 0.08);
+  --shadow-lg: 0 10px 32px -4px oklch(0.5 0.08 60 / 0.14), 0 4px 12px -2px oklch(0.5 0.08 60 / 0.1);
+  --shadow-xl:
+    0 16px 40px -4px oklch(0.5 0.08 60 / 0.16), 0 6px 16px -2px oklch(0.5 0.08 60 / 0.12);
+  --shadow-2xl: 0 24px 56px -4px oklch(0.5 0.08 60 / 0.24);
+
+  /* Gold Glow Effects - Signature luxury detail */
+  --gold-glow-sm: 0 0 12px oklch(0.76 0.095 72 / 0.15);
+  --gold-glow-md: 0 0 20px oklch(0.76 0.095 72 / 0.25);
+  --gold-glow-lg: 0 0 32px oklch(0.76 0.095 72 / 0.35);
+
+  /* ───────────────────────────────────────────────────────────
+     GRADIENT SYSTEM
+     ─────────────────────────────────────────────────────────── */
+
+  --gradient-gold: linear-gradient(
+    135deg,
+    oklch(0.76 0.095 72) 0%,
+    oklch(0.82 0.078 68) 50%,
+    oklch(0.76 0.095 72) 100%
+  );
+
+  --gradient-shimmer: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.76 0.095 72 / 0.15) 50%,
+    transparent 100%
+  );
+
+  --gradient-stone: linear-gradient(
+    to bottom right,
+    var(--stone-50),
+    oklch(0.94 0.028 80 / 0.3),
+    var(--stone-100)
+  );
+
+  --gradient-gold-border: linear-gradient(
+    135deg,
+    oklch(0.76 0.095 72 / 0.4) 0%,
+    transparent 40%,
+    transparent 60%,
+    oklch(0.76 0.095 72 / 0.4) 100%
+  );
 }
 
-.dark {
+/* ───────────────────────────────────────────────────────────
+   DARK MODE - Archived (Light mode only for Wealth Reserve)
+   Preserved for potential Executive Portfolio blue theme
+   ─────────────────────────────────────────────────────────── */
+
+/* .dark {
   --background: oklch(0.2161 0.0061 56.0434);
   --foreground: oklch(0.9699 0.0013 106.4238);
-  --card: oklch(0.2685 0.0063 34.2976);
-  --card-foreground: oklch(0.9699 0.0013 106.4238);
-  --popover: oklch(0.2685 0.0063 34.2976);
-  --popover-foreground: oklch(0.9699 0.0013 106.4238);
-  --primary: oklch(0.5054 0.1905 27.5181);
-  --primary-foreground: oklch(0.9779 0.0042 56.3756);
-  --secondary: oklch(0.4732 0.1247 46.2007);
-  --secondary-foreground: oklch(0.9619 0.058 95.6174);
-  --muted: oklch(0.2291 0.006 56.0708);
-  --muted-foreground: oklch(0.8687 0.0043 56.366);
-  --accent: oklch(0.5553 0.1455 48.9975);
-  --accent-foreground: oklch(0.9619 0.058 95.6174);
-  --destructive: oklch(0.6368 0.2078 25.3313);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.3741 0.0087 67.5582);
-  --input: oklch(0.3741 0.0087 67.5582);
-  --ring: oklch(0.5054 0.1905 27.5181);
-  --chart-1: oklch(0.7106 0.1661 22.2162);
-  --chart-2: oklch(0.6368 0.2078 25.3313);
-  --chart-3: oklch(0.5771 0.2152 27.325);
-  --chart-4: oklch(0.8369 0.1644 84.4286);
-  --chart-5: oklch(0.7686 0.1647 70.0804);
-  --sidebar: oklch(0.2161 0.0061 56.0434);
-  --sidebar-foreground: oklch(0.9699 0.0013 106.4238);
-  --sidebar-primary: oklch(0.5054 0.1905 27.5181);
-  --sidebar-primary-foreground: oklch(0.9779 0.0042 56.3756);
-  --sidebar-accent: oklch(0.5553 0.1455 48.9975);
-  --sidebar-accent-foreground: oklch(0.9619 0.058 95.6174);
-  --sidebar-border: oklch(0.3741 0.0087 67.5582);
-  --sidebar-ring: oklch(0.5054 0.1905 27.5181);
-  --font-sans: Poppins, sans-serif;
-  --font-serif: Libre Baskerville, serif;
-  --font-mono: IBM Plex Mono, monospace;
-  --radius: 0.375rem;
-  --shadow-x: 1px;
-  --shadow-y: 1px;
-  --shadow-blur: 16px;
-  --shadow-spread: -2px;
-  --shadow-opacity: 0.12;
-  --shadow-color: hsl(0 63% 18%);
-  --shadow-2xs: 1px 1px 16px -2px hsl(0 63% 18% / 0.06);
-  --shadow-xs: 1px 1px 16px -2px hsl(0 63% 18% / 0.06);
-  --shadow-sm: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 1px 2px -3px hsl(0 63% 18% / 0.12);
-  --shadow: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 1px 2px -3px hsl(0 63% 18% / 0.12);
-  --shadow-md: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 2px 4px -3px hsl(0 63% 18% / 0.12);
-  --shadow-lg: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 4px 6px -3px hsl(0 63% 18% / 0.12);
-  --shadow-xl: 1px 1px 16px -2px hsl(0 63% 18% / 0.12), 1px 8px 10px -3px hsl(0 63% 18% / 0.12);
-  --shadow-2xl: 1px 1px 16px -2px hsl(0 63% 18% / 0.3);
-}
+  ... (commented out for light-only implementation)
+} */
 
 @theme inline {
   --color-background: var(--background);
@@ -228,4 +303,85 @@ input[type='number'] {
 /* Ensure header row has bottom border to separate from data */
 .ag-theme-quartz .ag-header-row:last-child .ag-header-cell {
   border-bottom: 1px solid var(--ag-row-border-color) !important;
+}
+
+/* ───────────────────────────────────────────────────────────
+   LUXURY CARD HOVER EFFECTS
+   ─────────────────────────────────────────────────────────── */
+
+/* Gradient border that appears on hover - signature Wealth Reserve detail */
+.luxury-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    oklch(0.76 0.095 72 / 0.4) 0%,
+    transparent 40%,
+    transparent 60%,
+    oklch(0.76 0.095 72 / 0.4) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.luxury-card:hover::before {
+  opacity: 1;
+}
+
+/* ───────────────────────────────────────────────────────────
+   ELEGANT ANIMATIONS
+   ─────────────────────────────────────────────────────────── */
+
+@keyframes gold-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes gold-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 10px oklch(0.76 0.095 72 / 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px oklch(0.76 0.095 72 / 0.4);
+  }
+}
+
+@keyframes elegant-fade {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Shimmer text effect for luxury headers */
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    oklch(0.76 0.095 72) 0%,
+    oklch(0.82 0.078 68) 50%,
+    oklch(0.76 0.095 72) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gold-shimmer 3s linear infinite;
 }

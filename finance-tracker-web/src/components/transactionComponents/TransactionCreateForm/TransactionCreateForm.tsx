@@ -46,23 +46,7 @@ const createTransactionSchema = z.object({
   payment_method: z.string().optional(),
   reference_number: z.string().optional(),
   is_recurring: z.boolean().optional(),
-  transaction_date: z
-    .string()
-    .min(1, 'Transaction date is required')
-    .refine(
-      (dateString) => {
-        if (!dateString) {
-          return false;
-        }
-        const selectedDate = startOfDay(new Date(dateString));
-        const today = startOfDay(new Date());
-        // Allow today and past dates, but not future dates
-        return selectedDate <= today;
-      },
-      {
-        message: 'Transaction date cannot be in the future',
-      }
-    ),
+  transaction_date: z.string().min(1, 'Transaction date is required'),
 });
 
 type CreateTransactionFormSchema = z.infer<typeof createTransactionSchema>;
@@ -178,90 +162,116 @@ export function TransactionCreateForm({
       showToastOnError={false}
     >
       {({ form, isSubmitting }) => (
-        <div className="space-y-4">
-          <FormSelect
-            control={form.control}
-            name="account_id"
-            label="Account"
-            required
-            options={accountOptions}
-            placeholder={isLoadingAccounts ? 'Loading accounts...' : 'Select an account'}
-            disabled={isLoadingAccounts}
-            searchable={true}
-          />
-          <FormSelect
-            control={form.control}
-            name="type"
-            label="Transaction Type"
-            required
-            options={TXN_TYPE_OPTIONS}
-            placeholder="Select transaction type"
-          />
-          <FormDatePicker
-            control={form.control}
-            name="transaction_date"
-            label="Transaction Date"
-            required
-            placeholder="Select transaction date"
-          />
-          <FormInput
-            control={form.control}
-            name="amount"
-            label="Amount"
-            required
-            type="number"
-            step="0.01"
-            min="0.01"
-            placeholder="Enter amount"
-          />
-          <FormInput
-            control={form.control}
-            name="description"
-            label="Description"
-            placeholder="Enter description"
-          />
-          <FormSelect
-            control={form.control}
-            name="category_id"
-            label="Category"
-            options={categoryOptions}
-            placeholder={isLoadingCategories ? 'Loading categories...' : 'Select a category'}
-            disabled={isLoadingCategories}
-            searchable={true}
-          />
-          <FormSelect
-            control={form.control}
-            name="merchant_id"
-            label="Merchant"
-            options={merchantOptions}
-            placeholder={isLoadingMerchants ? 'Loading merchants...' : 'Select a merchant'}
-            disabled={isLoadingMerchants}
-            searchable={true}
-          />
-          <FormTextarea
-            control={form.control}
-            name="notes"
-            label="Notes"
-            placeholder="Enter notes"
-          />
-          <FormInput
-            control={form.control}
-            name="tags"
-            label="Tags"
-            placeholder="Enter tags (comma separated)"
-          />
-          <FormInput
-            control={form.control}
-            name="payment_method"
-            label="Payment Method"
-            placeholder="Enter payment method"
-          />
+        <div className="space-y-4 flex flex-col gap-4">
+          {/* Account + Transaction Type - Side by Side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormSelect
+              control={form.control}
+              name="account_id"
+              label="Account"
+              required
+              options={accountOptions}
+              placeholder={isLoadingAccounts ? 'Loading accounts...' : 'Select an account'}
+              disabled={isLoadingAccounts}
+              searchable={true}
+            />
+            <FormSelect
+              control={form.control}
+              name="type"
+              label="Transaction Type"
+              required
+              options={TXN_TYPE_OPTIONS}
+              placeholder="Select transaction type"
+            />
+          </div>
+
+          {/* Merchant + Category - Side by Side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormSelect
+              control={form.control}
+              name="merchant_id"
+              label="Merchant"
+              options={merchantOptions}
+              placeholder={isLoadingMerchants ? 'Loading merchants...' : 'Select a merchant'}
+              disabled={isLoadingMerchants}
+              searchable={true}
+            />
+            <FormSelect
+              control={form.control}
+              name="category_id"
+              label="Category"
+              options={categoryOptions}
+              placeholder={isLoadingCategories ? 'Loading categories...' : 'Select a category'}
+              disabled={isLoadingCategories}
+              searchable={true}
+            />
+          </div>
+
+          {/* Transaction Date + Amount - Side by Side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormDatePicker
+              control={form.control}
+              name="transaction_date"
+              label="Transaction Date"
+              required
+              placeholder="Select transaction date"
+              allowFutureDates={true}
+            />
+            <FormInput
+              control={form.control}
+              name="amount"
+              label="Amount"
+              required
+              type="number"
+              step="0.01"
+              min="0.01"
+              placeholder="Enter amount"
+            />
+          </div>
+
+          {/* Description + Merchant - Side by Side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormTextarea
+              control={form.control}
+              name="description"
+              label="Description"
+              placeholder="Enter description"
+            />
+            <FormTextarea
+              control={form.control}
+              name="notes"
+              label="Notes"
+              placeholder="Enter notes"
+            />
+          </div>
+
+          {/* Notes - Full Width */}
+
+          {/* Tags + Payment Method - Side by Side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormInput
+              control={form.control}
+              name="tags"
+              label="Tags"
+              placeholder="Enter tags (comma separated)"
+            />
+            <FormInput
+              control={form.control}
+              name="payment_method"
+              label="Payment Method"
+              placeholder="Enter payment method"
+            />
+          </div>
+
+          {/* Reference Number - Full Width */}
           <FormInput
             control={form.control}
             name="reference_number"
             label="Reference Number"
             placeholder="Enter reference number"
           />
+
+          {/* Is Recurring - Full Width */}
           <FormSwitch
             control={form.control}
             name="is_recurring"
@@ -269,7 +279,9 @@ export function TransactionCreateForm({
             switchLabel="Mark as recurring transaction"
             description="Recurring transactions are automatically created on schedule"
           />
-          <div className="flex justify-end gap-2">
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-2 pt-2">
             {onCancel && (
               <Button
                 type="button"

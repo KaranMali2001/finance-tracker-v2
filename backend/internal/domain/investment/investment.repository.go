@@ -130,7 +130,7 @@ func (r *InvestmentRepository) GetGoalsWithFilter(c context.Context, params *Get
 		return nil, err
 	}
 
-	goals := make([]Goal, 0, len(rows))
+	goals := make([]Goal, len(rows))
 
 	for i, row := range rows {
 		goals[i] = *goalFromDb(&row)
