@@ -2,6 +2,7 @@ package reconciliation
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -40,7 +41,11 @@ func (r *ReconRepository) CreateUpload(
 	if fileSize > 0 {
 		fileSizePg = utils.IntToInt4(fileSize)
 	}
-	row, err := r.queries.CreateBankStatementUpload(ctx, generated.CreateBankStatementUploadParams{
+	queries := r.queries
+	if tx := r.tm.GetTx(ctx); tx != nil {
+		queries = queries.WithTx(tx)
+	}
+	row, err := queries.CreateBankStatementUpload(ctx, generated.CreateBankStatementUploadParams{
 		UserID:               userID,
 		AccountID:            utils.UUIDToPgtype(accountID),
 		FileName:             fileName,
@@ -147,6 +152,10 @@ func rowToUploadListItem(id, accountID pgtype.UUID, fileName string, uploadStatu
 
 func (r *ReconRepository) InsertStatementTransactions(ctx context.Context, rows []ParsedTxns) (map[string]struct{}, error) {
 	inserted := make(map[string]struct{})
+	queries := r.queries
+	if tx := r.tm.GetTx(ctx); tx != nil {
+		queries = queries.WithTx(tx)
+	}
 	args := make([]generated.InsertStatementTransactionsBatchParams, 0, len(rows))
 	for i := range rows {
 		if rows[i].RawRowHash == nil || *rows[i].RawRowHash == "" {
@@ -157,7 +166,7 @@ func (r *ReconRepository) InsertStatementTransactions(ctx context.Context, rows 
 	if len(args) == 0 {
 		return inserted, nil
 	}
-	br := r.queries.InsertStatementTransactionsBatch(ctx, args)
+	br := queries.InsertStatementTransactionsBatch(ctx, args)
 	var batchErr error
 	br.QueryRow(func(_ int, rawRowHash string, err error) {
 		if err != nil {
@@ -172,6 +181,89 @@ func (r *ReconRepository) InsertStatementTransactions(ctx context.Context, rows 
 		return nil, batchErr
 	}
 	return inserted, nil
+}
+
+func (r *ReconRepository) GetUploadDetail(ctx context.Context, uploadID uuid.UUID, userID string) (*UploadFullDetail, error) {
+	row, err := r.queries.GetUploadWithSummary(ctx, generated.GetUploadWithSummaryParams{
+		ID:     utils.UUIDToPgtype(uploadID),
+		UserID: userID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	txnRows, err := r.queries.ListStatementTransactionsByUploadID(ctx, row.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var parseErrors []ParseError
+	if len(row.ParsingErrors) > 0 {
+		if err := json.Unmarshal(row.ParsingErrors, &parseErrors); err != nil {
+			parseErrors = []ParseError{}
+		}
+	}
+	if parseErrors == nil {
+		parseErrors = []ParseError{}
+	}
+
+	txns := make([]StatementTransaction, 0, len(txnRows))
+	for _, t := range txnRows {
+		var txnDate *time.Time
+		if t.TransactionDate.Valid {
+			txnDate = &t.TransactionDate.Time
+		}
+		isDup := utils.BoolToBoolPtr(t.IsDuplicate)
+		txns = append(txns, StatementTransaction{
+			ID:              utils.UUIDToUUID(t.ID),
+			UploadID:        utils.UUIDToUUID(t.UploadID),
+			AccountID:       utils.UUIDToUUID(t.AccountID),
+			TransactionDate: txnDate,
+			Description:     utils.TextToStringPtr(t.Description),
+			Amount:          utils.NumericToFloat64(t.Amount),
+			Type:            t.Type,
+			ReferenceNumber: utils.TextToStringPtr(t.ReferenceNumber),
+			RawRowHash:      t.RawRowHash,
+			RowNumber:       t.RowNumber,
+			IsDuplicate:     isDup,
+		})
+	}
+
+	item := rowToUploadListItem(row.ID, row.AccountID, row.FileName, row.UploadStatus, row.ProcessingStatus, row.StatementPeriodStart, row.StatementPeriodEnd, row.CreatedAt)
+	return &UploadFullDetail{
+		ID:                   item.ID,
+		AccountID:            item.AccountID,
+		FileName:             item.FileName,
+		UploadStatus:         item.UploadStatus,
+		ProcessingStatus:     item.ProcessingStatus,
+		StatementPeriodStart: item.StatementPeriodStart,
+		StatementPeriodEnd:   item.StatementPeriodEnd,
+		ValidRows:            utils.Int4ToInt(row.ValidRows),
+		DuplicateRows:        utils.Int4ToInt(row.DuplicateRows),
+		ErrorRows:            utils.Int4ToInt(row.ErrorRows),
+		ParsingErrors:        parseErrors,
+		Transactions:         txns,
+		CreatedAt:            item.CreatedAt,
+		UpdatedAt:            utils.TimestampToTimePtr(row.UpdatedAt),
+	}, nil
+}
+
+func (r *ReconRepository) UpdateParseSummary(ctx context.Context, uploadID uuid.UUID, summary UploadSummary) error {
+	queries := r.queries
+	if tx := r.tm.GetTx(ctx); tx != nil {
+		queries = queries.WithTx(tx)
+	}
+	errorsJSON, err := json.Marshal(summary.Errors)
+	if err != nil {
+		return err
+	}
+	return queries.UpdateUploadSummary(ctx, generated.UpdateUploadSummaryParams{
+		ID:            utils.UUIDToPgtype(uploadID),
+		ValidRows:     pgtype.Int4{Int32: int32(summary.ValidRows), Valid: true},
+		DuplicateRows: pgtype.Int4{Int32: int32(summary.DuplicateRows), Valid: true},
+		ErrorRows:     pgtype.Int4{Int32: int32(summary.ErrorRows), Valid: true},
+		ParsingErrors: errorsJSON,
+	})
 }
 
 func parsedTxnToBatchParam(row ParsedTxns) generated.InsertStatementTransactionsBatchParams {

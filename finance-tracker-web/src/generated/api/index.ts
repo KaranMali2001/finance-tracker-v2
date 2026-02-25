@@ -17,8 +17,10 @@ export type { internal_domain_investment_Goal } from './models/internal_domain_i
 export type { internal_domain_investment_UpdateGoals } from './models/internal_domain_investment_UpdateGoals';
 export type { internal_domain_reconciliation_ParsedTxns } from './models/internal_domain_reconciliation_ParsedTxns';
 export type { internal_domain_reconciliation_ParseError } from './models/internal_domain_reconciliation_ParseError';
+export type { internal_domain_reconciliation_StatementTransaction } from './models/internal_domain_reconciliation_StatementTransaction';
 export { internal_domain_reconciliation_TxnType } from './models/internal_domain_reconciliation_TxnType';
 export type { internal_domain_reconciliation_UploadDetail } from './models/internal_domain_reconciliation_UploadDetail';
+export type { internal_domain_reconciliation_UploadFullDetail } from './models/internal_domain_reconciliation_UploadFullDetail';
 export type { internal_domain_reconciliation_UploadListItem } from './models/internal_domain_reconciliation_UploadListItem';
 export type { internal_domain_reconciliation_UploadStatementRes } from './models/internal_domain_reconciliation_UploadStatementRes';
 export type { internal_domain_reconciliation_UploadSummary } from './models/internal_domain_reconciliation_UploadSummary';

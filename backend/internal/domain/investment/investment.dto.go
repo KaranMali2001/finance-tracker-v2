@@ -69,3 +69,11 @@ func (c *GetGoalsWithFilter) Validate() error {
 func (c *GetGoalById) Validate() error {
 	return validator.New().Struct(c)
 }
+
+type DeleteGoalReq struct {
+	Id uuid.UUID `param:"id" validate:"required"`
+}
+
+func (c *DeleteGoalReq) Validate() error {
+	return validator.New().Struct(c)
+}

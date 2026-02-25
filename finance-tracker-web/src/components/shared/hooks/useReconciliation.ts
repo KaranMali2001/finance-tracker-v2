@@ -86,6 +86,31 @@ export function useUploadReconciliationStatement() {
   );
 }
 
+export type UploadFullDetail = Awaited<
+  ReturnType<typeof ReconciliationService.getReconciliationUploadsDetail>
+>;
+
+/**
+ * Get full detail for a single upload: metadata, summary counts, parsing errors, and all transactions.
+ */
+export function useReconciliationUploadDetail(uploadId: string | null | undefined) {
+  const { isLoaded, isSignedIn } = useAuth();
+
+  return useApiQuery<UploadFullDetail>(
+    ['reconciliation', 'uploads', uploadId, 'detail'],
+    () => {
+      if (!uploadId) {
+        throw new Error('Upload ID is required');
+      }
+      return ReconciliationService.getReconciliationUploadsDetail(uploadId);
+    },
+    {
+      enabled: isLoaded && isSignedIn && !!uploadId,
+      showToastOnError: true,
+    }
+  );
+}
+
 /**
  * Delete a reconciliation upload and all related data.
  * Invalidates reconciliation uploads list and the single-upload query on success.

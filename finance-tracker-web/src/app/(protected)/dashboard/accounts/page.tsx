@@ -1,8 +1,5 @@
 'use client';
 
-import { ArrowUpRight, Check, Palette, Plus, Wallet } from 'lucide-react';
-import Link from 'next/link';
-import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,10 +10,14 @@ import {
 import { useAccounts } from '@/components/shared/hooks/useAccount';
 import { EmptyState, ErrorState, LoadingState, PageShell } from '@/components/shared/layout';
 import { formatRupees } from '@/components/shared/utils';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import type { internal_domain_account_Account } from '@/generated/api';
 import { cn } from '@/lib/utils';
+import { ArrowUpRight, Check, Palette, Plus, Wallet } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
 import { AccountCreateForm } from '../../../../components/accountComponents/AccountCreateForm/AccountCreateForm';
 
 // ─── Types ────────────────────────────────────────────
@@ -151,8 +152,9 @@ function ThemeSelector({
         {THEMES.map((theme) => {
           const isSelected = selected === theme.id;
           return (
-            <button
+            <Button
               type="button"
+              variant="outline"
               key={theme.id}
               onClick={() => onChange(theme.id)}
               className={cn(
@@ -182,7 +184,7 @@ function ThemeSelector({
                 </p>
               </div>
               {isSelected && <Check className="h-3.5 w-3.5 text-primary ml-1 shrink-0" />}
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -203,7 +205,7 @@ function WealthReserveCard({ account }: { account: Account }) {
         'bg-white border-stone-200',
         'shadow-sm transition-all duration-400',
         'hover:shadow-lg hover:-translate-y-1',
-        'h-full min-h-[180px]'
+        'h-full min-h-[140px] md:min-h-[180px]'
       )}
     >
       <div className="relative p-6 h-full flex flex-col">
@@ -256,21 +258,20 @@ function WealthReserveCard({ account }: { account: Account }) {
 
 function WealthReserveAddCard({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="w-full text-left cursor-pointer">
-      <Card
-        className={cn(
-          'group flex min-h-[180px] flex-col items-center justify-center rounded-xl p-0 gap-0',
-          'border-2 border-dashed border-stone-300 bg-white',
-          'transition-all duration-300 hover:bg-amber-50/30 hover:border-amber-600/50'
-        )}
-      >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-600/20 to-yellow-600/20 transition-all group-hover:from-amber-600/30 group-hover:to-yellow-600/30">
-          <Plus className="h-6 w-6 text-amber-700" />
-        </div>
-        <h3 className="mt-3 font-semibold text-stone-700">Add Account</h3>
-        <p className="mt-1 text-xs text-stone-500">Create a new account</p>
-      </Card>
-    </button>
+    <Card
+      onClick={onClick}
+      className={cn(
+        'group flex min-h-[140px] md:min-h-[180px] flex-col items-center justify-center rounded-xl p-0 gap-0',
+        'border-2 border-dashed border-stone-300 bg-white cursor-pointer',
+        'transition-all duration-300 hover:bg-amber-50/30 hover:border-amber-600/50'
+      )}
+    >
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-600/20 to-yellow-600/20 transition-all group-hover:from-amber-600/30 group-hover:to-yellow-600/30">
+        <Plus className="h-6 w-6 text-amber-700" />
+      </div>
+      <h3 className="mt-3 font-semibold text-stone-700">Add Account</h3>
+      <p className="mt-1 text-xs text-stone-500">Create a new account</p>
+    </Card>
   );
 }
 
@@ -343,21 +344,20 @@ function GlassLuxeCard({ account }: { account: Account }) {
 
 function GlassLuxeAddCard({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="w-full text-left cursor-pointer">
-      <Card
-        className={cn(
-          'group flex min-h-[180px] flex-col items-center justify-center rounded-2xl p-0 gap-0',
-          'border-2 border-dashed border-white/40 bg-white/30 backdrop-blur-lg',
-          'transition-all duration-300 hover:bg-white/50 hover:border-violet-300/50'
-        )}
-      >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-400/30 to-indigo-500/30 transition-colors group-hover:from-violet-400/50 group-hover:to-indigo-500/50">
-          <Plus className="h-6 w-6 text-violet-600" />
-        </div>
-        <h3 className="mt-3 font-semibold text-slate-700">Add Account</h3>
-        <p className="mt-1 text-xs text-slate-500">Create a new account</p>
-      </Card>
-    </button>
+    <Card
+      onClick={onClick}
+      className={cn(
+        'group flex min-h-[140px] md:min-h-[180px] flex-col items-center justify-center rounded-2xl p-0 gap-0 cursor-pointer',
+        'border-2 border-dashed border-white/40 bg-white/30 backdrop-blur-lg',
+        'transition-all duration-300 hover:bg-white/50 hover:border-violet-300/50'
+      )}
+    >
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-400/30 to-indigo-500/30 transition-colors group-hover:from-violet-400/50 group-hover:to-indigo-500/50">
+        <Plus className="h-6 w-6 text-violet-600" />
+      </div>
+      <h3 className="mt-3 font-semibold text-slate-700">Add Account</h3>
+      <p className="mt-1 text-xs text-slate-500">Create a new account</p>
+    </Card>
   );
 }
 
@@ -441,21 +441,20 @@ function MidnightProCard({ account, index }: { account: Account; index: number }
 
 function MidnightProAddCard({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="w-full text-left cursor-pointer">
-      <Card
-        className={cn(
-          'group flex min-h-[180px] flex-col items-center justify-center rounded-xl p-0 gap-0',
-          'border-2 border-dashed border-slate-700 bg-slate-900/50',
-          'transition-all duration-300 hover:border-slate-500 hover:bg-slate-800/80'
-        )}
-      >
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-700/50 transition-colors group-hover:bg-slate-600/50">
-          <Plus className="h-6 w-6 text-slate-400" />
-        </div>
-        <h3 className="mt-3 font-semibold text-slate-300">Add Account</h3>
-        <p className="mt-1 text-xs text-slate-500">Create a new account</p>
-      </Card>
-    </button>
+    <Card
+      onClick={onClick}
+      className={cn(
+        'group flex min-h-[140px] md:min-h-[180px] flex-col items-center justify-center rounded-xl p-0 gap-0 cursor-pointer',
+        'border-2 border-dashed border-slate-700 bg-slate-900/50',
+        'transition-all duration-300 hover:border-slate-500 hover:bg-slate-800/80'
+      )}
+    >
+      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-700/50 transition-colors group-hover:bg-slate-600/50">
+        <Plus className="h-6 w-6 text-slate-400" />
+      </div>
+      <h3 className="mt-3 font-semibold text-slate-300">Add Account</h3>
+      <p className="mt-1 text-xs text-slate-500">Create a new account</p>
+    </Card>
   );
 }
 
@@ -528,21 +527,20 @@ function WarmEarthCard({ account }: { account: Account }) {
 
 function WarmEarthAddCard({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="w-full text-left cursor-pointer">
-      <Card
-        className={cn(
-          'group flex min-h-[180px] flex-col items-center justify-center rounded-2xl p-0 gap-0',
-          'border-2 border-dashed border-amber-300/60 bg-amber-50/50',
-          'transition-all duration-300 hover:bg-amber-50 hover:border-amber-400/70'
-        )}
-      >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-200/50 transition-colors group-hover:bg-amber-200/80">
-          <Plus className="h-6 w-6 text-amber-700" />
-        </div>
-        <h3 className="mt-3 font-semibold text-stone-700">Add Account</h3>
-        <p className="mt-1 text-xs text-stone-500">Create a new account</p>
-      </Card>
-    </button>
+    <Card
+      onClick={onClick}
+      className={cn(
+        'group flex min-h-[140px] md:min-h-[180px] flex-col items-center justify-center rounded-2xl p-0 gap-0 cursor-pointer',
+        'border-2 border-dashed border-amber-300/60 bg-amber-50/50',
+        'transition-all duration-300 hover:bg-amber-50 hover:border-amber-400/70'
+      )}
+    >
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-200/50 transition-colors group-hover:bg-amber-200/80">
+        <Plus className="h-6 w-6 text-amber-700" />
+      </div>
+      <h3 className="mt-3 font-semibold text-stone-700">Add Account</h3>
+      <p className="mt-1 text-xs text-stone-500">Create a new account</p>
+    </Card>
   );
 }
 
@@ -630,109 +628,19 @@ function CrispMinimalCard({ account }: { account: Account }) {
 
 function CrispMinimalAddCard({ onClick }: { onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="w-full text-left cursor-pointer">
-      <Card
-        className={cn(
-          'group flex min-h-[180px] flex-col items-center justify-center rounded-lg p-0 gap-0',
-          'border-2 border-dashed border-slate-200 bg-white',
-          'transition-all duration-300 hover:border-indigo-300 hover:bg-indigo-50/30'
-        )}
-      >
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 transition-colors group-hover:bg-indigo-100">
-          <Plus className="h-5 w-5 text-indigo-600" />
-        </div>
-        <h3 className="mt-3 text-sm font-semibold text-slate-600">Add Account</h3>
-      </Card>
-    </button>
-  );
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// THEME 5: BOLD GRADIENT
-// Vivid gradient backgrounds, white text, radial shine
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-function BoldGradientCard({ account, index }: { account: Account; index: number }) {
-  const gradient = CARD_GRADIENTS[index % CARD_GRADIENTS.length];
-
-  return (
     <Card
+      onClick={onClick}
       className={cn(
-        'group relative overflow-hidden rounded-2xl p-0 gap-0',
-        'bg-gradient-to-br',
-        gradient,
-        'border-0 shadow-xl transition-all duration-300',
-        'hover:shadow-2xl hover:-translate-y-1 hover:scale-[1.02]'
+        'group flex min-h-[140px] md:min-h-[180px] flex-col items-center justify-center rounded-lg p-0 gap-0 cursor-pointer',
+        'border-2 border-dashed border-slate-200 bg-white',
+        'transition-all duration-300 hover:border-indigo-300 hover:bg-indigo-50/30'
       )}
     >
-      {/* Radial shine overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.15)_0%,_transparent_60%)]" />
-
-      <div className="relative p-6">
-        <div className="mb-4 flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-              <Wallet className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-white">{account.account_name}</h3>
-                {account.is_primary && (
-                  <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-medium text-white border border-white/30 backdrop-blur-sm">
-                    Primary
-                  </span>
-                )}
-              </div>
-              <p className="text-sm text-white/70">{account.account_type || 'Account'}</p>
-            </div>
-          </div>
-          <ArrowUpRight className="h-4 w-4 text-white/50 opacity-0 transition-opacity group-hover:opacity-100" />
-        </div>
-
-        <div className="space-y-2">
-          {account.bank && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-white/60">Bank</span>
-              <span className="font-medium text-white/90">{account.bank.name}</span>
-            </div>
-          )}
-          {account.account_number && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-white/60">Account</span>
-              <span className="font-mono text-sm text-white/80">{account.account_number}</span>
-            </div>
-          )}
-          {account.current_balence !== undefined && (
-            <div className="flex items-center justify-between border-t border-white/20 pt-3 mt-1">
-              <span className="text-sm text-white/60">Balance</span>
-              <span className="text-2xl font-bold text-white">
-                {formatRupees(account.current_balence)}
-              </span>
-            </div>
-          )}
-        </div>
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 transition-colors group-hover:bg-indigo-100">
+        <Plus className="h-5 w-5 text-indigo-600" />
       </div>
+      <h3 className="mt-3 text-sm font-semibold text-slate-600">Add Account</h3>
     </Card>
-  );
-}
-
-function BoldGradientAddCard({ onClick }: { onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick} className="w-full text-left cursor-pointer">
-      <Card
-        className={cn(
-          'group flex min-h-[180px] flex-col items-center justify-center rounded-2xl p-0 gap-0',
-          'border-2 border-dashed border-purple-300/50 bg-gradient-to-br from-slate-100 to-purple-50',
-          'transition-all duration-300 hover:from-purple-50 hover:to-indigo-50 hover:border-purple-400/60'
-        )}
-      >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-400/30 to-indigo-500/30 transition-all group-hover:from-purple-400/50 group-hover:to-indigo-500/50">
-          <Plus className="h-6 w-6 text-purple-600" />
-        </div>
-        <h3 className="mt-3 font-semibold text-purple-800">Add Account</h3>
-        <p className="mt-1 text-xs text-purple-500">Create a new account</p>
-      </Card>
-    </button>
   );
 }
 

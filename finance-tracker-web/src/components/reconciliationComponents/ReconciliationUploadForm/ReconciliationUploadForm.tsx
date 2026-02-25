@@ -3,6 +3,7 @@
 import { useAccounts } from '@/components/shared/hooks/useAccount';
 import { useUploadReconciliationStatement } from '@/components/shared/hooks/useReconciliation';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -102,7 +103,7 @@ export function ReconciliationUploadForm({
         <div className="space-y-2">
           <Label>Statement file</Label>
           <div className="flex items-center gap-2">
-            <input
+            <Input
               id="recon-statement-input"
               type="file"
               accept=".xlsx,.csv,text/csv,application/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"

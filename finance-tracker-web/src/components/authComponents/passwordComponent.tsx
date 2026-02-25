@@ -93,13 +93,15 @@ export default function PasswordComponent({ email }: { email: string }) {
                 disabled={isLoading}
                 className="pr-12 h-11"
               />
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-4 text-stone-500 hover:text-amber-700 transition-colors"
+                className="absolute inset-y-0 right-0 h-full px-4 text-stone-500 hover:text-amber-700 transition-colors"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
+              </Button>
             </div>
           </div>
 

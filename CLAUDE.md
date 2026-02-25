@@ -286,3 +286,98 @@ See `backend/.env.example` for required variables.
 - Docker Compose for local services
 - Air for backend hot-reload
 - pnpm for frontend package management
+
+## AI Instructions
+
+Rules that Claude Code must follow in this codebase.
+
+### Code Generation — Never Write, Always Generate
+
+- **`backend/internal/database/generated/`** — All files here are produced by SQLC. **Never edit them manually.**
+  - After adding or changing a query in `backend/internal/database/queries/`, run:
+    ```bash
+    cd backend/internal/database && sqlc generate
+    ```
+  - The `sqlc.yml` config lives at `backend/internal/database/sqlc.yml`.
+
+- **`finance-tracker-web/src/generated/api/`** — All files here are produced by the OpenAPI codegen from the Swagger spec. **Never edit them manually.**
+  - After changing backend handlers/routes/DTOs, regenerate with:
+    ```bash
+    task docs:generate:backend   # regenerate swagger spec first
+    task docs:generate:frontend  # then regenerate TS client
+    ```
+
+### Correct Workflow for a New Backend Endpoint
+
+Always follow this exact order — no steps may be skipped:
+
+1. Write the SQL query in `backend/internal/database/queries/<domain>/*.sql`
+2. Run `cd backend/internal/database && sqlc generate` to regenerate Go types
+3. Add the DTO in `<domain>.dto.go`
+4. Add the repository method in `<domain>.repository.go` (uses generated types)
+5. Add the service method in `<domain>.service.go`
+6. Add the handler in `<domain>.handler.go` with full Swagger annotations
+   - Use `handler.Handle` for endpoints that return JSON
+   - Use `handler.HandleNoContent` for endpoints that return 204 No Content
+7. Register the route in `<domain>.router.go`
+8. Run `task docs:generate:backend` to regenerate the Swagger spec
+9. Run `task docs:generate:frontend` to regenerate the TypeScript API client
+
+### Frontend API Usage
+
+- Never call backend URLs directly. Always use the generated `InvestmentService`, `AccountService`, etc. from `src/generated/api/`.
+- All data fetching goes through TanStack Query hooks in `src/components/shared/hooks/use<Domain>.ts`.
+- Use `useApiQuery` for reads and `useApiMutation` for writes/deletes.
+
+### ShadCN Component Usage Rules
+
+All UI must use ShadCN components. Never use raw `<button>`, `<input>`, or `<select>` HTML elements.
+
+#### Shared Wrappers — Always Use These First
+
+Before reaching for a raw ShadCN primitive, check if a shared wrapper already exists:
+
+| Need | Use |
+|---|---|
+| Data table | `TanStackTable` from `src/components/shared/table/` |
+| Row edit/delete actions | `RowActions` from `src/components/shared/table/` |
+| Page layout | `PageShell`, `LoadingState`, `ErrorState`, `EmptyState` from `src/components/shared/layout/` |
+| Info display field | `InfoField` from `src/components/shared/display/` |
+
+If a shared wrapper for a pattern does not exist yet, **create one** in the appropriate `src/components/shared/` subdirectory and export it from the barrel `index.ts`. Do not inline the pattern in a page.
+
+#### Clickable Card Rule
+
+**Never wrap a `Card` (or any block-level content) inside a `Button`.**
+
+`Button` renders as `inline-flex` and will collapse the card's height, breaking the layout.
+
+For a card that the user can click, put `onClick` and `cursor-pointer` directly on the `Card`:
+
+```tsx
+// CORRECT — onClick on the Card itself
+<Card onClick={handleClick} className="... cursor-pointer">
+  ...
+</Card>
+
+// WRONG — Button wrapping a Card breaks block layout
+<Button onClick={handleClick} className="h-auto p-0 w-full">
+  <Card>...</Card>
+</Button>
+```
+
+`Button` is only for actions that render as an actual inline button element (form submits, icon buttons, toolbar actions). Use `Card` with `onClick` for clickable card-level surfaces.
+
+#### Tailwind Dynamic Class Names
+
+**Never build Tailwind class names via string interpolation** (e.g. `` `grid-cols-${n}` ``). Tailwind scans source files at build time and cannot detect dynamically constructed class names — the class will not exist in the output CSS.
+
+Use inline `style` props for dynamic CSS values instead:
+
+```tsx
+// CORRECT — inline style for dynamic value
+<div style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
+
+// WRONG — dynamic Tailwind class will not be generated
+<div className={`grid-cols-${n}`}>
+```

@@ -69,4 +69,28 @@ export class SmsService {
             },
         });
     }
+    /**
+     * Delete an SMS log
+     * Deletes a specific SMS log by its ID for the authenticated user
+     * @param id SMS ID
+     * @returns void
+     * @throws ApiError
+     */
+    public static deleteSms(
+        id: string,
+    ): CancelablePromise<void> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/sms/{id}',
+            path: {
+                'id': id,
+            },
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
 }

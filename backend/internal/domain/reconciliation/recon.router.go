@@ -27,10 +27,12 @@ func NewReconiliationModule(deps Deps) *Module {
 		handler: handler,
 	}
 }
+
 func (m *Module) RegisterRoutes(g *echo.Group) {
 	authMiddleware := middleware.NewAuthMiddleware(m.handler.server).RequireAuth
 	g.POST("/reconciliation/upload", m.handler.UploadAndProcessBankStatement, authMiddleware)
 	g.GET("/reconciliation/uploads", m.handler.ListUploads, authMiddleware)
 	g.GET("/reconciliation/uploads/:upload_id", m.handler.GetUploadByID, authMiddleware)
+	g.GET("/reconciliation/uploads/:upload_id/detail", m.handler.GetUploadDetail, authMiddleware)
 	g.DELETE("/reconciliation/uploads/:upload_id", m.handler.DeleteUpload, authMiddleware)
 }

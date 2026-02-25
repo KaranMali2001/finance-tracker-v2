@@ -39,3 +39,27 @@ DELETE FROM statement_transactions WHERE upload_id = $1;
 -- Delete the bank statement upload (must run after the above in same tx).
 -- name: DeleteBankStatementUploadByID :exec
 DELETE FROM bank_statement_uploads WHERE id = $1 AND user_id = $2;
+
+-- name: UpdateUploadSummary :exec
+UPDATE bank_statement_uploads
+SET
+    valid_rows     = $2,
+    duplicate_rows = $3,
+    error_rows     = $4,
+    parsing_errors = $5
+WHERE id = $1;
+
+-- name: GetUploadWithSummary :one
+SELECT id, user_id, account_id, file_name, upload_status, processing_status,
+       statement_period_start, statement_period_end,
+       valid_rows, duplicate_rows, error_rows, parsing_errors,
+       created_at, updated_at
+FROM bank_statement_uploads
+WHERE id = $1 AND user_id = $2;
+
+-- name: ListStatementTransactionsByUploadID :many
+SELECT id, upload_id, account_id, transaction_date, description, amount, type,
+       balance, reference_number, raw_row_hash, row_number, is_duplicate
+FROM statement_transactions
+WHERE upload_id = $1
+ORDER BY row_number ASC;

@@ -16,12 +16,16 @@ export function PageShell({ title, description, actions, children, className }: 
   return (
     <div className={containerClass}>
       {(title || description || actions) && (
-        <div className={`flex items-center justify-between ${isFlexLayout ? 'shrink-0' : ''}`}>
-          <div className="space-y-1">
-            {title && <h1 className="text-3xl font-bold tracking-tight">{title}</h1>}
-            {description && <p className="text-muted-foreground">{description}</p>}
+        <div
+          className={`flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between ${isFlexLayout ? 'shrink-0' : ''}`}
+        >
+          <div className="space-y-1 min-w-0">
+            {title && <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{title}</h1>}
+            {description && (
+              <p className="text-muted-foreground text-sm md:text-base">{description}</p>
+            )}
           </div>
-          {actions && <div className="flex items-center gap-2">{actions}</div>}
+          {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
         </div>
       )}
       {children}

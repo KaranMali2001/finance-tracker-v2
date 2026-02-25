@@ -48,6 +48,10 @@ func (s *ReconService) GetUploadByID(c echo.Context, payload *GetUploadByIDReq, 
 	return s.repo.GetUploadByID(c.Request().Context(), payload, clerkId)
 }
 
+func (s *ReconService) GetUploadDetail(c echo.Context, payload *GetUploadDetailReq, clerkId string) (*UploadFullDetail, error) {
+	return s.repo.GetUploadDetail(c.Request().Context(), payload.UploadId, clerkId)
+}
+
 func (s *ReconService) DeleteUpload(c echo.Context, payload *DeleteUploadReq, clerkId string) error {
 	if s.tm == nil {
 		return fmt.Errorf("tx manager not configured")
@@ -95,26 +99,37 @@ func (s *ReconService) ParseAndProcessStatement(c echo.Context, payload *ParseEx
 				Txns:     []ParsedTxns{},
 			}, nil
 		}
+		insertedHashes := make(map[string]struct{})
+		var uploadID uuid.UUID
 
-		uploadID, err := s.repo.CreateUpload(ctx, payload.UserId, payload.AccountId, payload.FileName, "", "", 0, payload.StatementPeriodStart, payload.StatementPeriodEnd)
+		err = s.tm.WithTx(ctx, func(ctx context.Context) error {
+			uploadID, err = s.repo.CreateUpload(ctx, payload.UserId, payload.AccountId, payload.FileName, "", "", 0, payload.StatementPeriodStart, payload.StatementPeriodEnd)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to create bank statement upload")
+				return err
+			}
+			for i := range rows {
+				rows[i].UploadId = uploadID
+				rows[i].AccountId = payload.AccountId
+			}
+
+			insertedHashes, err = s.repo.InsertStatementTransactions(ctx, rows)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to insert statement transactions")
+				return err
+			}
+			return nil
+		}, log)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to create bank statement upload")
 			return nil, err
 		}
-
-		for i := range rows {
-			rows[i].UploadId = uploadID
-			rows[i].AccountId = payload.AccountId
-		}
-
-		insertedHashes, err := s.repo.InsertStatementTransactions(ctx, rows)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to insert statement transactions")
-			return nil, err
-		}
-
 		MarkDuplicatesFromInsertedSet(rows, insertedHashes)
 		summary := SummaryFromRows(rows, parseErrors)
+
+		if err := s.repo.UpdateParseSummary(ctx, uploadID, summary); err != nil {
+			log.Error().Err(err).Msg("Failed to update parse summary")
+		}
 
 		return &UploadStatementRes{
 			UploadId: uploadID,
@@ -137,7 +152,8 @@ func (s *ReconService) ParseAndProcessStatement(c echo.Context, payload *ParseEx
 
 func parseXlsxRows(r interface {
 	Read(p []byte) (n int, err error)
-}, accountID uuid.UUID, uploadID uuid.UUID) ([]ParsedTxns, []ParseError, error) {
+}, accountID uuid.UUID, uploadID uuid.UUID,
+) ([]ParsedTxns, []ParseError, error) {
 	ef, err := excelize.OpenReader(r)
 	if err != nil {
 		return nil, nil, err

@@ -24,7 +24,16 @@ export default function ReconciliationPage() {
   const { data: uploads, isLoading, error, refetch, isFetching } = useReconciliationUploads();
   const deleteUpload = useDeleteReconciliationUpload();
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isCloseConfirmOpen, setIsCloseConfirmOpen] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
+  function handleUploadDialogOpenChange(open: boolean) {
+    if (!open) {
+      setIsCloseConfirmOpen(true);
+    } else {
+      setIsUploadDialogOpen(true);
+    }
+  }
 
   if (isLoading || isFetching || uploads === undefined) {
     return (
@@ -65,8 +74,8 @@ export default function ReconciliationPage() {
             },
           }}
         />
-        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <Dialog open={isUploadDialogOpen} onOpenChange={handleUploadDialogOpenChange}>
+          <DialogContent className="w-[95vw] max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Upload bank statement</DialogTitle>
               <DialogDescription>
@@ -78,11 +87,23 @@ export default function ReconciliationPage() {
                 setIsUploadDialogOpen(false);
               }}
               onCancel={() => {
-                setIsUploadDialogOpen(false);
+                setIsCloseConfirmOpen(true);
               }}
             />
           </DialogContent>
         </Dialog>
+        <ConfirmDialog
+          open={isCloseConfirmOpen}
+          onOpenChange={setIsCloseConfirmOpen}
+          title="Discard changes?"
+          description="You have unsaved changes. Are you sure you want to close this form?"
+          confirmText="Discard"
+          cancelText="Keep editing"
+          onConfirm={() => {
+            setIsCloseConfirmOpen(false);
+            setIsUploadDialogOpen(false);
+          }}
+        />
       </PageShell>
     );
   }
@@ -103,71 +124,68 @@ export default function ReconciliationPage() {
           >
             <Link
               href={upload.id ? `/dashboard/reconciliation/uploads/${upload.id}` : '#'}
-              className="absolute inset-0 z-0"
-              aria-hidden
+              className="absolute inset-0"
             />
-            <div className="relative z-10">
-              <div className="mb-4 flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                    <FileSpreadsheet className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3
-                      className="font-semibold text-card-foreground truncate max-w-[200px]"
-                      title={upload.file_name}
-                    >
-                      {upload.file_name || 'Unnamed file'}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {upload.upload_status ?? '—'} / {upload.processing_status ?? '—'}
-                    </p>
-                  </div>
+            <div className="mb-4 flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <FileSpreadsheet className="h-5 w-5 text-primary" />
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (upload.id) {
-                      setDeleteTargetId(upload.id);
-                    }
-                  }}
-                  disabled={deleteUpload.isPending}
-                  aria-label="Delete upload"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div>
+                  <h3
+                    className="font-semibold text-card-foreground truncate"
+                    title={upload.file_name}
+                  >
+                    {upload.file_name || 'Unnamed file'}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {upload.upload_status ?? '—'} / {upload.processing_status ?? '—'}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-2 text-sm">
-                {upload.statement_period_start && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Period start</span>
-                    <span className="text-card-foreground">
-                      {format(new Date(upload.statement_period_start), 'dd MMM yyyy')}
-                    </span>
-                  </div>
-                )}
-                {upload.statement_period_end && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Period end</span>
-                    <span className="text-card-foreground">
-                      {format(new Date(upload.statement_period_end), 'dd MMM yyyy')}
-                    </span>
-                  </div>
-                )}
-                {upload.created_at && (
-                  <div className="flex justify-between border-t border-border pt-2">
-                    <span className="text-muted-foreground">Uploaded</span>
-                    <span className="text-card-foreground">
-                      {format(new Date(upload.created_at), 'dd MMM yyyy HH:mm')}
-                    </span>
-                  </div>
-                )}
-              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="relative z-10 h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (upload.id) {
+                    setDeleteTargetId(upload.id);
+                  }
+                }}
+                disabled={deleteUpload.isPending}
+                aria-label="Delete upload"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="space-y-2 text-sm">
+              {upload.statement_period_start && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Period start</span>
+                  <span className="text-card-foreground">
+                    {format(new Date(upload.statement_period_start), 'dd MMM yyyy')}
+                  </span>
+                </div>
+              )}
+              {upload.statement_period_end && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Period end</span>
+                  <span className="text-card-foreground">
+                    {format(new Date(upload.statement_period_end), 'dd MMM yyyy')}
+                  </span>
+                </div>
+              )}
+              {upload.created_at && (
+                <div className="flex justify-between border-t border-border pt-2">
+                  <span className="text-muted-foreground">Uploaded</span>
+                  <span className="text-card-foreground">
+                    {format(new Date(upload.created_at), 'dd MMM yyyy HH:mm')}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -193,8 +211,8 @@ export default function ReconciliationPage() {
         }}
       />
 
-      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={isUploadDialogOpen} onOpenChange={handleUploadDialogOpenChange}>
+        <DialogContent className="w-[95vw] max-w-5xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Upload bank statement</DialogTitle>
             <DialogDescription>
@@ -206,11 +224,23 @@ export default function ReconciliationPage() {
               setIsUploadDialogOpen(false);
             }}
             onCancel={() => {
-              setIsUploadDialogOpen(false);
+              setIsCloseConfirmOpen(true);
             }}
           />
         </DialogContent>
       </Dialog>
+      <ConfirmDialog
+        open={isCloseConfirmOpen}
+        onOpenChange={setIsCloseConfirmOpen}
+        title="Discard changes?"
+        description="You have unsaved changes. Are you sure you want to close this form?"
+        confirmText="Discard"
+        cancelText="Keep editing"
+        onConfirm={() => {
+          setIsCloseConfirmOpen(false);
+          setIsUploadDialogOpen(false);
+        }}
+      />
     </PageShell>
   );
 }

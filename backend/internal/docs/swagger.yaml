@@ -217,6 +217,31 @@ definitions:
       upload_id:
         type: string
     type: object
+  internal_domain_reconciliation.StatementTransaction:
+    properties:
+      account_id:
+        type: string
+      amount:
+        type: number
+      description:
+        type: string
+      id:
+        type: string
+      is_duplicate:
+        type: boolean
+      raw_row_hash:
+        type: string
+      reference_number:
+        type: string
+      row_number:
+        type: integer
+      transaction_date:
+        type: string
+      type:
+        type: string
+      upload_id:
+        type: string
+    type: object
   internal_domain_reconciliation.TxnType:
     enum:
     - CREDIT
@@ -245,6 +270,41 @@ definitions:
         type: string
       upload_status:
         type: string
+    type: object
+  internal_domain_reconciliation.UploadFullDetail:
+    properties:
+      account_id:
+        type: string
+      created_at:
+        type: string
+      duplicate_rows:
+        type: integer
+      error_rows:
+        type: integer
+      file_name:
+        type: string
+      id:
+        type: string
+      parsing_errors:
+        items:
+          $ref: '#/definitions/internal_domain_reconciliation.ParseError'
+        type: array
+      processing_status:
+        type: string
+      statement_period_end:
+        type: string
+      statement_period_start:
+        type: string
+      transactions:
+        items:
+          $ref: '#/definitions/internal_domain_reconciliation.StatementTransaction'
+        type: array
+      updated_at:
+        type: string
+      upload_status:
+        type: string
+      valid_rows:
+        type: integer
     type: object
   internal_domain_reconciliation.UploadListItem:
     properties:
@@ -955,6 +1015,47 @@ paths:
       tags:
       - Investment
   /investment/goal/{id}:
+    delete:
+      description: Deletes an existing investment goal for the authenticated user
+      parameters:
+      - description: Goal ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete an investment goal
+      tags:
+      - Investment
     get:
       description: Retrieves a specific investment goal by ID for the authenticated
         user
@@ -1229,6 +1330,51 @@ paths:
       summary: Get bank statement upload by ID
       tags:
       - Reconciliation
+  /reconciliation/uploads/{upload_id}/detail:
+    get:
+      description: Returns complete detail for a bank statement upload including summary
+        counts, parsing errors, and all statement transactions
+      parameters:
+      - description: Upload ID
+        format: uuid
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_reconciliation.UploadFullDetail'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get full upload detail
+      tags:
+      - Reconciliation
   /sms:
     get:
       description: Retrieves all SMS logs for the authenticated user
@@ -1296,6 +1442,47 @@ paths:
       tags:
       - SMS
   /sms/{id}:
+    delete:
+      description: Deletes a specific SMS log by its ID for the authenticated user
+      parameters:
+      - description: SMS ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete an SMS log
+      tags:
+      - SMS
     get:
       description: Retrieves a specific SMS log by its ID for the authenticated user
       parameters:

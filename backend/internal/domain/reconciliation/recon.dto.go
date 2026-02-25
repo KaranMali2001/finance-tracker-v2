@@ -110,3 +110,45 @@ type DeleteUploadReq struct {
 func (r *DeleteUploadReq) Validate() error {
 	return validator.New().Struct(r)
 }
+
+// StatementTransaction is a single parsed row returned from an upload detail query.
+type StatementTransaction struct {
+	ID              uuid.UUID  `json:"id"`
+	UploadID        uuid.UUID  `json:"upload_id"`
+	AccountID       uuid.UUID  `json:"account_id"`
+	TransactionDate *time.Time `json:"transaction_date"`
+	Description     *string    `json:"description"`
+	Amount          float64    `json:"amount"`
+	Type            string     `json:"type"`
+	ReferenceNumber *string    `json:"reference_number"`
+	RawRowHash      string     `json:"raw_row_hash"`
+	RowNumber       int32      `json:"row_number"`
+	IsDuplicate     *bool      `json:"is_duplicate"`
+}
+
+// UploadFullDetail is the complete detail for a single upload: metadata, summary counts, parse errors, and all statement transactions.
+type UploadFullDetail struct {
+	ID                   uuid.UUID              `json:"id"`
+	AccountID            uuid.UUID              `json:"account_id"`
+	FileName             string                 `json:"file_name"`
+	UploadStatus         string                 `json:"upload_status"`
+	ProcessingStatus     string                 `json:"processing_status"`
+	StatementPeriodStart *time.Time             `json:"statement_period_start,omitempty"`
+	StatementPeriodEnd   *time.Time             `json:"statement_period_end,omitempty"`
+	ValidRows            int                    `json:"valid_rows"`
+	DuplicateRows        int                    `json:"duplicate_rows"`
+	ErrorRows            int                    `json:"error_rows"`
+	ParsingErrors        []ParseError           `json:"parsing_errors"`
+	Transactions         []StatementTransaction `json:"transactions"`
+	CreatedAt            *time.Time             `json:"created_at,omitempty"`
+	UpdatedAt            *time.Time             `json:"updated_at,omitempty"`
+}
+
+// GetUploadDetailReq is used for fetching full upload detail by ID.
+type GetUploadDetailReq struct {
+	UploadId uuid.UUID `param:"upload_id" validate:"required"`
+}
+
+func (r *GetUploadDetailReq) Validate() error {
+	return validator.New().Struct(r)
+}

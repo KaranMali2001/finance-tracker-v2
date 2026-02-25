@@ -12,6 +12,7 @@ import { useInvestmentGoals } from '@/components/shared/hooks/useInvestment';
 import { EmptyState, ErrorState, PageShell } from '@/components/shared/layout';
 import { formatDate, formatRupees } from '@/components/shared/utils';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Plus, Target } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -132,16 +133,16 @@ export default function InvestmentsPage() {
     >
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Add New Goal Card */}
-        <button
+        <Card
           onClick={() => setIsCreateDialogOpen(true)}
-          className="group flex min-h-[240px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-amber-300 bg-white p-6 transition-all duration-300 hover:border-amber-600 hover:bg-amber-50/50 hover:shadow-lg hover:shadow-amber-500/10 elegant-fade"
+          className="group flex min-h-[160px] md:min-h-[240px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-amber-300 bg-white p-6 transition-all duration-300 hover:border-amber-600 hover:bg-amber-50/50 hover:shadow-lg hover:shadow-amber-500/10 elegant-fade cursor-pointer"
         >
           <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-amber-600 to-yellow-600 shadow-md transition-all duration-300 group-hover:shadow-lg group-hover:shadow-amber-500/40 group-hover:scale-110">
             <Plus className="h-7 w-7 text-white" />
           </div>
           <h3 className="mt-4 font-semibold text-stone-800">Add New Goal</h3>
           <p className="mt-1 text-sm text-stone-600">Create a new investment goal</p>
-        </button>
+        </Card>
 
         {goals.map((goal, index) => {
           const progressPercentage =

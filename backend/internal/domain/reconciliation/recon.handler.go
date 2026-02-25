@@ -91,6 +91,30 @@ func (h *ReconHandler) DeleteUpload(c echo.Context) error {
 	)(c)
 }
 
+// GetUploadDetail godoc
+// @Summary Get full upload detail
+// @Description Returns complete detail for a bank statement upload including summary counts, parsing errors, and all statement transactions
+// @Tags Reconciliation
+// @Produce json
+// @Param upload_id path string true "Upload ID" format(uuid)
+// @Success 200 {object} UploadFullDetail
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 404 {object} map[string]string "Not Found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /reconciliation/uploads/{upload_id}/detail [get]
+func (h *ReconHandler) GetUploadDetail(c echo.Context) error {
+	return handler.Handle(
+		h.base,
+		func(c echo.Context, payload *GetUploadDetailReq) (*UploadFullDetail, error) {
+			clerkId := middleware.GetUserID(c)
+			return h.service.GetUploadDetail(c, payload, clerkId)
+		},
+		http.StatusOK,
+		&GetUploadDetailReq{},
+	)(c)
+}
+
 // UploadAndProcessBankStatement godoc
 // @Summary Upload bank statement for reconciliation
 // @Description Uploads a bank statement Excel file and starts reconciliation processing

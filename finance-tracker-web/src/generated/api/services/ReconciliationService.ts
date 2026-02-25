@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { internal_domain_reconciliation_UploadDetail } from '../models/internal_domain_reconciliation_UploadDetail';
+import type { internal_domain_reconciliation_UploadFullDetail } from '../models/internal_domain_reconciliation_UploadFullDetail';
 import type { internal_domain_reconciliation_UploadListItem } from '../models/internal_domain_reconciliation_UploadListItem';
 import type { internal_domain_reconciliation_UploadStatementRes } from '../models/internal_domain_reconciliation_UploadStatementRes';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -100,6 +101,30 @@ export class ReconciliationService {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/reconciliation/uploads/{upload_id}',
+            path: {
+                'upload_id': uploadId,
+            },
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Get full upload detail
+     * Returns complete detail for a bank statement upload including summary counts, parsing errors, and all statement transactions
+     * @param uploadId Upload ID
+     * @returns internal_domain_reconciliation_UploadFullDetail OK
+     * @throws ApiError
+     */
+    public static getReconciliationUploadsDetail(
+        uploadId: string,
+    ): CancelablePromise<internal_domain_reconciliation_UploadFullDetail> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/reconciliation/uploads/{upload_id}/detail',
             path: {
                 'upload_id': uploadId,
             },

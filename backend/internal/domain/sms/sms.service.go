@@ -25,6 +25,10 @@ func (s *SmsService) GetSmsById(c echo.Context, payload *GetSmsByIdReq, clerkId 
 	return s.r.GetSmsById(c.Request().Context(), payload, clerkId)
 }
 
+func (s *SmsService) DeleteSms(c echo.Context, payload *DeleteSmsReq, clerkId string) error {
+	return s.r.DeleteSms(c.Request().Context(), payload, clerkId)
+}
+
 func (s *SmsService) CreateSms(c echo.Context, payload *CreateSmsReq, clerkId string) (*SmsLogs, error) {
 	return s.r.CreateSms(c.Request().Context(), payload, clerkId)
 }

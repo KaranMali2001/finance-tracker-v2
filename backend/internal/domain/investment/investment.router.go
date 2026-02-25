@@ -34,4 +34,5 @@ func (m *Module) RegisterRoutes(g *echo.Group) {
 	g.GET("/investment/goal", m.handler.GetGoalsWithFilter, authMiddleware)
 	g.GET("/investment/goal/:id", m.handler.GetGoalById, authMiddleware)
 	g.PUT("/investment/goal/:id", m.handler.UpdateGoals, authMiddleware)
+	g.DELETE("/investment/goal/:id", m.handler.DeleteGoal, authMiddleware)
 }

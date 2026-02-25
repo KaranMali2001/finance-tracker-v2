@@ -48,6 +48,23 @@ export function useSms(smsId: string | null | undefined) {
 }
 
 /**
+ * Delete SMS log hook
+ * Deletes a specific SMS log by its ID
+ */
+export function useDeleteSms() {
+  const queryClient = useQueryClient();
+
+  return useApiMutation<void, { id: string }>(({ id }) => SmsService.deleteSms(id), {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sms'] });
+    },
+    showToastOnSuccess: true,
+    successMessage: 'SMS log deleted successfully',
+    showToastOnError: true,
+  });
+}
+
+/**
  * Create SMS log hook
  * Creates a new SMS log entry
  */

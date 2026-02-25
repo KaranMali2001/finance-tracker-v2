@@ -154,6 +154,17 @@ func (r *InvestmentRepository) GetGoalById(c context.Context, param *GetGoalById
 	return goalFromDb(&goal), nil
 }
 
+func (r *InvestmentRepository) DeleteGoal(ctx context.Context, goalID uuid.UUID, clerkID string) error {
+	queries := r.queries
+	if tx := r.tm.GetTx(ctx); tx != nil {
+		queries = r.queries.WithTx(tx)
+	}
+	return queries.DeleteGoal(ctx, generated.DeleteGoalParams{
+		ID:     utils.UUIDToPgtype(goalID),
+		UserID: clerkID,
+	})
+}
+
 func (r *InvestmentRepository) UpdateGoal(
 	ctx context.Context,
 	goalID uuid.UUID,

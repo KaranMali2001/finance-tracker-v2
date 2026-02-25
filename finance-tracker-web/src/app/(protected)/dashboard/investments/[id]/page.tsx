@@ -3,6 +3,7 @@
 import { InvestmentGoalForm } from '@/components/investmentComponents';
 import { ConfirmDialog } from '@/components/shared/dialog';
 import {
+  useDeleteInvestmentGoal,
   useInvestmentGoalById,
   useUpdateInvestmentGoal,
 } from '@/components/shared/hooks/useInvestment';
@@ -48,6 +49,7 @@ export default function InvestmentGoalDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const updateGoal = useUpdateInvestmentGoal();
+  const deleteGoal = useDeleteInvestmentGoal();
 
   // Show loading state while initial load or refetching
   if (isLoading || isFetching) {
@@ -267,11 +269,8 @@ export default function InvestmentGoalDetailPage() {
         cancelText="Cancel"
         destructive
         onConfirm={async () => {
-          // TODO: Implement delete functionality when backend supports it
-          // For now, just close the dialog
-          setIsDeleteDialogOpen(false);
-          // await deleteGoal.mutateAsync(goalId);
-          // router.push('/dashboard/investments');
+          await deleteGoal.mutateAsync(goalId);
+          router.push('/dashboard/investments');
         }}
       />
     </PageShell>

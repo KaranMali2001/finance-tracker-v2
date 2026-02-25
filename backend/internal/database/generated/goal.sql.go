@@ -56,6 +56,21 @@ func (q *Queries) CreateGoal(ctx context.Context, arg CreateGoalParams) (Goal, e
 	return i, err
 }
 
+const deleteGoal = `-- name: DeleteGoal :exec
+DELETE FROM goals
+WHERE id = $1 AND user_id = $2
+`
+
+type DeleteGoalParams struct {
+	ID     pgtype.UUID
+	UserID string
+}
+
+func (q *Queries) DeleteGoal(ctx context.Context, arg DeleteGoalParams) error {
+	_, err := q.db.Exec(ctx, deleteGoal, arg.ID, arg.UserID)
+	return err
+}
+
 const getGoalById = `-- name: GetGoalById :one
 SELECT id, user_id, name, target_amount, current_amount, target_date, status, priority, created_at, updated_at, achieved_at FROM goals g
 WHERE g.id=$1 AND g.user_id=$2

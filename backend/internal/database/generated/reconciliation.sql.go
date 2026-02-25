@@ -124,6 +124,59 @@ func (q *Queries) GetBankStatementUploadByID(ctx context.Context, arg GetBankSta
 	return i, err
 }
 
+const getUploadWithSummary = `-- name: GetUploadWithSummary :one
+SELECT id, user_id, account_id, file_name, upload_status, processing_status,
+       statement_period_start, statement_period_end,
+       valid_rows, duplicate_rows, error_rows, parsing_errors,
+       created_at, updated_at
+FROM bank_statement_uploads
+WHERE id = $1 AND user_id = $2
+`
+
+type GetUploadWithSummaryParams struct {
+	ID     pgtype.UUID
+	UserID string
+}
+
+type GetUploadWithSummaryRow struct {
+	ID                   pgtype.UUID
+	UserID               string
+	AccountID            pgtype.UUID
+	FileName             string
+	UploadStatus         pgtype.Text
+	ProcessingStatus     NullUploadProcessingStatus
+	StatementPeriodStart pgtype.Date
+	StatementPeriodEnd   pgtype.Date
+	ValidRows            pgtype.Int4
+	DuplicateRows        pgtype.Int4
+	ErrorRows            pgtype.Int4
+	ParsingErrors        []byte
+	CreatedAt            pgtype.Timestamp
+	UpdatedAt            pgtype.Timestamp
+}
+
+func (q *Queries) GetUploadWithSummary(ctx context.Context, arg GetUploadWithSummaryParams) (GetUploadWithSummaryRow, error) {
+	row := q.db.QueryRow(ctx, getUploadWithSummary, arg.ID, arg.UserID)
+	var i GetUploadWithSummaryRow
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.AccountID,
+		&i.FileName,
+		&i.UploadStatus,
+		&i.ProcessingStatus,
+		&i.StatementPeriodStart,
+		&i.StatementPeriodEnd,
+		&i.ValidRows,
+		&i.DuplicateRows,
+		&i.ErrorRows,
+		&i.ParsingErrors,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const listBankStatementUploadsByUser = `-- name: ListBankStatementUploadsByUser :many
 SELECT id, user_id, account_id, file_name, upload_status, processing_status,
        statement_period_start, statement_period_end, created_at
@@ -172,4 +225,89 @@ func (q *Queries) ListBankStatementUploadsByUser(ctx context.Context, userID str
 		return nil, err
 	}
 	return items, nil
+}
+
+const listStatementTransactionsByUploadID = `-- name: ListStatementTransactionsByUploadID :many
+SELECT id, upload_id, account_id, transaction_date, description, amount, type,
+       balance, reference_number, raw_row_hash, row_number, is_duplicate
+FROM statement_transactions
+WHERE upload_id = $1
+ORDER BY row_number ASC
+`
+
+type ListStatementTransactionsByUploadIDRow struct {
+	ID              pgtype.UUID
+	UploadID        pgtype.UUID
+	AccountID       pgtype.UUID
+	TransactionDate pgtype.Timestamptz
+	Description     pgtype.Text
+	Amount          pgtype.Numeric
+	Type            string
+	Balance         pgtype.Numeric
+	ReferenceNumber pgtype.Text
+	RawRowHash      string
+	RowNumber       int32
+	IsDuplicate     pgtype.Bool
+}
+
+func (q *Queries) ListStatementTransactionsByUploadID(ctx context.Context, uploadID pgtype.UUID) ([]ListStatementTransactionsByUploadIDRow, error) {
+	rows, err := q.db.Query(ctx, listStatementTransactionsByUploadID, uploadID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListStatementTransactionsByUploadIDRow
+	for rows.Next() {
+		var i ListStatementTransactionsByUploadIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UploadID,
+			&i.AccountID,
+			&i.TransactionDate,
+			&i.Description,
+			&i.Amount,
+			&i.Type,
+			&i.Balance,
+			&i.ReferenceNumber,
+			&i.RawRowHash,
+			&i.RowNumber,
+			&i.IsDuplicate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateUploadSummary = `-- name: UpdateUploadSummary :exec
+UPDATE bank_statement_uploads
+SET
+    valid_rows     = $2,
+    duplicate_rows = $3,
+    error_rows     = $4,
+    parsing_errors = $5
+WHERE id = $1
+`
+
+type UpdateUploadSummaryParams struct {
+	ID            pgtype.UUID
+	ValidRows     pgtype.Int4
+	DuplicateRows pgtype.Int4
+	ErrorRows     pgtype.Int4
+	ParsingErrors []byte
+}
+
+func (q *Queries) UpdateUploadSummary(ctx context.Context, arg UpdateUploadSummaryParams) error {
+	_, err := q.db.Exec(ctx, updateUploadSummary,
+		arg.ID,
+		arg.ValidRows,
+		arg.DuplicateRows,
+		arg.ErrorRows,
+		arg.ParsingErrors,
+	)
+	return err
 }

@@ -16,3 +16,6 @@ INSERT INTO sms_logs (
     $1,$2,$3,$4
 ) 
 RETURNING *;
+
+-- name: DeleteSms :exec
+DELETE FROM sms_logs WHERE user_id=$1 AND id=$2;

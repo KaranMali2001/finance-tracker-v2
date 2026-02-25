@@ -29,3 +29,7 @@ func (s *InvestmentService) GetGoalById(c echo.Context, params *GetGoalById, cle
 func (s *InvestmentService) UpdateGoals(c echo.Context, params *UpdateGoals, clerkId string) (*Goal, error) {
 	return s.r.UpdateGoal(c.Request().Context(), params.Id, clerkId, params)
 }
+
+func (s *InvestmentService) DeleteGoal(c echo.Context, params *DeleteGoalReq, clerkId string) error {
+	return s.r.DeleteGoal(c.Request().Context(), params.Id, clerkId)
+}

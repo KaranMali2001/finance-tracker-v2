@@ -68,6 +68,30 @@ func (h *SmsHandler) GetSmsById(c echo.Context) error {
 	)(c)
 }
 
+// DeleteSms godoc
+// @Summary Delete an SMS log
+// @Description Deletes a specific SMS log by its ID for the authenticated user
+// @Tags SMS
+// @Produce json
+// @Name DeleteSms
+// @Param id path string true "SMS ID" format(uuid)
+// @Success 204
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 404 {object} map[string]string "Not Found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /sms/{id} [delete]
+func (h *SmsHandler) DeleteSms(c echo.Context) error {
+	return handler.HandleNoContent(
+		h.base,
+		func(c echo.Context, payload *DeleteSmsReq) error {
+			return h.service.DeleteSms(c, payload, middleware.GetUserID(c))
+		},
+		http.StatusNoContent,
+		&DeleteSmsReq{},
+	)(c)
+}
+
 // CreateSms godoc
 // @Summary Create a new SMS log
 // @Description Creates a new SMS log entry
