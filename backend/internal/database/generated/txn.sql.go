@@ -18,7 +18,7 @@ INSERT INTO transactions(
 ) VALUES (
    $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15
 )
-RETURNING id, user_id, account_id, to_account_id, category_id, merchant_id, type, amount, description, notes, tags, transaction_date, sms_id, payment_method, reference_number, is_recurring, is_excluded, is_cash, deleted_at, deleted_by, created_at, updated_at
+RETURNING id, user_id, account_id, to_account_id, category_id, merchant_id, type, amount, description, notes, tags, transaction_date, sms_id, payment_method, reference_number, is_recurring, is_excluded, is_cash, deleted_at, deleted_by, created_at, updated_at, source, reconciliation_status, reconciled_by, reconciled_at, statement_txn_id
 `
 
 type CreateTxnParams struct {
@@ -81,8 +81,78 @@ func (q *Queries) CreateTxn(ctx context.Context, arg CreateTxnParams) (Transacti
 		&i.DeletedBy,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Source,
+		&i.ReconciliationStatus,
+		&i.ReconciledBy,
+		&i.ReconciledAt,
+		&i.StatementTxnID,
 	)
 	return i, err
+}
+
+const getAppTransactionsInDateRange = `-- name: GetAppTransactionsInDateRange :many
+SELECT id, amount, transaction_date, type, description, reference_number
+FROM transactions
+WHERE account_id = $1
+  AND transaction_date BETWEEN $2 AND $3
+  AND reconciliation_status = 'UNRECONCILED'
+  AND is_cash = false
+  AND deleted_at IS NULL
+`
+
+type GetAppTransactionsInDateRangeParams struct {
+	AccountID         pgtype.UUID
+	TransactionDate   pgtype.Timestamp
+	TransactionDate_2 pgtype.Timestamp
+}
+
+type GetAppTransactionsInDateRangeRow struct {
+	ID              pgtype.UUID
+	Amount          pgtype.Numeric
+	TransactionDate pgtype.Timestamp
+	Type            TxnType
+	Description     pgtype.Text
+	ReferenceNumber pgtype.Text
+}
+
+func (q *Queries) GetAppTransactionsInDateRange(ctx context.Context, arg GetAppTransactionsInDateRangeParams) ([]GetAppTransactionsInDateRangeRow, error) {
+	rows, err := q.db.Query(ctx, getAppTransactionsInDateRange, arg.AccountID, arg.TransactionDate, arg.TransactionDate_2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAppTransactionsInDateRangeRow
+	for rows.Next() {
+		var i GetAppTransactionsInDateRangeRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Amount,
+			&i.TransactionDate,
+			&i.Type,
+			&i.Description,
+			&i.ReferenceNumber,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getMaxAppTransactionDate = `-- name: GetMaxAppTransactionDate :one
+SELECT MAX(transaction_date)
+FROM transactions
+WHERE account_id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) GetMaxAppTransactionDate(ctx context.Context, accountID pgtype.UUID) (interface{}, error) {
+	row := q.db.QueryRow(ctx, getMaxAppTransactionDate, accountID)
+	var max interface{}
+	err := row.Scan(&max)
+	return max, err
 }
 
 const getTxnsWithFilters = `-- name: GetTxnsWithFilters :many
@@ -228,12 +298,31 @@ func (q *Queries) HardDeleteTxns(ctx context.Context, arg HardDeleteTxnsParams) 
 	return err
 }
 
+const markTransactionAutoVerified = `-- name: MarkTransactionAutoVerified :exec
+UPDATE transactions
+SET reconciliation_status = 'AUTO_VERIFIED',
+    reconciled_by         = 'SYSTEM',
+    reconciled_at         = NOW(),
+    statement_txn_id      = $2
+WHERE id = $1
+`
+
+type MarkTransactionAutoVerifiedParams struct {
+	ID             pgtype.UUID
+	StatementTxnID pgtype.UUID
+}
+
+func (q *Queries) MarkTransactionAutoVerified(ctx context.Context, arg MarkTransactionAutoVerifiedParams) error {
+	_, err := q.db.Exec(ctx, markTransactionAutoVerified, arg.ID, arg.StatementTxnID)
+	return err
+}
+
 const softDeleteTxns = `-- name: SoftDeleteTxns :many
 UPDATE transactions
 SET (deleted_at, deleted_by) = ($1, $2)
 WHERE user_id = $3
   AND id = ANY($4::uuid[])
-RETURNING id, user_id, account_id, to_account_id, category_id, merchant_id, type, amount, description, notes, tags, transaction_date, sms_id, payment_method, reference_number, is_recurring, is_excluded, is_cash, deleted_at, deleted_by, created_at, updated_at
+RETURNING id, user_id, account_id, to_account_id, category_id, merchant_id, type, amount, description, notes, tags, transaction_date, sms_id, payment_method, reference_number, is_recurring, is_excluded, is_cash, deleted_at, deleted_by, created_at, updated_at, source, reconciliation_status, reconciled_by, reconciled_at, statement_txn_id
 `
 
 type SoftDeleteTxnsParams struct {
@@ -280,6 +369,11 @@ func (q *Queries) SoftDeleteTxns(ctx context.Context, arg SoftDeleteTxnsParams) 
 			&i.DeletedBy,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Source,
+			&i.ReconciliationStatus,
+			&i.ReconciledBy,
+			&i.ReconciledAt,
+			&i.StatementTxnID,
 		); err != nil {
 			return nil, err
 		}
@@ -293,7 +387,7 @@ func (q *Queries) SoftDeleteTxns(ctx context.Context, arg SoftDeleteTxnsParams) 
 
 const updateTxn = `-- name: UpdateTxn :one
 UPDATE transactions t
-SET 
+SET
     category_id = COALESCE($2, t.category_id),
     merchant_id = COALESCE($3, t.merchant_id),
     amount = COALESCE($4, t.amount),

@@ -12,10 +12,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useClerk, useUser } from '@clerk/nextjs';
 import {
   ChevronLeft,
+  FileSpreadsheet,
   Landmark,
   LogOut,
   MessageSquare,
@@ -46,6 +48,11 @@ export function DashboardSidebar() {
       icon: Receipt,
     },
     {
+      title: 'Reconciliation',
+      url: '/dashboard/reconciliation',
+      icon: FileSpreadsheet,
+    },
+    {
       title: 'Investments',
       url: '/dashboard/investments',
       icon: Target,
@@ -63,12 +70,14 @@ export function DashboardSidebar() {
   ];
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="hidden md:flex">
       <SidebarHeader>
         <div className="flex items-center justify-between px-2 py-1">
-          <button
+          <Button
+            type="button"
+            variant="ghost"
             onClick={toggleSidebar}
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer h-auto p-0"
           >
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-600 to-yellow-600 shadow-md shadow-amber-600/20 flex-shrink-0">
               <Landmark className="h-4 w-4 text-white" />
@@ -81,14 +90,17 @@ export function DashboardSidebar() {
                 Wealth Reserve
               </h2>
             </div>
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             onClick={toggleSidebar}
             className="group-data-[collapsible=icon]:hidden h-8 w-8 flex items-center justify-center hover:bg-amber-50 hover:text-amber-700 rounded-md transition-colors -mr-1"
             aria-label="Toggle sidebar"
           >
             <ChevronLeft className="h-5 w-5 text-stone-600" />
-          </button>
+          </Button>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -149,7 +161,9 @@ export function DashboardSidebar() {
                 </span>
               </div>
             </Link>
-            <button
+            <Button
+              type="button"
+              variant="ghost"
               onClick={() => {
                 signOut();
                 router.push('/sign-in');
@@ -164,7 +178,7 @@ export function DashboardSidebar() {
             >
               <LogOut className="h-4 w-4" />
               <span className="group-data-[collapsible=icon]:hidden">Logout</span>
-            </button>
+            </Button>
           </>
         )}
       </SidebarFooter>

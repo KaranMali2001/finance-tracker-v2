@@ -30,6 +30,8 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/auth"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/investment"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/reconciliation"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/shared"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/sms"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/static"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/system"
@@ -83,8 +85,20 @@ func main() {
 		Addr: cfg.Redis.Address,
 	})
 	taskService := tasks.NewTaskService(globalSvcs, jobModule.GetJobRepository(), qClient)
+
+	databaseTxnManager := database.NewTxManager(server.DB.Pool)
+	balanceUpdater := shared.NewBalanceUpdater(queries)
+
+	reconciliationModule := reconciliation.NewReconiliationModule(reconciliation.Deps{
+		Server:         server,
+		Queries:        queries,
+		TxnManager:     databaseTxnManager,
+		TaskService:    taskService,
+		BalanceUpdater: balanceUpdater,
+	})
+
 	// create new job service
-	q := queue.NewJobService(log, cfg, taskService, qClient)
+	q := queue.NewJobService(log, cfg, taskService, qClient, jobModule.GetJobRepository(), reconciliationModule.GetService())
 
 	if err := q.Start(); err != nil {
 		log.Error().Err(err).Msg("failed to start Queue services")
@@ -96,8 +110,6 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create server")
 	}
-
-	databaseTxnManager := database.NewTxManager(server.DB.Pool)
 
 	systemModule := system.NewModule(system.Dependencies{Server: server})
 	authModule := auth.NewModule(auth.Dependencies{
@@ -119,12 +131,13 @@ func main() {
 		Queries: queries,
 	})
 	transactionModule := transaction.NewTxnModule(transaction.Deps{
-		Server:     server,
-		Queries:    queries,
-		UserRepo:   userModule.GetUserRepository(),
-		GeminiSvc:  globalSvcs.GeminiService,
-		StaticRepo: staticModule.GetRepository(),
-		Tm:         databaseTxnManager,
+		Server:         server,
+		Queries:        queries,
+		UserRepo:       userModule.GetUserRepository(),
+		GeminiSvc:      globalSvcs.GeminiService,
+		StaticRepo:     staticModule.GetRepository(),
+		Tm:             databaseTxnManager,
+		BalanceUpdater: balanceUpdater,
 	})
 	smsModule := sms.NewSmsModule(sms.Deps{
 		Server:  server,
@@ -135,12 +148,13 @@ func main() {
 		Queries: queries,
 		Tm:      databaseTxnManager,
 	})
+
 	log.Info().
 		Strs("cors_origins", cfg.Server.CORSAllowedOrigins).
 		Msg("CORS configuration loaded")
 	r := router.NewRouter(server,
 		[]router.RouteRegistrar{systemModule},
-		[]router.RouteRegistrar{authModule, userModule, accountModule, staticModule, transactionModule, smsModule, investmentModule},
+		[]router.RouteRegistrar{authModule, userModule, accountModule, staticModule, transactionModule, smsModule, investmentModule, reconciliationModule},
 	)
 	docs.SwaggerInfo.Title = "Finance Tracker API"
 	docs.SwaggerInfo.Description = "API documentation for Finance Tracker services."

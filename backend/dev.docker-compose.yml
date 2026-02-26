@@ -48,6 +48,16 @@ services:
   #     - "8080:8080"
   #   depends_on:
   #     - postgres
+  chartdb:
+    image: ghcr.io/chartdb/chartdb:latest
+    container_name: finance-tracker-chartdb
+    restart: unless-stopped
+    networks:
+      - finance-tracker-network
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
 
   # backend:
   #   build:

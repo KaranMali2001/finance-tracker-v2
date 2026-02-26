@@ -31,6 +31,10 @@ type CreateSmsReq struct {
 	RawMessage string    `json:"raw_message,omitempty"`
 	ReceivedAt time.Time `json:"received_at,omitempty"`
 }
+type DeleteSmsReq struct {
+	SmsId uuid.UUID `param:"id" validate:"required"`
+}
+
 type GetSmsesReq struct{}
 
 func (u *GetSmsesReq) Validate() error {
@@ -42,5 +46,9 @@ func (u *CreateSmsReq) Validate() error {
 }
 
 func (u *GetSmsByIdReq) Validate() error {
+	return validator.New().Struct(u)
+}
+
+func (u *DeleteSmsReq) Validate() error {
 	return validator.New().Struct(u)
 }

@@ -2,6 +2,7 @@ package jobs
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
@@ -21,8 +22,14 @@ func NewJobRepository(q *generated.Queries) *JobRepository {
 func jobFromDb(job *generated.Job) *Job {
 	var result *string
 	if len(job.Result) > 0 {
-		resultStr := string(job.Result)
-		result = &resultStr
+		// result is stored as JSONB. If it's a JSON string, unwrap it.
+		var decoded string
+		if err := json.Unmarshal(job.Result, &decoded); err == nil {
+			result = &decoded
+		} else {
+			resultStr := string(job.Result)
+			result = &resultStr
+		}
 	}
 	return &Job{
 		ID:         utils.UUIDToUUID(job.ID),
@@ -92,7 +99,13 @@ func (r *JobRepository) UpdateJob(c context.Context, body *UpdateJob) (*Job, err
 
 	var result []byte
 	if body.Result != nil {
-		result = []byte(*body.Result)
+		// jobs.result is JSONB in DB, so ensure we always write valid JSON.
+		// For a plain message, store it as a JSON string.
+		b, err := json.Marshal(*body.Result)
+		if err != nil {
+			return nil, err
+		}
+		result = b
 	}
 
 	var lastError pgtype.Text

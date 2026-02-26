@@ -674,6 +674,537 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "Deletes an existing investment goal for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Investment"
+                ],
+                "summary": "Delete an investment goal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Goal ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reconciliation/results/status": {
+            "patch": {
+                "description": "Updates the user_action for one or more reconciliation results. Send a single-element array for a single update.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reconciliation"
+                ],
+                "summary": "Bulk accept or reject reconciliation results",
+                "parameters": [
+                    {
+                        "description": "Result IDs and user action",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_reconciliation.BulkUpdateResultStatusReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_reconciliation.BulkUpdateResultStatusRes"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reconciliation/upload": {
+            "post": {
+                "description": "Uploads a bank statement Excel file and starts reconciliation processing",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reconciliation"
+                ],
+                "summary": "Upload bank statement for reconciliation",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Bank statement Excel file (.xls, .xlsx)",
+                        "name": "statement",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Statement period start",
+                        "name": "statement_period_start",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Statement period end",
+                        "name": "statement_period_end",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Account ID",
+                        "name": "account_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID (Clerk ID)",
+                        "name": "user_id",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Original file name",
+                        "name": "file_name",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_reconciliation.UploadStatementRes"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reconciliation/uploads": {
+            "get": {
+                "description": "Returns all bank statement uploads for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reconciliation"
+                ],
+                "summary": "List bank statement uploads",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_domain_reconciliation.UploadListItem"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reconciliation/uploads/{upload_id}": {
+            "get": {
+                "description": "Returns details for a single bank statement upload",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reconciliation"
+                ],
+                "summary": "Get bank statement upload by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_reconciliation.UploadDetail"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a bank statement upload and all related statement transactions and reconciliation data. Unlinks any app transactions that were linked to this upload.",
+                "tags": [
+                    "Reconciliation"
+                ],
+                "summary": "Delete bank statement upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reconciliation/uploads/{upload_id}/detail": {
+            "get": {
+                "description": "Returns complete detail for a bank statement upload including summary counts, parsing errors, and paginated statement transactions",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reconciliation"
+                ],
+                "summary": "Get full upload detail",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default 25)",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_reconciliation.UploadFullDetailPaginated"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reconciliation/uploads/{upload_id}/results": {
+            "get": {
+                "description": "Returns paginated reconciliation results for a bank statement upload, including statement transaction details and match signals",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reconciliation"
+                ],
+                "summary": "Get reconciliation results for an upload",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Upload ID",
+                        "name": "upload_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size (default 25)",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_reconciliation.PaginatedReconciliationResults"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
             }
         },
         "/sms": {
@@ -802,6 +1333,67 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/internal_domain_sms.SmsLogs"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a specific SMS log by its ID for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SMS"
+                ],
+                "summary": "Delete an SMS log",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "SMS ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -1667,6 +2259,441 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_domain_reconciliation.BulkUpdateResultStatusReq": {
+            "type": "object",
+            "required": [
+                "result_ids",
+                "upload_id",
+                "user_action"
+            ],
+            "properties": {
+                "result_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "upload_id": {
+                    "type": "string"
+                },
+                "user_action": {
+                    "type": "string",
+                    "enum": [
+                        "accepted",
+                        "rejected"
+                    ]
+                }
+            }
+        },
+        "internal_domain_reconciliation.BulkUpdateResultStatusRes": {
+            "type": "object",
+            "properties": {
+                "updated": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_domain_reconciliation.UpdateResultStatusRes"
+                    }
+                }
+            }
+        },
+        "internal_domain_reconciliation.MatchSignals": {
+            "type": "object",
+            "properties": {
+                "amount_diff": {
+                    "type": "number"
+                },
+                "amount_diff_pct": {
+                    "type": "number"
+                },
+                "amount_score": {
+                    "type": "integer"
+                },
+                "date_diff_days": {
+                    "type": "integer"
+                },
+                "date_score": {
+                    "type": "integer"
+                },
+                "description_score": {
+                    "type": "integer"
+                },
+                "description_similarity": {
+                    "type": "number"
+                },
+                "reference_match": {
+                    "type": "boolean"
+                },
+                "reference_score": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_domain_reconciliation.PaginatedReconciliationResults": {
+            "type": "object",
+            "properties": {
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_domain_reconciliation.ReconciliationResultRow"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_domain_reconciliation.ParseError": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "error": {
+                    "type": "string"
+                },
+                "row": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_domain_reconciliation.ParsedTxns": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "is_duplicate": {
+                    "type": "boolean"
+                },
+                "raw_row_hash": {
+                    "type": "string"
+                },
+                "reference_number": {
+                    "type": "string"
+                },
+                "row_number": {
+                    "type": "integer"
+                },
+                "txn_date": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/internal_domain_reconciliation.TxnType"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "upload_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_reconciliation.ReconciliationResultRow": {
+            "type": "object",
+            "properties": {
+                "app_transaction_id": {
+                    "type": "string"
+                },
+                "confidence_score": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "match_signals": {
+                    "$ref": "#/definitions/internal_domain_reconciliation.MatchSignals"
+                },
+                "match_status": {
+                    "type": "string"
+                },
+                "result_type": {
+                    "type": "string"
+                },
+                "statement_transaction_id": {
+                    "type": "string"
+                },
+                "stmt_amount": {
+                    "type": "number"
+                },
+                "stmt_date": {
+                    "description": "Statement transaction side",
+                    "type": "string"
+                },
+                "stmt_description": {
+                    "type": "string"
+                },
+                "stmt_reference_number": {
+                    "type": "string"
+                },
+                "stmt_row_number": {
+                    "type": "integer"
+                },
+                "stmt_type": {
+                    "type": "string"
+                },
+                "upload_id": {
+                    "type": "string"
+                },
+                "user_action": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_reconciliation.StatementTransaction": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_duplicate": {
+                    "type": "boolean"
+                },
+                "raw_row_hash": {
+                    "type": "string"
+                },
+                "reference_number": {
+                    "type": "string"
+                },
+                "row_number": {
+                    "type": "integer"
+                },
+                "transaction_date": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "upload_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_reconciliation.TxnType": {
+            "type": "string",
+            "enum": [
+                "CREDIT",
+                "DEBIT"
+            ],
+            "x-enum-varnames": [
+                "CREDIT",
+                "DEBIT"
+            ]
+        },
+        "internal_domain_reconciliation.UpdateResultStatusRes": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "user_action": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_reconciliation.UploadDetail": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "processing_status": {
+                    "type": "string"
+                },
+                "statement_period_end": {
+                    "type": "string"
+                },
+                "statement_period_start": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "upload_status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_reconciliation.UploadFullDetailPaginated": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "duplicate_rows": {
+                    "type": "integer"
+                },
+                "error_rows": {
+                    "type": "integer"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "parsing_errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_domain_reconciliation.ParseError"
+                    }
+                },
+                "processing_status": {
+                    "type": "string"
+                },
+                "statement_period_end": {
+                    "type": "string"
+                },
+                "statement_period_start": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
+                },
+                "transactions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_domain_reconciliation.StatementTransaction"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "upload_status": {
+                    "type": "string"
+                },
+                "valid_rows": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_domain_reconciliation.UploadListItem": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "processing_status": {
+                    "type": "string"
+                },
+                "statement_period_end": {
+                    "type": "string"
+                },
+                "statement_period_start": {
+                    "type": "string"
+                },
+                "upload_status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_reconciliation.UploadStatementRes": {
+            "type": "object",
+            "properties": {
+                "job_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "summary": {
+                    "$ref": "#/definitions/internal_domain_reconciliation.UploadSummary"
+                },
+                "txns": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_domain_reconciliation.ParsedTxns"
+                    }
+                },
+                "upload_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_reconciliation.UploadSummary": {
+            "type": "object",
+            "properties": {
+                "duplicate_rows": {
+                    "type": "integer"
+                },
+                "error_rows": {
+                    "type": "integer"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_domain_reconciliation.ParseError"
+                    }
+                },
+                "total_rows": {
+                    "type": "integer"
+                },
+                "valid_rows": {
+                    "type": "integer"
+                }
+            }
+        },
         "internal_domain_sms.CreateSmsReq": {
             "type": "object",
             "properties": {
@@ -2001,6 +3028,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "to_account_number": {
+                    "type": "string"
+                },
+                "transaction_date": {
                     "type": "string"
                 },
                 "type": {

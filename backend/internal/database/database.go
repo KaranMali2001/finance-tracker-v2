@@ -41,13 +41,24 @@ func (mt *multiTracer) TraceQueryStart(ctx context.Context, conn *pgx.Conn, data
 	return ctx
 }
 
-// TraceQueryEnd implements pgx tracer interface
+// TraceQueryEnd implements pgx tracer interface.
+// Each child tracer is called with recover so one panic (e.g. tracelog when ctx lacks
+// trace data during batch result consumption) does not crash the process.
 func (mt *multiTracer) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryEndData) {
 	for _, tracer := range mt.tracers {
 		if t, ok := tracer.(interface {
 			TraceQueryEnd(context.Context, *pgx.Conn, pgx.TraceQueryEndData)
 		}); ok {
-			t.TraceQueryEnd(ctx, conn, data)
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						// Tracers (e.g. tracelog) can panic when TraceQueryEnd is called
+						// for batch sub-results where ctx has no traceQueryData.
+						_ = r
+					}
+				}()
+				t.TraceQueryEnd(ctx, conn, data)
+			}()
 		}
 	}
 }

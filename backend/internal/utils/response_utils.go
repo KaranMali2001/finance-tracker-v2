@@ -1,5 +1,18 @@
 package utils
 
+// PtrString returns a pointer to s. Returns nil if s is empty.
+func PtrString(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
+// PtrBool returns a pointer to b.
+func PtrBool(b bool) *bool {
+	return &b
+}
+
 // PaginatedResponse represents a paginated response for GET queries
 type PaginatedResponse[T any] struct {
 	Data       []T `json:"data"`

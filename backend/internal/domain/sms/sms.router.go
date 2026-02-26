@@ -30,4 +30,5 @@ func (m *Module) RegisterRoutes(g *echo.Group) {
 	g.GET("/sms", m.handler.GetSmses, authMiddleware)
 	g.GET("/sms/:id", m.handler.GetSmsById, authMiddleware)
 	g.POST("/sms", m.handler.CreateSms, authMiddleware)
+	g.DELETE("/sms/:id", m.handler.DeleteSms, authMiddleware)
 }

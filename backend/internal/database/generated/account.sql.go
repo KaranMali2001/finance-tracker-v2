@@ -11,6 +11,25 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const adjustAccountBalance = `-- name: AdjustAccountBalance :exec
+UPDATE accounts
+SET current_balance = current_balance + $1::numeric
+WHERE id = $2
+  AND user_id = $3
+  AND deleted_at IS NULL
+`
+
+type AdjustAccountBalanceParams struct {
+	Delta  pgtype.Numeric
+	ID     pgtype.UUID
+	UserID string
+}
+
+func (q *Queries) AdjustAccountBalance(ctx context.Context, arg AdjustAccountBalanceParams) error {
+	_, err := q.db.Exec(ctx, adjustAccountBalance, arg.Delta, arg.ID, arg.UserID)
+	return err
+}
+
 const createAccount = `-- name: CreateAccount :one
 INSERT INTO accounts (
     account_number,

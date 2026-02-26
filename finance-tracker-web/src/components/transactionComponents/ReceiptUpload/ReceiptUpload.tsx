@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useParseTransactionImage } from '@/components/shared/hooks/useTransaction';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import type { internal_domain_transaction_ParsedTxnRes } from '@/generated/api';
 
 interface ReceiptUploadProps {
@@ -45,7 +46,7 @@ export function ReceiptUpload({ onParsed, onError }: ReceiptUploadProps) {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <input
+          <Input
             id="receipt-upload-input"
             type="file"
             accept="image/*"

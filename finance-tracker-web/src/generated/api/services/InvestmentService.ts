@@ -125,4 +125,28 @@ export class InvestmentService {
             },
         });
     }
+    /**
+     * Delete an investment goal
+     * Deletes an existing investment goal for the authenticated user
+     * @param id Goal ID
+     * @returns void
+     * @throws ApiError
+     */
+    public static deleteInvestmentGoal(
+        id: string,
+    ): CancelablePromise<void> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/investment/goal/{id}',
+            path: {
+                'id': id,
+            },
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
+                404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
 }

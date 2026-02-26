@@ -266,6 +266,8 @@ const (
 	DefaultMaxFileSize int64 = 10 << 20 // 10MB
 	// ImageContextKey is the key used to store uploaded image in request context
 	ImageContextKey = "image"
+	// StatementContextKey is the key used to store uploaded statement in request context
+	StatementContextKey = "statement"
 )
 
 var (
@@ -285,7 +287,33 @@ var (
 		".gif":  true,
 		".webp": true,
 	}
+
+	// AllowedExcelTypes contains the allowed MIME types for Excel uploads
+	AllowedExcelTypes = map[string]bool{
+		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true, // .xlsx
+		"application/vnd.ms-excel": true, // .xls
+		"text/csv": true, // .csv
+		"application/csv": true, // .csv (non-standard but common)
+		// Some clients may upload Excel with a generic content type.
+		"application/octet-stream": true,
+	}
+	// AllowedExcelExtensions contains the allowed file extensions for Excel uploads
+	AllowedExcelExtensions = map[string]bool{
+		".xlsx": true,
+		".xls":  true,
+		".csv":  true,
+	}
 )
+
+// UploadValidationConfig defines validation rules for file uploads.
+type UploadValidationConfig struct {
+	FormField         string
+	ContextKey        string
+	MaxFileSize       int64
+	AllowedExtensions map[string]bool
+	AllowedMIMETypes  map[string]bool
+	RequiredLabel     string // used in error messages (e.g. "Image", "Statement")
+}
 
 // handleUploadRequest is the unified handler function for file uploads that eliminates code duplication
 func handleUploadRequest[Req validation.Validatable, Res any](
@@ -294,6 +322,23 @@ func handleUploadRequest[Req validation.Validatable, Res any](
 	handler HandlerFuncUpload[Req, Res],
 	responseHandler ResponseHandler,
 	maxFileSize int64,
+) error {
+	return handleUploadRequestWithConfig(c, req, handler, responseHandler, UploadValidationConfig{
+		FormField:         "image",
+		ContextKey:        ImageContextKey,
+		MaxFileSize:       maxFileSize,
+		AllowedExtensions: AllowedImageExtensions,
+		AllowedMIMETypes:  AllowedImageTypes,
+		RequiredLabel:     "Image",
+	})
+}
+
+func handleUploadRequestWithConfig[Req validation.Validatable, Res any](
+	c echo.Context,
+	req Req,
+	handler HandlerFuncUpload[Req, Res],
+	responseHandler ResponseHandler,
+	cfg UploadValidationConfig,
 ) error {
 	start := time.Now()
 	method := c.Request().Method
@@ -321,7 +366,7 @@ func handleUploadRequest[Req validation.Validatable, Res any](
 
 	// Parse and validate file upload
 	fileValidationStart := time.Now()
-	fileHeader, err := c.FormFile("image")
+	fileHeader, err := c.FormFile(cfg.FormField)
 	if err != nil {
 		fileValidationDuration := time.Since(fileValidationStart)
 
@@ -338,8 +383,12 @@ func handleUploadRequest[Req validation.Validatable, Res any](
 
 		// Check if it's a "no such file" error
 		if strings.Contains(err.Error(), "no such file") {
-			return errs.NewBadRequestError("Image file is required", false, nil, []errs.FieldError{
-				{Field: "image", Error: "is required"},
+			requiredLabel := cfg.RequiredLabel
+			if requiredLabel == "" {
+				requiredLabel = "File"
+			}
+			return errs.NewBadRequestError(requiredLabel+" file is required", false, nil, []errs.FieldError{
+				{Field: cfg.FormField, Error: "is required"},
 			}, nil)
 		}
 
@@ -347,12 +396,12 @@ func handleUploadRequest[Req validation.Validatable, Res any](
 	}
 
 	// Validate file size
-	if fileHeader.Size > maxFileSize {
+	if fileHeader.Size > cfg.MaxFileSize {
 		fileValidationDuration := time.Since(fileValidationStart)
 
 		logger.Error().
 			Int64("file_size", fileHeader.Size).
-			Int64("max_size", maxFileSize).
+			Int64("max_size", cfg.MaxFileSize).
 			Dur("file_validation_duration", fileValidationDuration).
 			Msg("file size validation failed")
 
@@ -360,18 +409,18 @@ func handleUploadRequest[Req validation.Validatable, Res any](
 			txn.NoticeError(errs.NewBadRequestError("File size exceeds maximum allowed size", false, nil, nil, nil))
 			txn.AddAttribute("file_validation.status", "failed")
 			txn.AddAttribute("file.size_bytes", fileHeader.Size)
-			txn.AddAttribute("file.max_size_bytes", maxFileSize)
+			txn.AddAttribute("file.max_size_bytes", cfg.MaxFileSize)
 			txn.AddAttribute("file_validation.duration_ms", fileValidationDuration.Milliseconds())
 		}
 
 		return errs.NewBadRequestError("File size exceeds maximum allowed size", false, nil, []errs.FieldError{
-			{Field: "image", Error: "file size exceeds maximum allowed size"},
+			{Field: cfg.FormField, Error: "file size exceeds maximum allowed size"},
 		}, nil)
 	}
 
 	// Validate file type by extension
 	ext := strings.ToLower(filepath.Ext(fileHeader.Filename))
-	if !AllowedImageExtensions[ext] {
+	if cfg.AllowedExtensions != nil && !cfg.AllowedExtensions[ext] {
 		fileValidationDuration := time.Since(fileValidationStart)
 
 		logger.Error().
@@ -388,8 +437,8 @@ func handleUploadRequest[Req validation.Validatable, Res any](
 			txn.AddAttribute("file_validation.duration_ms", fileValidationDuration.Milliseconds())
 		}
 
-		return errs.NewBadRequestError("Invalid file type. Only image files (jpg, jpeg, png, gif, webp) are allowed", false, nil, []errs.FieldError{
-			{Field: "image", Error: "invalid file type. Only image files (jpg, jpeg, png, gif, webp) are allowed"},
+		return errs.NewBadRequestError("Invalid file type", false, nil, []errs.FieldError{
+			{Field: cfg.FormField, Error: "invalid file type"},
 		}, nil)
 	}
 
@@ -410,7 +459,7 @@ func handleUploadRequest[Req validation.Validatable, Res any](
 			contentType = mediaType
 		}
 
-		if !AllowedImageTypes[contentType] {
+		if cfg.AllowedMIMETypes != nil && !cfg.AllowedMIMETypes[contentType] {
 			fileValidationDuration := time.Since(fileValidationStart)
 
 			logger.Error().
@@ -427,14 +476,14 @@ func handleUploadRequest[Req validation.Validatable, Res any](
 				txn.AddAttribute("file_validation.duration_ms", fileValidationDuration.Milliseconds())
 			}
 
-			return errs.NewBadRequestError("Invalid file type. Only image files (jpg, jpeg, png, gif, webp) are allowed", false, nil, []errs.FieldError{
-				{Field: "image", Error: "invalid file type. Only image files (jpg, jpeg, png, gif, webp) are allowed"},
+			return errs.NewBadRequestError("Invalid file type", false, nil, []errs.FieldError{
+				{Field: cfg.FormField, Error: "invalid file type"},
 			}, nil)
 		}
 	}
 
 	// Store file in context
-	c.Set(ImageContextKey, fileHeader)
+	c.Set(cfg.ContextKey, fileHeader)
 
 	fileValidationDuration := time.Since(fileValidationStart)
 	if txn != nil {
@@ -544,5 +593,35 @@ func HandleUploadWithMaxSize[Req validation.Validatable, Res any](
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		return handleUploadRequest(c, req, handler, JSONResponseHandler{status: status}, maxFileSize)
+	}
+}
+
+// HandleUploadStatementExcel wraps an Excel statement upload handler.
+// It expects the multipart form file field to be named "statement" and stores it in context under StatementContextKey.
+func HandleUploadStatementExcel[Req validation.Validatable, Res any](
+	h Handler,
+	handler HandlerFuncUpload[Req, Res],
+	status int,
+	req Req,
+) echo.HandlerFunc {
+	return HandleUploadStatementExcelWithMaxSize(h, handler, status, req, DefaultMaxFileSize)
+}
+
+func HandleUploadStatementExcelWithMaxSize[Req validation.Validatable, Res any](
+	h Handler,
+	handler HandlerFuncUpload[Req, Res],
+	status int,
+	req Req,
+	maxFileSize int64,
+) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		return handleUploadRequestWithConfig(c, req, handler, JSONResponseHandler{status: status}, UploadValidationConfig{
+			FormField:         "statement",
+			ContextKey:        StatementContextKey,
+			MaxFileSize:       maxFileSize,
+			AllowedExtensions: AllowedExcelExtensions,
+			AllowedMIMETypes:  AllowedExcelTypes,
+			RequiredLabel:     "Statement",
+		})
 	}
 }

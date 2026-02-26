@@ -36,3 +36,7 @@ SET
 WHERE id = $8
   AND user_id = $9
 RETURNING *;
+
+-- name: DeleteGoal :exec
+DELETE FROM goals
+WHERE id = $1 AND user_id = $2;

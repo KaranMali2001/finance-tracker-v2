@@ -16,3 +16,10 @@ WHERE clerk_id=$5 RETURNING *;
 
 -- name: GetUserByApiKey :one
 SELECT * FROM users WHERE api_key=$1 ;
+
+-- name: AdjustUserLifetimeMetrics :exec
+UPDATE users
+SET
+  lifetime_income  = lifetime_income  + sqlc.arg(income_delta)::numeric,
+  lifetime_expense = lifetime_expense + sqlc.arg(expense_delta)::numeric
+WHERE clerk_id = sqlc.arg(clerk_id);

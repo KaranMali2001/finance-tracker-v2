@@ -102,6 +102,31 @@ func (h *InvestmentHandler) GetGoalById(c echo.Context) error {
 	)(c)
 }
 
+// DeleteGoal godoc
+// @Summary Delete an investment goal
+// @Description Deletes an existing investment goal for the authenticated user
+// @Tags Investment
+// @Produce json
+// @Name DeleteGoal
+// @Param id path string true "Goal ID" format(uuid)
+// @Success 204 "No Content"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 404 {object} map[string]string "Not Found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /investment/goal/{id} [delete]
+func (h *InvestmentHandler) DeleteGoal(c echo.Context) error {
+	return handler.HandleNoContent(
+		h.base,
+		func(c echo.Context, payload *DeleteGoalReq) error {
+			clerkId := middleware.GetUserID(c)
+			return h.service.DeleteGoal(c, payload, clerkId)
+		},
+		http.StatusNoContent,
+		&DeleteGoalReq{},
+	)(c)
+}
+
 // UpdateGoals godoc
 // @Summary Update an investment goal
 // @Description Updates an existing investment goal for the authenticated user

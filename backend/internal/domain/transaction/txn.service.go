@@ -9,31 +9,36 @@ import (
 	"path/filepath"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/shared"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/static"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/user"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/handler"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	aiservices "github.com/KaranMali2001/finance-tracker-v2-backend/internal/services/aiServices"
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
 type TxnService struct {
-	s          *server.Server
-	r          *TxnRepository
-	userRepo   *user.UserRepository
-	geminiSvc  *aiservices.GeminiService
-	staticRepo *static.StaticRepository
-	tm         *database.TxManager
+	s              *server.Server
+	r              *TxnRepository
+	userRepo       *user.UserRepository
+	geminiSvc      *aiservices.GeminiService
+	staticRepo     *static.StaticRepository
+	tm             *database.TxManager
+	balanceUpdater *shared.BalanceUpdater
 }
 
-func NewTxnService(s *server.Server, r *TxnRepository, userRepo *user.UserRepository, geminiSvc *aiservices.GeminiService, staticRepo *static.StaticRepository) *TxnService {
+func NewTxnService(s *server.Server, r *TxnRepository, userRepo *user.UserRepository, geminiSvc *aiservices.GeminiService, staticRepo *static.StaticRepository, tm *database.TxManager, balanceUpdater *shared.BalanceUpdater) *TxnService {
 	return &TxnService{
-		s:          s,
-		r:          r,
-		userRepo:   userRepo,
-		geminiSvc:  geminiSvc,
-		staticRepo: staticRepo,
+		s:              s,
+		r:              r,
+		userRepo:       userRepo,
+		geminiSvc:      geminiSvc,
+		staticRepo:     staticRepo,
+		tm:             tm,
+		balanceUpdater: balanceUpdater,
 	}
 }
 
@@ -47,25 +52,7 @@ func (s *TxnService) CreateTxn(c echo.Context, payload *CreateTxnReq, clerkId st
 			return err
 		}
 		result = txn
-		userData, err := s.userRepo.GetUserByClerkId(c, clerkId)
-		if err != nil {
-			return err
-		}
-		updateUserReq := &user.UpdateUserReq{}
-
-		switch txn.Type {
-		case TxnTypeCredit, TxnTypeIncome, TxnTypeRefund, TxnTypeInvestment:
-			newIncome := txn.Amount + userData.LifetimeIncome
-			updateUserReq.LifetimeIncome = &newIncome
-		case TxnTypeDebit, TxnTypeSubscription:
-			newExpense := userData.LifetimeExpense + txn.Amount
-			updateUserReq.LifetimeExpense = &newExpense
-		}
-		if updateUserReq.LifetimeExpense == nil && updateUserReq.LifetimeIncome == nil {
-			return nil
-		}
-		_, err = s.userRepo.UpdateUser(c, updateUserReq, clerkId)
-		if err != nil {
+		if err := s.balanceUpdater.Apply(c, clerkId, payload.AccountId, string(txn.Type), txn.Amount); err != nil {
 			return err
 		}
 		return nil
@@ -74,8 +61,7 @@ func (s *TxnService) CreateTxn(c echo.Context, payload *CreateTxnReq, clerkId st
 		return nil, err
 	}
 
-	log.Info().
-		Msg("User Lifetime balence updated successfully ")
+	log.Info().Msg("User Lifetime balance and account balance updated successfully")
 	return result, nil
 }
 
@@ -83,52 +69,49 @@ func (s *TxnService) GetTxnsWithFilters(c echo.Context, payload *GetTxnsWithFilt
 	return s.r.GetTxnsWithFilters(c.Request().Context(), clerkId, payload)
 }
 
-// TODO -> put this in TXN for atomicity
 func (s *TxnService) SoftDeleteTxns(c echo.Context, payload *SoftDeleteTxnsReq, clerkId string) error {
 	log := middleware.GetLogger(c)
 	log.Info().Msgf("Soft Deleting Transactions %v for User %v", payload.Ids, clerkId)
 	err := s.tm.WithTx(c.Request().Context(), func(c context.Context) error {
-		userData, err := s.userRepo.GetUserByClerkId(c, clerkId)
-		if err != nil {
-			return err
-		}
-		updateUserReq := &user.UpdateUserReq{}
-		totalExpToSubstract := 0.0
-		totalIncToSubstract := 0.0
 		txns, err := s.r.SoftDeleteTxns(c, clerkId, payload)
 		if err != nil {
 			return err
 		}
+		// Group deltas by account so we make exactly 2 DB calls per account.
+		type accountDelta struct {
+			incomeDelta  float64
+			expenseDelta float64
+			balanceDelta float64
+		}
+		deltasByAccount := make(map[uuid.UUID]*accountDelta)
 		for _, txn := range txns {
+			accountID, err := uuid.Parse(txn.AccountId)
+			if err != nil {
+				return err
+			}
+			d := deltasByAccount[accountID]
+			if d == nil {
+				d = &accountDelta{}
+				deltasByAccount[accountID] = d
+			}
 			switch txn.Type {
 			case TxnTypeCredit, TxnTypeIncome, TxnTypeRefund, TxnTypeInvestment:
-				totalIncToSubstract += txn.Amount
+				d.incomeDelta += txn.Amount
+				d.balanceDelta -= txn.Amount
 			case TxnTypeDebit, TxnTypeSubscription:
-				totalExpToSubstract += txn.Amount
-
+				d.expenseDelta += txn.Amount
+				d.balanceDelta += txn.Amount
 			}
 		}
-		if totalIncToSubstract == 0 && totalExpToSubstract == 0 {
-			return nil
+		for accountID, d := range deltasByAccount {
+			if err := s.balanceUpdater.ApplyBatch(c, clerkId, accountID, -d.incomeDelta, -d.expenseDelta, d.balanceDelta); err != nil {
+				return err
+			}
 		}
-
-		newIncome := userData.LifetimeIncome - totalIncToSubstract
-		newExpense := userData.LifetimeExpense - totalExpToSubstract
-		updateUserReq.LifetimeExpense = &newExpense
-		updateUserReq.LifetimeIncome = &newIncome
-
-		_, err = s.userRepo.UpdateUser(c, updateUserReq, clerkId)
-		if err != nil {
-			return err
-		}
-		log.Info().
-			Msg("User Lifetime balence updated successfully ")
+		log.Info().Msg("User Lifetime balance and account balance reversed successfully")
 		return nil
 	}, log)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (s *TxnService) UpdateTxn(c echo.Context, payload *UpdateTxnReq, clerkId string) (*Transaction, error) {

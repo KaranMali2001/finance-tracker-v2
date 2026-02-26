@@ -15,7 +15,8 @@ import (
 type TaskType string
 
 const (
-	TaskWelcomeEmail TaskType = "email:welcome"
+	TaskWelcomeEmail       TaskType = "email:welcome"
+	TaskBankReconciliation TaskType = "reconciliation:process"
 )
 
 type QueueName string
@@ -51,7 +52,7 @@ var (
 	LowQueueConfig = QueueConfig{
 		QueueName:  QueueLow,
 		MaxRetries: 2,
-		Timeout:    60 * time.Second,
+		Timeout:    10 * time.Minute,
 	}
 )
 
@@ -66,6 +67,11 @@ var TaskRegistry = map[TaskType]TaskConfig{
 		Type:        TaskWelcomeEmail,
 		QueueConfig: &DefaultQueueConfig,
 		Description: "Sends welcome email to newly registered users",
+	},
+	TaskBankReconciliation: {
+		Type:        TaskBankReconciliation,
+		QueueConfig: &LowQueueConfig,
+		Description: "Runs transaction matching algorithm for a bank statement upload",
 	},
 }
 

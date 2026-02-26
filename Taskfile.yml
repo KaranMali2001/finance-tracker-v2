@@ -104,6 +104,26 @@ tasks:
       - pnpm start
     interrupt: true
 
+  build:
+    desc: Build both backend and frontend
+    cmds:
+      - task: build:backend
+      - task: build:frontend
+
+  build:backend:
+    desc: Build Go backend binary
+    dir: "{{.BACKEND_DIR}}"
+    cmds:
+      - go build -o bin/backend ./cmd/backend
+      - echo "Backend build completed successfully"
+
+  build:frontend:
+    desc: Build Next.js frontend for production
+    dir: "{{.FRONTEND_DIR}}"
+    cmds:
+      - pnpm build
+      - echo "Frontend build completed successfully"
+
   frontend:build:
     desc: Build Next.js application for production
     dir: "{{.FRONTEND_DIR}}"

@@ -105,6 +105,23 @@ export function useCreateInvestmentGoal() {
 }
 
 /**
+ * Delete investment goal hook
+ * Deletes an existing investment goal for the authenticated user
+ */
+export function useDeleteInvestmentGoal() {
+  const queryClient = useQueryClient();
+
+  return useApiMutation<void, string>((id) => InvestmentService.deleteInvestmentGoal(id), {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['investment-goals'] });
+    },
+    showToastOnSuccess: true,
+    successMessage: 'Investment goal deleted successfully',
+    showToastOnError: true,
+  });
+}
+
+/**
  * Update investment goal hook
  * Updates an existing investment goal for the authenticated user
  */

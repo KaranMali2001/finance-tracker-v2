@@ -180,6 +180,294 @@ definitions:
     required:
     - id
     type: object
+  internal_domain_reconciliation.BulkUpdateResultStatusReq:
+    properties:
+      result_ids:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      upload_id:
+        type: string
+      user_action:
+        enum:
+        - accepted
+        - rejected
+        type: string
+    required:
+    - result_ids
+    - upload_id
+    - user_action
+    type: object
+  internal_domain_reconciliation.BulkUpdateResultStatusRes:
+    properties:
+      updated:
+        items:
+          $ref: '#/definitions/internal_domain_reconciliation.UpdateResultStatusRes'
+        type: array
+    type: object
+  internal_domain_reconciliation.MatchSignals:
+    properties:
+      amount_diff:
+        type: number
+      amount_diff_pct:
+        type: number
+      amount_score:
+        type: integer
+      date_diff_days:
+        type: integer
+      date_score:
+        type: integer
+      description_score:
+        type: integer
+      description_similarity:
+        type: number
+      reference_match:
+        type: boolean
+      reference_score:
+        type: integer
+    type: object
+  internal_domain_reconciliation.PaginatedReconciliationResults:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/internal_domain_reconciliation.ReconciliationResultRow'
+        type: array
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  internal_domain_reconciliation.ParseError:
+    properties:
+      data:
+        additionalProperties: true
+        type: object
+      error:
+        type: string
+      row:
+        type: integer
+    type: object
+  internal_domain_reconciliation.ParsedTxns:
+    properties:
+      account_id:
+        type: string
+      amount:
+        type: number
+      created_at:
+        type: string
+      description:
+        type: string
+      is_duplicate:
+        type: boolean
+      raw_row_hash:
+        type: string
+      reference_number:
+        type: string
+      row_number:
+        type: integer
+      txn_date:
+        type: string
+      type:
+        $ref: '#/definitions/internal_domain_reconciliation.TxnType'
+      updated_at:
+        type: string
+      upload_id:
+        type: string
+    type: object
+  internal_domain_reconciliation.ReconciliationResultRow:
+    properties:
+      app_transaction_id:
+        type: string
+      confidence_score:
+        type: number
+      created_at:
+        type: string
+      id:
+        type: string
+      match_signals:
+        $ref: '#/definitions/internal_domain_reconciliation.MatchSignals'
+      match_status:
+        type: string
+      result_type:
+        type: string
+      statement_transaction_id:
+        type: string
+      stmt_amount:
+        type: number
+      stmt_date:
+        description: Statement transaction side
+        type: string
+      stmt_description:
+        type: string
+      stmt_reference_number:
+        type: string
+      stmt_row_number:
+        type: integer
+      stmt_type:
+        type: string
+      upload_id:
+        type: string
+      user_action:
+        type: string
+    type: object
+  internal_domain_reconciliation.StatementTransaction:
+    properties:
+      account_id:
+        type: string
+      amount:
+        type: number
+      description:
+        type: string
+      id:
+        type: string
+      is_duplicate:
+        type: boolean
+      raw_row_hash:
+        type: string
+      reference_number:
+        type: string
+      row_number:
+        type: integer
+      transaction_date:
+        type: string
+      type:
+        type: string
+      upload_id:
+        type: string
+    type: object
+  internal_domain_reconciliation.TxnType:
+    enum:
+    - CREDIT
+    - DEBIT
+    type: string
+    x-enum-varnames:
+    - CREDIT
+    - DEBIT
+  internal_domain_reconciliation.UpdateResultStatusRes:
+    properties:
+      id:
+        type: string
+      user_action:
+        type: string
+    type: object
+  internal_domain_reconciliation.UploadDetail:
+    properties:
+      account_id:
+        type: string
+      created_at:
+        type: string
+      file_name:
+        type: string
+      id:
+        type: string
+      processing_status:
+        type: string
+      statement_period_end:
+        type: string
+      statement_period_start:
+        type: string
+      updated_at:
+        type: string
+      upload_status:
+        type: string
+    type: object
+  internal_domain_reconciliation.UploadFullDetailPaginated:
+    properties:
+      account_id:
+        type: string
+      created_at:
+        type: string
+      duplicate_rows:
+        type: integer
+      error_rows:
+        type: integer
+      file_name:
+        type: string
+      id:
+        type: string
+      page:
+        type: integer
+      page_size:
+        type: integer
+      parsing_errors:
+        items:
+          $ref: '#/definitions/internal_domain_reconciliation.ParseError'
+        type: array
+      processing_status:
+        type: string
+      statement_period_end:
+        type: string
+      statement_period_start:
+        type: string
+      total:
+        type: integer
+      total_pages:
+        type: integer
+      transactions:
+        items:
+          $ref: '#/definitions/internal_domain_reconciliation.StatementTransaction'
+        type: array
+      updated_at:
+        type: string
+      upload_status:
+        type: string
+      valid_rows:
+        type: integer
+    type: object
+  internal_domain_reconciliation.UploadListItem:
+    properties:
+      account_id:
+        type: string
+      created_at:
+        type: string
+      file_name:
+        type: string
+      id:
+        type: string
+      processing_status:
+        type: string
+      statement_period_end:
+        type: string
+      statement_period_start:
+        type: string
+      upload_status:
+        type: string
+    type: object
+  internal_domain_reconciliation.UploadStatementRes:
+    properties:
+      job_id:
+        type: string
+      status:
+        type: string
+      summary:
+        $ref: '#/definitions/internal_domain_reconciliation.UploadSummary'
+      txns:
+        items:
+          $ref: '#/definitions/internal_domain_reconciliation.ParsedTxns'
+        type: array
+      upload_id:
+        type: string
+    type: object
+  internal_domain_reconciliation.UploadSummary:
+    properties:
+      duplicate_rows:
+        type: integer
+      error_rows:
+        type: integer
+      errors:
+        items:
+          $ref: '#/definitions/internal_domain_reconciliation.ParseError'
+        type: array
+      total_rows:
+        type: integer
+      valid_rows:
+        type: integer
+    type: object
   internal_domain_sms.CreateSmsReq:
     properties:
       raw_message:
@@ -402,6 +690,8 @@ definitions:
       to_account_name:
         type: string
       to_account_number:
+        type: string
+      transaction_date:
         type: string
       type:
         $ref: '#/definitions/internal_domain_transaction.TxnType'
@@ -840,6 +1130,47 @@ paths:
       tags:
       - Investment
   /investment/goal/{id}:
+    delete:
+      description: Deletes an existing investment goal for the authenticated user
+      parameters:
+      - description: Goal ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete an investment goal
+      tags:
+      - Investment
     get:
       description: Retrieves a specific investment goal by ID for the authenticated
         user
@@ -935,6 +1266,326 @@ paths:
       summary: Update an investment goal
       tags:
       - Investment
+  /reconciliation/results/status:
+    patch:
+      consumes:
+      - application/json
+      description: Updates the user_action for one or more reconciliation results.
+        Send a single-element array for a single update.
+      parameters:
+      - description: Result IDs and user action
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_reconciliation.BulkUpdateResultStatusReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_reconciliation.BulkUpdateResultStatusRes'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Bulk accept or reject reconciliation results
+      tags:
+      - Reconciliation
+  /reconciliation/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a bank statement Excel file and starts reconciliation processing
+      parameters:
+      - description: Bank statement Excel file (.xls, .xlsx)
+        in: formData
+        name: statement
+        required: true
+        type: file
+      - description: Statement period start
+        format: date-time
+        in: formData
+        name: statement_period_start
+        required: true
+        type: string
+      - description: Statement period end
+        format: date-time
+        in: formData
+        name: statement_period_end
+        required: true
+        type: string
+      - description: Account ID
+        format: uuid
+        in: formData
+        name: account_id
+        required: true
+        type: string
+      - description: User ID (Clerk ID)
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      - description: Original file name
+        in: formData
+        name: file_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/internal_domain_reconciliation.UploadStatementRes'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Upload bank statement for reconciliation
+      tags:
+      - Reconciliation
+  /reconciliation/uploads:
+    get:
+      description: Returns all bank statement uploads for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_domain_reconciliation.UploadListItem'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List bank statement uploads
+      tags:
+      - Reconciliation
+  /reconciliation/uploads/{upload_id}:
+    delete:
+      description: Deletes a bank statement upload and all related statement transactions
+        and reconciliation data. Unlinks any app transactions that were linked to
+        this upload.
+      parameters:
+      - description: Upload ID
+        format: uuid
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete bank statement upload
+      tags:
+      - Reconciliation
+    get:
+      description: Returns details for a single bank statement upload
+      parameters:
+      - description: Upload ID
+        format: uuid
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_reconciliation.UploadDetail'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get bank statement upload by ID
+      tags:
+      - Reconciliation
+  /reconciliation/uploads/{upload_id}/detail:
+    get:
+      description: Returns complete detail for a bank statement upload including summary
+        counts, parsing errors, and paginated statement transactions
+      parameters:
+      - description: Upload ID
+        format: uuid
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Page size (default 25)
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_reconciliation.UploadFullDetailPaginated'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get full upload detail
+      tags:
+      - Reconciliation
+  /reconciliation/uploads/{upload_id}/results:
+    get:
+      description: Returns paginated reconciliation results for a bank statement upload,
+        including statement transaction details and match signals
+      parameters:
+      - description: Upload ID
+        format: uuid
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Page size (default 25)
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_reconciliation.PaginatedReconciliationResults'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get reconciliation results for an upload
+      tags:
+      - Reconciliation
   /sms:
     get:
       description: Retrieves all SMS logs for the authenticated user
@@ -1002,6 +1653,47 @@ paths:
       tags:
       - SMS
   /sms/{id}:
+    delete:
+      description: Deletes a specific SMS log by its ID for the authenticated user
+      parameters:
+      - description: SMS ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete an SMS log
+      tags:
+      - SMS
     get:
       description: Retrieves a specific SMS log by its ID for the authenticated user
       parameters:

@@ -62,6 +62,14 @@ func (s *SmsRepository) GetSmsById(c context.Context, payload *GetSmsByIdReq, cl
 	return SmsFromDB(sms), nil
 }
 
+func (s *SmsRepository) DeleteSms(c context.Context, payload *DeleteSmsReq, clerkId string) error {
+	params := generated.DeleteSmsParams{
+		UserID: clerkId,
+		ID:     utils.UUIDToPgtype(payload.SmsId),
+	}
+	return s.q.DeleteSms(c, params)
+}
+
 func (s *SmsRepository) CreateSms(c context.Context, payload *CreateSmsReq, clerkId string) (*SmsLogs, error) {
 	params := generated.CreateSmsParams{
 		UserID:     clerkId,

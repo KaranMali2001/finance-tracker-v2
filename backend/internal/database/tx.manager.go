@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -35,6 +36,7 @@ func (tm *TxManager) WithTx(c context.Context, fn func(c context.Context) error,
 
 			return err
 		}
+		return fmt.Errorf("Rollback transaction  %w", err)
 	}
 	return tx.Commit(c)
 }

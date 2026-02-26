@@ -305,6 +305,14 @@ func TimeToDate(t time.Time) pgtype.Date {
 	}
 }
 
+// TimeToTimestamptz converts time.Time to pgtype.Timestamptz for TIMESTAMPTZ columns.
+func TimeToTimestamptz(t time.Time) pgtype.Timestamptz {
+	return pgtype.Timestamptz{
+		Time:  t,
+		Valid: true,
+	}
+}
+
 // TimePtrToDate converts *time.Time to pgtype.Date
 // Returns invalid Date if the pointer is nil
 func TimePtrToDate(t *time.Time) pgtype.Date {

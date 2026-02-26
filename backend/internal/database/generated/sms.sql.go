@@ -57,6 +57,20 @@ func (q *Queries) CreateSms(ctx context.Context, arg CreateSmsParams) (SmsLog, e
 	return i, err
 }
 
+const deleteSms = `-- name: DeleteSms :exec
+DELETE FROM sms_logs WHERE user_id=$1 AND id=$2
+`
+
+type DeleteSmsParams struct {
+	UserID string
+	ID     pgtype.UUID
+}
+
+func (q *Queries) DeleteSms(ctx context.Context, arg DeleteSmsParams) error {
+	_, err := q.db.Exec(ctx, deleteSms, arg.UserID, arg.ID)
+	return err
+}
+
 const getSmsById = `-- name: GetSmsById :one
 SELECT id, user_id, sender, raw_message, received_at, parsing_status, error_message, retry_count, llm_parsed, llm_parse_attempted, llm_response, created_at, last_retry_at, updated_at FROM sms_logs
 WHERE user_id=$1 AND id=$2

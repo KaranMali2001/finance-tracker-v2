@@ -178,7 +178,7 @@ export function InvestmentGoalForm({
     <Form
       key={JSON.stringify(defaultValues)}
       schema={schema}
-      defaultValues={defaultValues}
+      defaultValues={defaultValues as unknown as Partial<z.infer<typeof schema>>}
       onSubmit={handleSubmit}
       showToastOnSuccess={false}
       showToastOnError={false}
