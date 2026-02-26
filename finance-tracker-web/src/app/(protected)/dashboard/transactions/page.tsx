@@ -80,21 +80,21 @@ export default function TransactionsPage() {
     }
     if (filters.dateFrom) {
       filtered = filtered.filter((txn) => {
-        const txnDate = (txn as any).transaction_date || txn.created_at;
+        const txnDate = txn.transaction_date ?? txn.created_at;
         return txnDate && txnDate >= filters.dateFrom!;
       });
     }
     if (filters.dateTo) {
       filtered = filtered.filter((txn) => {
-        const txnDate = (txn as any).transaction_date || txn.created_at;
+        const txnDate = txn.transaction_date ?? txn.created_at;
         return txnDate && txnDate <= filters.dateTo!;
       });
     }
 
     // Sort by date descending (most recent first)
     filtered.sort((a, b) => {
-      const dateA = (a as any).transaction_date || a.created_at || '';
-      const dateB = (b as any).transaction_date || b.created_at || '';
+      const dateA = a.transaction_date ?? a.created_at ?? '';
+      const dateB = b.transaction_date ?? b.created_at ?? '';
       return dateB.localeCompare(dateA);
     });
 
@@ -160,7 +160,7 @@ export default function TransactionsPage() {
         width: 'col-span-2',
         cell: (txn) => (
           <span className="text-sm font-mono text-stone-700">
-            {formatDate((txn as any).transaction_date || txn.created_at || '')}
+            {formatDate(txn.transaction_date ?? txn.created_at ?? '')}
           </span>
         ),
       },

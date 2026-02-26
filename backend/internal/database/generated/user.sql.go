@@ -11,6 +11,25 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const adjustUserLifetimeMetrics = `-- name: AdjustUserLifetimeMetrics :exec
+UPDATE users
+SET
+  lifetime_income  = lifetime_income  + $1::numeric,
+  lifetime_expense = lifetime_expense + $2::numeric
+WHERE clerk_id = $3
+`
+
+type AdjustUserLifetimeMetricsParams struct {
+	IncomeDelta  pgtype.Numeric
+	ExpenseDelta pgtype.Numeric
+	ClerkID      string
+}
+
+func (q *Queries) AdjustUserLifetimeMetrics(ctx context.Context, arg AdjustUserLifetimeMetricsParams) error {
+	_, err := q.db.Exec(ctx, adjustUserLifetimeMetrics, arg.IncomeDelta, arg.ExpenseDelta, arg.ClerkID)
+	return err
+}
+
 const getAuthUser = `-- name: GetAuthUser :one
 SELECT clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string, reconciliation_threshold FROM users WHERE clerk_id=$1
 `

@@ -180,6 +180,68 @@ definitions:
     required:
     - id
     type: object
+  internal_domain_reconciliation.BulkUpdateResultStatusReq:
+    properties:
+      result_ids:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      upload_id:
+        type: string
+      user_action:
+        enum:
+        - accepted
+        - rejected
+        type: string
+    required:
+    - result_ids
+    - upload_id
+    - user_action
+    type: object
+  internal_domain_reconciliation.BulkUpdateResultStatusRes:
+    properties:
+      updated:
+        items:
+          $ref: '#/definitions/internal_domain_reconciliation.UpdateResultStatusRes'
+        type: array
+    type: object
+  internal_domain_reconciliation.MatchSignals:
+    properties:
+      amount_diff:
+        type: number
+      amount_diff_pct:
+        type: number
+      amount_score:
+        type: integer
+      date_diff_days:
+        type: integer
+      date_score:
+        type: integer
+      description_score:
+        type: integer
+      description_similarity:
+        type: number
+      reference_match:
+        type: boolean
+      reference_score:
+        type: integer
+    type: object
+  internal_domain_reconciliation.PaginatedReconciliationResults:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/internal_domain_reconciliation.ReconciliationResultRow'
+        type: array
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
   internal_domain_reconciliation.ParseError:
     properties:
       data:
@@ -217,6 +279,42 @@ definitions:
       upload_id:
         type: string
     type: object
+  internal_domain_reconciliation.ReconciliationResultRow:
+    properties:
+      app_transaction_id:
+        type: string
+      confidence_score:
+        type: number
+      created_at:
+        type: string
+      id:
+        type: string
+      match_signals:
+        $ref: '#/definitions/internal_domain_reconciliation.MatchSignals'
+      match_status:
+        type: string
+      result_type:
+        type: string
+      statement_transaction_id:
+        type: string
+      stmt_amount:
+        type: number
+      stmt_date:
+        description: Statement transaction side
+        type: string
+      stmt_description:
+        type: string
+      stmt_reference_number:
+        type: string
+      stmt_row_number:
+        type: integer
+      stmt_type:
+        type: string
+      upload_id:
+        type: string
+      user_action:
+        type: string
+    type: object
   internal_domain_reconciliation.StatementTransaction:
     properties:
       account_id:
@@ -250,6 +348,13 @@ definitions:
     x-enum-varnames:
     - CREDIT
     - DEBIT
+  internal_domain_reconciliation.UpdateResultStatusRes:
+    properties:
+      id:
+        type: string
+      user_action:
+        type: string
+    type: object
   internal_domain_reconciliation.UploadDetail:
     properties:
       account_id:
@@ -271,7 +376,7 @@ definitions:
       upload_status:
         type: string
     type: object
-  internal_domain_reconciliation.UploadFullDetail:
+  internal_domain_reconciliation.UploadFullDetailPaginated:
     properties:
       account_id:
         type: string
@@ -285,6 +390,10 @@ definitions:
         type: string
       id:
         type: string
+      page:
+        type: integer
+      page_size:
+        type: integer
       parsing_errors:
         items:
           $ref: '#/definitions/internal_domain_reconciliation.ParseError'
@@ -295,6 +404,10 @@ definitions:
         type: string
       statement_period_start:
         type: string
+      total:
+        type: integer
+      total_pages:
+        type: integer
       transactions:
         items:
           $ref: '#/definitions/internal_domain_reconciliation.StatementTransaction'
@@ -577,6 +690,8 @@ definitions:
       to_account_name:
         type: string
       to_account_number:
+        type: string
+      transaction_date:
         type: string
       type:
         $ref: '#/definitions/internal_domain_transaction.TxnType'
@@ -1151,6 +1266,47 @@ paths:
       summary: Update an investment goal
       tags:
       - Investment
+  /reconciliation/results/status:
+    patch:
+      consumes:
+      - application/json
+      description: Updates the user_action for one or more reconciliation results.
+        Send a single-element array for a single update.
+      parameters:
+      - description: Result IDs and user action
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_reconciliation.BulkUpdateResultStatusReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_reconciliation.BulkUpdateResultStatusRes'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Bulk accept or reject reconciliation results
+      tags:
+      - Reconciliation
   /reconciliation/upload:
     post:
       consumes:
@@ -1333,7 +1489,7 @@ paths:
   /reconciliation/uploads/{upload_id}/detail:
     get:
       description: Returns complete detail for a bank statement upload including summary
-        counts, parsing errors, and all statement transactions
+        counts, parsing errors, and paginated statement transactions
       parameters:
       - description: Upload ID
         format: uuid
@@ -1341,13 +1497,21 @@ paths:
         name: upload_id
         required: true
         type: string
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Page size (default 25)
+        in: query
+        name: page_size
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_domain_reconciliation.UploadFullDetail'
+            $ref: '#/definitions/internal_domain_reconciliation.UploadFullDetailPaginated'
         "400":
           description: Bad Request
           schema:
@@ -1373,6 +1537,53 @@ paths:
               type: string
             type: object
       summary: Get full upload detail
+      tags:
+      - Reconciliation
+  /reconciliation/uploads/{upload_id}/results:
+    get:
+      description: Returns paginated reconciliation results for a bank statement upload,
+        including statement transaction details and match signals
+      parameters:
+      - description: Upload ID
+        format: uuid
+        in: path
+        name: upload_id
+        required: true
+        type: string
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Page size (default 25)
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_reconciliation.PaginatedReconciliationResults'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get reconciliation results for an upload
       tags:
       - Reconciliation
   /sms:

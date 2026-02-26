@@ -67,7 +67,7 @@ DELETE FROM transactions WHERE user_id=$1 AND id=ANY($2::uuid[]);
 
 -- name: UpdateTxn :one
 UPDATE transactions t
-SET 
+SET
     category_id = COALESCE($2, t.category_id),
     merchant_id = COALESCE($3, t.merchant_id),
     amount = COALESCE($4, t.amount),
@@ -79,3 +79,36 @@ WHERE t.id = $1
   AND a.id = t.account_id
   AND a.user_id = $8  -- pass authenticated user_id as parameter
 RETURNING t.id;
+
+-- name: GetMaxAppTransactionDate :one
+SELECT MAX(transaction_date)
+FROM transactions
+WHERE account_id = $1 AND deleted_at IS NULL;
+
+-- name: GetAppTransactionsInDateRange :many
+SELECT id, amount, transaction_date, type, description, reference_number
+FROM transactions
+WHERE account_id = $1
+  AND transaction_date BETWEEN $2 AND $3
+  AND reconciliation_status = 'UNRECONCILED'
+  AND is_cash = false
+  AND deleted_at IS NULL;
+
+-- name: CreateTxnBatch :batchone
+INSERT INTO transactions(
+    user_id, account_id, to_account_id, category_id, merchant_id,
+    type, amount, description, tags, sms_id, payment_method,
+    reference_number, is_recurring, notes, transaction_date,
+    source, statement_txn_id
+) VALUES (
+    $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17
+)
+RETURNING id, transaction_date, amount, type, description;
+
+-- name: MarkTransactionAutoVerified :exec
+UPDATE transactions
+SET reconciliation_status = 'AUTO_VERIFIED',
+    reconciled_by         = 'SYSTEM',
+    reconciled_at         = NOW(),
+    statement_txn_id      = $2
+WHERE id = $1;

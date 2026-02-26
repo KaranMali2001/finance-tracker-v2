@@ -125,6 +125,7 @@ func (r *TxnRepository) GetTxnsWithFilters(c context.Context, clerkId string, fi
 			PaymentMethod:   utils.TextToStringPtr(dbTxn.PaymentMethod),
 			ReferenceNumber: utils.TextToStringPtr(dbTxn.ReferenceNumber),
 			IsRecurring:     utils.BoolToBool(dbTxn.IsRecurring),
+			TransactionDate: utils.TimestampToTimePtr(dbTxn.TransactionDate),
 		}
 	}
 	return txns, nil

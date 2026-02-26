@@ -30,6 +30,7 @@ export type internal_domain_transaction_Transaction = {
     to_account_id?: string;
     to_account_name?: string;
     to_account_number?: string;
+    transaction_date?: string;
     type?: internal_domain_transaction_TxnType;
     updated_at?: string;
     user_id?: string;

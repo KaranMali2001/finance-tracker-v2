@@ -43,3 +43,9 @@ SELECT * FROM accounts LEFT JOIN banks ON accounts.bank_id=banks.id WHERE accoun
 
 -- name: DeleteAccount :exec
 DELETE FROM accounts WHERE id=$1 AND user_id=$2 AND deleted_at IS NULL;
+-- name: AdjustAccountBalance :exec
+UPDATE accounts
+SET current_balance = current_balance + sqlc.arg(delta)::numeric
+WHERE id = sqlc.arg(id)
+  AND user_id = sqlc.arg(user_id)
+  AND deleted_at IS NULL;

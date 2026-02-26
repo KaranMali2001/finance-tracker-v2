@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -18,19 +19,6 @@ func RowHash(transactionDate time.Time, amount float64, drCr string, description
 	sum := dateStr + "|" + amountStr + "|" + drCr + "|" + description
 	h := sha256.Sum256([]byte(sum))
 	return hex.EncodeToString(h[:])
-}
-
-// PtrString returns a pointer to s. Returns nil if s is empty.
-func PtrString(s string) *string {
-	if s == "" {
-		return nil
-	}
-	return &s
-}
-
-// PtrBool returns a pointer to b.
-func PtrBool(b bool) *bool {
-	return &b
 }
 
 // SafeCell returns row[i] or "" if index out of range.
@@ -95,7 +83,7 @@ func MarkDuplicatesFromInsertedSet(rows []ParsedTxns, insertedHashes map[string]
 			h = *rows[i].RawRowHash
 		}
 		_, inserted := insertedHashes[h]
-		rows[i].IsDuplicate = PtrBool(!inserted)
+		rows[i].IsDuplicate = utils.PtrBool(!inserted)
 	}
 }
 

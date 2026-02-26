@@ -629,6 +629,7 @@ type StatementTransaction struct {
 	// Original position in Excel file (1-based)
 	RowNumber   int32
 	IsDuplicate pgtype.Bool
+	DeletedAt   pgtype.Timestamptz
 }
 
 type Transaction struct {

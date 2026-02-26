@@ -11,6 +11,83 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const bulkUpdateReconciliationResultStatus = `-- name: BulkUpdateReconciliationResultStatus :many
+UPDATE transaction_reconciliation tr
+SET
+    user_action    = $2,
+    user_action_at = NOW(),
+    reviewed_by    = 'USER',
+    reviewed_at    = NOW()
+FROM bank_statement_uploads bsu
+WHERE tr.id = ANY($1::uuid[])
+  AND tr.upload_id = bsu.id
+  AND tr.upload_id = $4
+  AND bsu.user_id = $3
+RETURNING tr.id, tr.user_action
+`
+
+type BulkUpdateReconciliationResultStatusParams struct {
+	Column1    []pgtype.UUID
+	UserAction pgtype.Text
+	UserID     string
+	UploadID   pgtype.UUID
+}
+
+type BulkUpdateReconciliationResultStatusRow struct {
+	ID         pgtype.UUID
+	UserAction pgtype.Text
+}
+
+func (q *Queries) BulkUpdateReconciliationResultStatus(ctx context.Context, arg BulkUpdateReconciliationResultStatusParams) ([]BulkUpdateReconciliationResultStatusRow, error) {
+	rows, err := q.db.Query(ctx, bulkUpdateReconciliationResultStatus,
+		arg.Column1,
+		arg.UserAction,
+		arg.UserID,
+		arg.UploadID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BulkUpdateReconciliationResultStatusRow
+	for rows.Next() {
+		var i BulkUpdateReconciliationResultStatusRow
+		if err := rows.Scan(&i.ID, &i.UserAction); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const countReconciliationResultsByUploadID = `-- name: CountReconciliationResultsByUploadID :one
+SELECT COUNT(*) FROM transaction_reconciliation tr
+JOIN statement_transactions st ON st.id = tr.statement_transaction_id AND st.deleted_at IS NULL
+WHERE tr.upload_id = $1
+`
+
+func (q *Queries) CountReconciliationResultsByUploadID(ctx context.Context, uploadID pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countReconciliationResultsByUploadID, uploadID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countStatementTransactionsByUploadID = `-- name: CountStatementTransactionsByUploadID :one
+SELECT COUNT(*) FROM statement_transactions
+WHERE upload_id = $1 AND deleted_at IS NULL
+`
+
+func (q *Queries) CountStatementTransactionsByUploadID(ctx context.Context, uploadID pgtype.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countStatementTransactionsByUploadID, uploadID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createBankStatementUpload = `-- name: CreateBankStatementUpload :one
 INSERT INTO bank_statement_uploads (
     user_id, account_id, file_name, file_type, file_size,
@@ -58,16 +135,6 @@ type DeleteBankStatementUploadByIDParams struct {
 // Delete the bank statement upload (must run after the above in same tx).
 func (q *Queries) DeleteBankStatementUploadByID(ctx context.Context, arg DeleteBankStatementUploadByIDParams) error {
 	_, err := q.db.Exec(ctx, deleteBankStatementUploadByID, arg.ID, arg.UserID)
-	return err
-}
-
-const deleteStatementTransactionsByUploadID = `-- name: DeleteStatementTransactionsByUploadID :exec
-DELETE FROM statement_transactions WHERE upload_id = $1
-`
-
-// Delete statement transactions for this upload.
-func (q *Queries) DeleteStatementTransactionsByUploadID(ctx context.Context, uploadID pgtype.UUID) error {
-	_, err := q.db.Exec(ctx, deleteStatementTransactionsByUploadID, uploadID)
 	return err
 }
 
@@ -122,6 +189,163 @@ func (q *Queries) GetBankStatementUploadByID(ctx context.Context, arg GetBankSta
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const getReconciliationResultsByUploadID = `-- name: GetReconciliationResultsByUploadID :many
+SELECT
+    tr.id,
+    tr.upload_id,
+    tr.statement_transaction_id,
+    tr.app_transaction_id,
+    tr.result_type,
+    tr.confidence_score,
+    tr.match_signals,
+    tr.match_status,
+    tr.user_action,
+    tr.created_at,
+    st.transaction_date  AS stmt_date,
+    st.description       AS stmt_description,
+    st.amount            AS stmt_amount,
+    st.type              AS stmt_type,
+    st.reference_number  AS stmt_reference_number,
+    st.row_number        AS stmt_row_number
+FROM transaction_reconciliation tr
+JOIN statement_transactions st ON st.id = tr.statement_transaction_id AND st.deleted_at IS NULL
+WHERE tr.upload_id = $1
+ORDER BY st.transaction_date ASC, tr.result_type ASC
+LIMIT $2 OFFSET $3
+`
+
+type GetReconciliationResultsByUploadIDParams struct {
+	UploadID pgtype.UUID
+	Limit    int32
+	Offset   int32
+}
+
+type GetReconciliationResultsByUploadIDRow struct {
+	ID                     pgtype.UUID
+	UploadID               pgtype.UUID
+	StatementTransactionID pgtype.UUID
+	AppTransactionID       pgtype.UUID
+	ResultType             ReconciliationResultType
+	ConfidenceScore        pgtype.Numeric
+	MatchSignals           []byte
+	MatchStatus            string
+	UserAction             pgtype.Text
+	CreatedAt              pgtype.Timestamp
+	StmtDate               pgtype.Timestamptz
+	StmtDescription        pgtype.Text
+	StmtAmount             pgtype.Numeric
+	StmtType               string
+	StmtReferenceNumber    pgtype.Text
+	StmtRowNumber          int32
+}
+
+func (q *Queries) GetReconciliationResultsByUploadID(ctx context.Context, arg GetReconciliationResultsByUploadIDParams) ([]GetReconciliationResultsByUploadIDRow, error) {
+	rows, err := q.db.Query(ctx, getReconciliationResultsByUploadID, arg.UploadID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetReconciliationResultsByUploadIDRow
+	for rows.Next() {
+		var i GetReconciliationResultsByUploadIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UploadID,
+			&i.StatementTransactionID,
+			&i.AppTransactionID,
+			&i.ResultType,
+			&i.ConfidenceScore,
+			&i.MatchSignals,
+			&i.MatchStatus,
+			&i.UserAction,
+			&i.CreatedAt,
+			&i.StmtDate,
+			&i.StmtDescription,
+			&i.StmtAmount,
+			&i.StmtType,
+			&i.StmtReferenceNumber,
+			&i.StmtRowNumber,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getStatementDateRange = `-- name: GetStatementDateRange :one
+SELECT
+    MIN(transaction_date) AS min_date,
+    MAX(transaction_date) AS max_date
+FROM statement_transactions
+WHERE upload_id = $1 AND is_duplicate = false AND deleted_at IS NULL
+`
+
+type GetStatementDateRangeRow struct {
+	MinDate interface{}
+	MaxDate interface{}
+}
+
+func (q *Queries) GetStatementDateRange(ctx context.Context, uploadID pgtype.UUID) (GetStatementDateRangeRow, error) {
+	row := q.db.QueryRow(ctx, getStatementDateRange, uploadID)
+	var i GetStatementDateRangeRow
+	err := row.Scan(&i.MinDate, &i.MaxDate)
+	return i, err
+}
+
+const getStatementTransactionsForProcessing = `-- name: GetStatementTransactionsForProcessing :many
+SELECT id, upload_id, account_id, transaction_date,
+       description, amount, type, reference_number, raw_row_hash
+FROM statement_transactions
+WHERE upload_id = $1 AND is_duplicate = false AND deleted_at IS NULL
+ORDER BY transaction_date ASC
+`
+
+type GetStatementTransactionsForProcessingRow struct {
+	ID              pgtype.UUID
+	UploadID        pgtype.UUID
+	AccountID       pgtype.UUID
+	TransactionDate pgtype.Timestamptz
+	Description     pgtype.Text
+	Amount          pgtype.Numeric
+	Type            string
+	ReferenceNumber pgtype.Text
+	RawRowHash      string
+}
+
+func (q *Queries) GetStatementTransactionsForProcessing(ctx context.Context, uploadID pgtype.UUID) ([]GetStatementTransactionsForProcessingRow, error) {
+	rows, err := q.db.Query(ctx, getStatementTransactionsForProcessing, uploadID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetStatementTransactionsForProcessingRow
+	for rows.Next() {
+		var i GetStatementTransactionsForProcessingRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UploadID,
+			&i.AccountID,
+			&i.TransactionDate,
+			&i.Description,
+			&i.Amount,
+			&i.Type,
+			&i.ReferenceNumber,
+			&i.RawRowHash,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getUploadWithSummary = `-- name: GetUploadWithSummary :one
@@ -231,9 +455,16 @@ const listStatementTransactionsByUploadID = `-- name: ListStatementTransactionsB
 SELECT id, upload_id, account_id, transaction_date, description, amount, type,
        balance, reference_number, raw_row_hash, row_number, is_duplicate
 FROM statement_transactions
-WHERE upload_id = $1
+WHERE upload_id = $1 AND deleted_at IS NULL
 ORDER BY row_number ASC
+LIMIT $2 OFFSET $3
 `
+
+type ListStatementTransactionsByUploadIDParams struct {
+	UploadID pgtype.UUID
+	Limit    int32
+	Offset   int32
+}
 
 type ListStatementTransactionsByUploadIDRow struct {
 	ID              pgtype.UUID
@@ -250,8 +481,8 @@ type ListStatementTransactionsByUploadIDRow struct {
 	IsDuplicate     pgtype.Bool
 }
 
-func (q *Queries) ListStatementTransactionsByUploadID(ctx context.Context, uploadID pgtype.UUID) ([]ListStatementTransactionsByUploadIDRow, error) {
-	rows, err := q.db.Query(ctx, listStatementTransactionsByUploadID, uploadID)
+func (q *Queries) ListStatementTransactionsByUploadID(ctx context.Context, arg ListStatementTransactionsByUploadIDParams) ([]ListStatementTransactionsByUploadIDRow, error) {
+	rows, err := q.db.Query(ctx, listStatementTransactionsByUploadID, arg.UploadID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -281,6 +512,33 @@ func (q *Queries) ListStatementTransactionsByUploadID(ctx context.Context, uploa
 		return nil, err
 	}
 	return items, nil
+}
+
+const softDeleteStatementTransactionsByUploadID = `-- name: SoftDeleteStatementTransactionsByUploadID :exec
+UPDATE statement_transactions SET deleted_at = NOW() WHERE upload_id = $1 AND deleted_at IS NULL
+`
+
+// Soft-delete statement transactions for this upload.
+func (q *Queries) SoftDeleteStatementTransactionsByUploadID(ctx context.Context, uploadID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, softDeleteStatementTransactionsByUploadID, uploadID)
+	return err
+}
+
+const updateUploadProcessingStatus = `-- name: UpdateUploadProcessingStatus :exec
+UPDATE bank_statement_uploads
+SET processing_status = $2, job_id = $3
+WHERE id = $1
+`
+
+type UpdateUploadProcessingStatusParams struct {
+	ID               pgtype.UUID
+	ProcessingStatus NullUploadProcessingStatus
+	JobID            pgtype.UUID
+}
+
+func (q *Queries) UpdateUploadProcessingStatus(ctx context.Context, arg UpdateUploadProcessingStatusParams) error {
+	_, err := q.db.Exec(ctx, updateUploadProcessingStatus, arg.ID, arg.ProcessingStatus, arg.JobID)
+	return err
 }
 
 const updateUploadSummary = `-- name: UpdateUploadSummary :exec

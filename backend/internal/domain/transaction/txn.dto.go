@@ -47,6 +47,7 @@ type Transaction struct {
 	IsRecurring     bool       `json:"is_recurring,omitempty"`
 	IsExcluded      *bool      `json:"is_excluded,omitempty"`
 	IsCash          *bool      `json:"is_cash,omitempty"`
+	TransactionDate *time.Time `json:"transaction_date,omitempty"`
 	DeletedAt       *time.Time `json:"deleted_at,omitempty"`
 	DeletedBy       *string    `json:"deleted_by,omitempty"`
 	CreatedAt       time.Time  `json:"created_at,omitempty"`

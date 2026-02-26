@@ -93,11 +93,13 @@ func (h *ReconHandler) DeleteUpload(c echo.Context) error {
 
 // GetUploadDetail godoc
 // @Summary Get full upload detail
-// @Description Returns complete detail for a bank statement upload including summary counts, parsing errors, and all statement transactions
+// @Description Returns complete detail for a bank statement upload including summary counts, parsing errors, and paginated statement transactions
 // @Tags Reconciliation
 // @Produce json
 // @Param upload_id path string true "Upload ID" format(uuid)
-// @Success 200 {object} UploadFullDetail
+// @Param page query int false "Page number (default 1)"
+// @Param page_size query int false "Page size (default 25)"
+// @Success 200 {object} UploadFullDetailPaginated
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 404 {object} map[string]string "Not Found"
@@ -106,12 +108,61 @@ func (h *ReconHandler) DeleteUpload(c echo.Context) error {
 func (h *ReconHandler) GetUploadDetail(c echo.Context) error {
 	return handler.Handle(
 		h.base,
-		func(c echo.Context, payload *GetUploadDetailReq) (*UploadFullDetail, error) {
+		func(c echo.Context, payload *GetUploadDetailReq) (*UploadFullDetailPaginated, error) {
 			clerkId := middleware.GetUserID(c)
 			return h.service.GetUploadDetail(c, payload, clerkId)
 		},
 		http.StatusOK,
 		&GetUploadDetailReq{},
+	)(c)
+}
+
+// GetResults godoc
+// @Summary Get reconciliation results for an upload
+// @Description Returns paginated reconciliation results for a bank statement upload, including statement transaction details and match signals
+// @Tags Reconciliation
+// @Produce json
+// @Param upload_id path string true "Upload ID" format(uuid)
+// @Param page query int false "Page number (default 1)"
+// @Param page_size query int false "Page size (default 25)"
+// @Success 200 {object} PaginatedReconciliationResults
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /reconciliation/uploads/{upload_id}/results [get]
+func (h *ReconHandler) GetResults(c echo.Context) error {
+	return handler.Handle(
+		h.base,
+		func(c echo.Context, payload *GetResultsReq) (*PaginatedReconciliationResults, error) {
+			clerkId := middleware.GetUserID(c)
+			return h.service.GetResults(c, payload, clerkId)
+		},
+		http.StatusOK,
+		&GetResultsReq{},
+	)(c)
+}
+
+// BulkUpdateResultStatus godoc
+// @Summary Bulk accept or reject reconciliation results
+// @Description Updates the user_action for one or more reconciliation results. Send a single-element array for a single update.
+// @Tags Reconciliation
+// @Accept json
+// @Produce json
+// @Param body body BulkUpdateResultStatusReq true "Result IDs and user action"
+// @Success 200 {object} BulkUpdateResultStatusRes
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /reconciliation/results/status [patch]
+func (h *ReconHandler) BulkUpdateResultStatus(c echo.Context) error {
+	return handler.Handle(
+		h.base,
+		func(c echo.Context, payload *BulkUpdateResultStatusReq) (*BulkUpdateResultStatusRes, error) {
+			clerkId := middleware.GetUserID(c)
+			return h.service.BulkUpdateResultStatus(c, payload, clerkId)
+		},
+		http.StatusOK,
+		&BulkUpdateResultStatusReq{},
 	)(c)
 }
 

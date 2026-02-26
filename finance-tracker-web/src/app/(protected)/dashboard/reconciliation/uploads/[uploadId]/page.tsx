@@ -24,7 +24,14 @@ export default function ReconciliationUploadDetailPage() {
   const params = useParams();
   const router = useRouter();
   const uploadId = params.uploadId as string;
-  const { data: upload, isLoading, error, refetch } = useReconciliationUploadDetail(uploadId);
+  const [txnPage, setTxnPage] = useState(1);
+  const [txnPageSize, setTxnPageSize] = useState(25);
+  const {
+    data: upload,
+    isLoading,
+    error,
+    refetch,
+  } = useReconciliationUploadDetail(uploadId, txnPage, txnPageSize);
   const deleteUpload = useDeleteReconciliationUpload();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
@@ -147,17 +154,19 @@ export default function ReconciliationUploadDetailPage() {
               Back to reconciliation
             </Link>
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
-            onClick={() => setIsDeleteDialogOpen(true)}
-            disabled={deleteUpload.isPending}
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete upload
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setIsDeleteDialogOpen(true)}
+              disabled={deleteUpload.isPending}
+            >
+              <Trash2 className="h-4 w-4" />
+              Delete upload
+            </Button>
+          </div>
         </div>
 
         {/* Summary counts */}
@@ -289,15 +298,24 @@ export default function ReconciliationUploadDetailPage() {
           <div className="rounded-lg border border-border bg-card">
             <div className="p-6 pb-3">
               <h2 className="text-lg font-semibold text-card-foreground">
-                Transactions ({upload.transactions.length})
+                Transactions ({upload.total ?? upload.valid_rows ?? 0})
               </h2>
             </div>
             <TanStackTable<ReconTransaction>
               data={upload.transactions}
               columns={reconTransactionColumns}
+              page={txnPage}
+              pageSize={txnPageSize}
+              totalPages={upload.total_pages ?? 1}
+              onPageChange={setTxnPage}
+              onPageSizeChange={(s) => {
+                setTxnPageSize(s);
+                setTxnPage(1);
+              }}
               getRowId={(row) => row.id ?? String(row.row_number)}
               minTableWidth="800px"
               bare
+              pageSizeOptions={[10, 25, 50, 100]}
             />
           </div>
         )}

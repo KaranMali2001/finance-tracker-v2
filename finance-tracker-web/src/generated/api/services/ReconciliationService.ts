@@ -2,14 +2,38 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { internal_domain_reconciliation_BulkUpdateResultStatusReq } from '../models/internal_domain_reconciliation_BulkUpdateResultStatusReq';
+import type { internal_domain_reconciliation_BulkUpdateResultStatusRes } from '../models/internal_domain_reconciliation_BulkUpdateResultStatusRes';
+import type { internal_domain_reconciliation_PaginatedReconciliationResults } from '../models/internal_domain_reconciliation_PaginatedReconciliationResults';
 import type { internal_domain_reconciliation_UploadDetail } from '../models/internal_domain_reconciliation_UploadDetail';
-import type { internal_domain_reconciliation_UploadFullDetail } from '../models/internal_domain_reconciliation_UploadFullDetail';
+import type { internal_domain_reconciliation_UploadFullDetailPaginated } from '../models/internal_domain_reconciliation_UploadFullDetailPaginated';
 import type { internal_domain_reconciliation_UploadListItem } from '../models/internal_domain_reconciliation_UploadListItem';
 import type { internal_domain_reconciliation_UploadStatementRes } from '../models/internal_domain_reconciliation_UploadStatementRes';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class ReconciliationService {
+    /**
+     * Bulk accept or reject reconciliation results
+     * Updates the user_action for one or more reconciliation results. Send a single-element array for a single update.
+     * @param body Result IDs and user action
+     * @returns internal_domain_reconciliation_BulkUpdateResultStatusRes OK
+     * @throws ApiError
+     */
+    public static patchReconciliationResultsStatus(
+        body: internal_domain_reconciliation_BulkUpdateResultStatusReq,
+    ): CancelablePromise<internal_domain_reconciliation_BulkUpdateResultStatusRes> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/reconciliation/results/status',
+            body: body,
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
     /**
      * Upload bank statement for reconciliation
      * Uploads a bank statement Excel file and starts reconciliation processing
@@ -114,24 +138,63 @@ export class ReconciliationService {
     }
     /**
      * Get full upload detail
-     * Returns complete detail for a bank statement upload including summary counts, parsing errors, and all statement transactions
+     * Returns complete detail for a bank statement upload including summary counts, parsing errors, and paginated statement transactions
      * @param uploadId Upload ID
-     * @returns internal_domain_reconciliation_UploadFullDetail OK
+     * @param page Page number (default 1)
+     * @param pageSize Page size (default 25)
+     * @returns internal_domain_reconciliation_UploadFullDetailPaginated OK
      * @throws ApiError
      */
     public static getReconciliationUploadsDetail(
         uploadId: string,
-    ): CancelablePromise<internal_domain_reconciliation_UploadFullDetail> {
+        page?: number,
+        pageSize?: number,
+    ): CancelablePromise<internal_domain_reconciliation_UploadFullDetailPaginated> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/reconciliation/uploads/{upload_id}/detail',
             path: {
                 'upload_id': uploadId,
             },
+            query: {
+                'page': page,
+                'page_size': pageSize,
+            },
             errors: {
                 400: `Bad Request`,
                 401: `Unauthorized`,
                 404: `Not Found`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * Get reconciliation results for an upload
+     * Returns paginated reconciliation results for a bank statement upload, including statement transaction details and match signals
+     * @param uploadId Upload ID
+     * @param page Page number (default 1)
+     * @param pageSize Page size (default 25)
+     * @returns internal_domain_reconciliation_PaginatedReconciliationResults OK
+     * @throws ApiError
+     */
+    public static getReconciliationUploadsResults(
+        uploadId: string,
+        page?: number,
+        pageSize?: number,
+    ): CancelablePromise<internal_domain_reconciliation_PaginatedReconciliationResults> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/reconciliation/uploads/{upload_id}/results',
+            path: {
+                'upload_id': uploadId,
+            },
+            query: {
+                'page': page,
+                'page_size': pageSize,
+            },
+            errors: {
+                400: `Bad Request`,
+                401: `Unauthorized`,
                 500: `Internal Server Error`,
             },
         });

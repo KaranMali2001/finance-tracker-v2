@@ -314,8 +314,8 @@ export function TanStackTable<T extends Record<string, unknown>>({
         )}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
+      {/* Pagination — always show when pageSizeOptions or multiple pages */}
+      {(onPageChange || onPageSizeChange) && (
         <div className="mt-6 flex flex-wrap gap-3 items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-sm text-stone-600">Rows per page:</span>
