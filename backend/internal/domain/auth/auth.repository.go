@@ -4,15 +4,14 @@ import (
 	"context"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
 )
 
 type AuthRepository struct {
-	queries *generated.Queries
+	queries authQuerier
 }
 
-func NewAuthRepository(s *server.Server, queries *generated.Queries) *AuthRepository {
+func NewAuthRepository(queries authQuerier) *AuthRepository {
 	return &AuthRepository{
 		queries: queries,
 	}
@@ -27,8 +26,6 @@ func (r *AuthRepository) CreateUser(c context.Context, user *UserCreateRequest) 
 	if err != nil {
 		return nil, err
 	}
-	// r.server.Queue.Client.Enqueue()
-
 	return &UserResponse{
 		Email:     userData.Email,
 		IsActive:  utils.BoolToBool(userData.IsActive),

@@ -33,7 +33,7 @@ type HealthCheckResult struct {
 
 func NewSystemHandler(s *server.Server) *SystemHandler {
 	return &SystemHandler{
-		base:   handler.NewHandler(s),
+		base:   handler.NewHandler(),
 		server: s,
 	}
 }

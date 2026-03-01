@@ -4,18 +4,15 @@ import (
 	"context"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
 )
 
 type AccRepo struct {
-	s *server.Server
-	q *generated.Queries
+	q accountQuerier
 }
 
-func NewAccRepo(s *server.Server, q *generated.Queries) *AccRepo {
+func NewAccRepo(q accountQuerier) *AccRepo {
 	return &AccRepo{
-		s: s,
 		q: q,
 	}
 }

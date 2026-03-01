@@ -19,7 +19,7 @@ import type { internal_domain_reconciliation_UploadStatementRes } from '@/genera
 import { useAuth } from '@clerk/nextjs';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface ReconciliationUploadFormProps {
@@ -46,6 +46,7 @@ export function ReconciliationUploadForm({
   const [result, setResult] = useState<internal_domain_reconciliation_UploadStatementRes | null>(
     null
   );
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const accountOptions = useMemo(() => {
     if (!accounts) {
@@ -104,7 +105,7 @@ export function ReconciliationUploadForm({
           <Label>Statement file</Label>
           <div className="flex items-center gap-2">
             <Input
-              id="recon-statement-input"
+              ref={fileInputRef}
               type="file"
               accept=".xlsx,.csv,text/csv,application/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               className="hidden"
@@ -117,12 +118,7 @@ export function ReconciliationUploadForm({
               type="button"
               variant="outline"
               onClick={() => {
-                const input = document.getElementById(
-                  'recon-statement-input'
-                ) as HTMLInputElement | null;
-                if (input) {
-                  input.click();
-                }
+                fileInputRef.current?.click();
               }}
               disabled={upload.isPending}
             >
@@ -273,14 +269,6 @@ export function ReconciliationUploadForm({
               </div>
             )}
           </div>
-          {result.txns && result.txns.length > 0 && (
-            <div className="space-y-2">
-              <div className="text-sm font-medium">Transactions ({result.txns.length})</div>
-              <pre className="max-h-[320px] overflow-auto rounded-md bg-muted p-3 text-xs">
-                {JSON.stringify(result.txns, null, 2)}
-              </pre>
-            </div>
-          )}
           {result.summary?.errors && result.summary.errors.length > 0 && (
             <div className="space-y-2">
               <div className="text-sm font-medium text-destructive">

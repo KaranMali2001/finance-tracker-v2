@@ -18,7 +18,7 @@ type AccHandler struct {
 func NewAccountHandler(s *server.Server, service *AccService) *AccHandler {
 	return &AccHandler{
 		server:  s,
-		base:    handler.NewHandler(s),
+		base:    handler.NewHandler(),
 		service: service,
 	}
 }

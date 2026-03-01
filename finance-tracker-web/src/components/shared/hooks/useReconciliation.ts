@@ -24,10 +24,6 @@ export interface UploadReconciliationStatementInput {
   fileName: string;
 }
 
-/**
- * Get all reconciliation uploads for the authenticated user.
- * Only fetches when Clerk is loaded and user is signed in.
- */
 export function useReconciliationUploads() {
   const { isLoaded, isSignedIn } = useAuth();
 
@@ -41,10 +37,6 @@ export function useReconciliationUploads() {
   );
 }
 
-/**
- * Get a single reconciliation upload by ID.
- * Only fetches when Clerk is loaded, user is signed in, and uploadId is provided.
- */
 export function useReconciliationUpload(uploadId: string | null | undefined) {
   const { isLoaded, isSignedIn } = useAuth();
 
@@ -94,10 +86,7 @@ export type UploadFullDetail = Awaited<
   ReturnType<typeof ReconciliationService.getReconciliationUploadsDetail>
 >;
 
-/**
- * Get full detail for a single upload: metadata, summary counts, parsing errors, and paginated transactions.
- * Polls every 3 seconds while processing_status is PROCESSING, then stops.
- */
+// Polls every 3 seconds while processing_status is PROCESSING, then stops.
 export function useReconciliationUploadDetail(
   uploadId: string | null | undefined,
   page = 1,
@@ -122,10 +111,6 @@ export function useReconciliationUploadDetail(
   );
 }
 
-/**
- * Delete a reconciliation upload and all related data.
- * Invalidates reconciliation uploads list and the single-upload query on success.
- */
 export function useDeleteReconciliationUpload() {
   const queryClient = useQueryClient();
 
@@ -148,9 +133,6 @@ export type ReconciliationResultRow = internal_domain_reconciliation_Reconciliat
 export type PaginatedReconciliationResults =
   internal_domain_reconciliation_PaginatedReconciliationResults;
 
-/**
- * Get paginated reconciliation results for an upload (matched, missing, unmatched rows).
- */
 export function useReconciliationResults(
   uploadId: string | null | undefined,
   page = 1,
@@ -171,10 +153,6 @@ export function useReconciliationResults(
   );
 }
 
-/**
- * Bulk accept or reject reconciliation results.
- * For a single item, pass result_ids with one element.
- */
 export function useUpdateReconciliationResultStatus() {
   const queryClient = useQueryClient();
 

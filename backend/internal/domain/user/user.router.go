@@ -2,7 +2,6 @@ package user
 
 import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/labstack/echo/v4"
@@ -15,13 +14,13 @@ type Module struct {
 }
 type Deps struct {
 	Server     *server.Server
-	Queries    *generated.Queries
+	Queries    userQuerier
 	TxnManager *database.TxManager
 }
 
 func NewModule(deps Deps) *Module {
-	repo := NewUserRepository(deps.Server, deps.Queries, deps.TxnManager)
-	service := NewUserService(deps.Server, repo)
+	repo := NewUserRepository(deps.Queries, deps.TxnManager)
+	service := NewUserService(repo)
 	handler := NewUserHandler(deps.Server, service)
 	return &Module{
 		handler: handler,
@@ -32,6 +31,10 @@ func NewModule(deps Deps) *Module {
 
 func (m *Module) GetUserRepository() *UserRepository {
 	return m.repo
+}
+
+func (m *Module) GetUserService() *UserService {
+	return m.service
 }
 
 func (m *Module) RegisterRoutes(g *echo.Group) {

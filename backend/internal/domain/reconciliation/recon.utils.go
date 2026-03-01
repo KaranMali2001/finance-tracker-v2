@@ -11,8 +11,6 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-// RowHash builds a deterministic hash for duplicate detection.
-// Uses: transaction date (as-is), amount, Dr/Cr, and description (when available).
 func RowHash(transactionDate time.Time, amount float64, drCr string, description string) string {
 	dateStr := transactionDate.Format(time.RFC3339)
 	amountStr := fmt.Sprintf("%.2f", amount)
@@ -21,7 +19,6 @@ func RowHash(transactionDate time.Time, amount float64, drCr string, description
 	return hex.EncodeToString(h[:])
 }
 
-// SafeCell returns row[i] or "" if index out of range.
 func SafeCell(row []string, i int) string {
 	if i < len(row) {
 		return row[i]
@@ -29,7 +26,6 @@ func SafeCell(row []string, i int) string {
 	return ""
 }
 
-// ParseExcelDate parses the cell at col in row as a date/datetime (uses whatever is in the column).
 func ParseExcelDate(row []string, col int) (time.Time, error) {
 	v := strings.TrimSpace(SafeCell(row, col))
 	if v == "" {
@@ -53,7 +49,6 @@ func ParseExcelDate(row []string, col int) (time.Time, error) {
 	var f float64
 	if _, err := fmt.Sscanf(v, "%f", &f); err == nil && f > 0 {
 		t, _ := excelize.ExcelDateToTime(f, false)
-		// Reject Excel serial dates that fall before 1990 (e.g. day-of-month 14 parsed as serial 14 => 1900-01-14).
 		if t.Year() < 1990 {
 			return time.Time{}, fmt.Errorf("date out of range (got year %d): %s", t.Year(), v)
 		}
@@ -62,7 +57,6 @@ func ParseExcelDate(row []string, col int) (time.Time, error) {
 	return time.Time{}, fmt.Errorf("unparseable date: %s", v)
 }
 
-// ParseExcelAmount parses the cell at col in row as a numeric amount.
 func ParseExcelAmount(row []string, col int) (float64, error) {
 	v := strings.TrimSpace(SafeCell(row, col))
 	v = strings.ReplaceAll(v, ",", "")
@@ -73,9 +67,6 @@ func ParseExcelAmount(row []string, col int) (float64, error) {
 	return f, nil
 }
 
-// MarkDuplicatesFromInsertedSet sets IsDuplicate on rows whose RawRowHash is not in insertedHashes.
-// Call after insert: DB returns only hashes that were inserted (ON CONFLICT DO NOTHING);
-// any hash not in that set is a duplicate.
 func MarkDuplicatesFromInsertedSet(rows []ParsedTxns, insertedHashes map[string]struct{}) {
 	for i := range rows {
 		h := ""
@@ -87,7 +78,6 @@ func MarkDuplicatesFromInsertedSet(rows []ParsedTxns, insertedHashes map[string]
 	}
 }
 
-// SummaryFromRows builds UploadSummary from parsed rows and parse errors.
 func SummaryFromRows(rows []ParsedTxns, parseErrors []ParseError) UploadSummary {
 	dup := 0
 	for i := range rows {

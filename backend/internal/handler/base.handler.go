@@ -8,7 +8,6 @@ import (
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/errs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/validation"
 	"github.com/labstack/echo/v4"
 	"github.com/newrelic/go-agent/v3/integrations/nrpkgerrors"
@@ -16,13 +15,11 @@ import (
 )
 
 // Handler provides base functionality for all handlers
-type Handler struct {
-	server *server.Server
-}
+type Handler struct{}
 
 // NewHandler creates a new base handler
-func NewHandler(s *server.Server) Handler {
-	return Handler{server: s}
+func NewHandler() Handler {
+	return Handler{}
 }
 
 // HandlerFunc represents a typed handler function that processes a request and returns a response
@@ -292,8 +289,8 @@ var (
 	AllowedExcelTypes = map[string]bool{
 		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true, // .xlsx
 		"application/vnd.ms-excel": true, // .xls
-		"text/csv": true, // .csv
-		"application/csv": true, // .csv (non-standard but common)
+		"text/csv":                 true, // .csv
+		"application/csv":          true, // .csv (non-standard but common)
 		// Some clients may upload Excel with a generic content type.
 		"application/octet-stream": true,
 	}

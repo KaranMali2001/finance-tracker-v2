@@ -19,7 +19,7 @@ func NewUserHandler(s *server.Server, userService *UserService) *UserHandler {
 	return &UserHandler{
 		server:      s,
 		userService: userService,
-		base:        handler.NewHandler(s),
+		base:        handler.NewHandler(),
 	}
 }
 

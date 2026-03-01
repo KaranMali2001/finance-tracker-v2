@@ -5,10 +5,10 @@ import (
 )
 
 type InvestmentService struct {
-	r *InvestmentRepository
+	r investmentRepository
 }
 
-func NewInvestMentService(r *InvestmentRepository) *InvestmentService {
+func NewInvestMentService(r investmentRepository) *InvestmentService {
 	return &InvestmentService{
 		r: r,
 	}

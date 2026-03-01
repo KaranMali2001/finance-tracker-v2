@@ -1,7 +1,6 @@
 package account
 
 import (
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/labstack/echo/v4"
@@ -12,12 +11,12 @@ type Module struct {
 }
 type Deps struct {
 	Server  *server.Server
-	Queries *generated.Queries
+	Queries accountQuerier
 }
 
 func NewAccountModule(deps Deps) *Module {
-	repo := NewAccRepo(deps.Server, deps.Queries)
-	service := NewAccountService(deps.Server, repo)
+	repo := NewAccRepo(deps.Queries)
+	service := NewAccountService(repo)
 	handler := NewAccountHandler(deps.Server, service)
 
 	return &Module{

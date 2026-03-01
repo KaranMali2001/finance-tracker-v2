@@ -1,21 +1,12 @@
-/**
- * Transaction type definitions
- */
 export type TransactionType =
   | 'DEBIT'
   | 'CREDIT'
   | 'INCOME'
   | 'REFUND'
   | 'SUBSCRIPTION'
-  | 'INVESTMENT'
-  | string;
+  | 'INVESTMENT';
 
-/**
- * Get CSS classes for transaction type badge styling
- * @param type - The transaction type
- * @returns Tailwind CSS classes for the transaction type badge
- */
-export function getTypeColor(type?: TransactionType): string {
+export function getTypeColor(type?: TransactionType | string): string {
   switch (type) {
     case 'DEBIT':
       return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';

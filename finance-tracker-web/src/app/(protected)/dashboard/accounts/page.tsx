@@ -649,10 +649,10 @@ function CrispMinimalAddCard({ onClick }: { onClick: () => void }) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 export default function AccountsPage() {
-  const { data: accounts, isLoading, error, refetch, isFetching } = useAccounts();
+  const { data: accounts, isLoading, error, refetch } = useAccounts();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  if (isLoading || isFetching || accounts === undefined) {
+  if (isLoading || accounts === undefined) {
     return (
       <PageShell title="Accounts">
         <LoadingState variant="skeleton" count={5} />

@@ -10,11 +10,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useApiMutation } from './useApiMutation';
 import { useApiQuery } from './useApiQuery';
 
-/**
- * Get authenticated user hook
- * Fetches the current authenticated user's information
- * Only fetches when Clerk is loaded and user is signed in
- */
 export function useAuthUser() {
   const { isLoaded, isSignedIn } = useAuth();
 
@@ -22,23 +17,16 @@ export function useAuthUser() {
     ['auth', 'user'],
     () => AuthService.getAuthUser(),
     {
-      enabled: isLoaded && isSignedIn, // Only fetch when Clerk is loaded and user is signed in
+      enabled: isLoaded && isSignedIn,
       showToastOnError: true,
     }
   );
 }
 
-/**
- * Update user hook
- * Updates the authenticated user's information
- */
 export function useUpdateUser() {
-  const queryClient = useQueryClient();
-
   return useApiMutation<internal_domain_user_User, internal_domain_user_UpdateUserReq>(
     (data) => UserService.putUser(data),
     {
-      onSuccess: () => {},
       showToastOnSuccess: true,
       successMessage: 'Profile updated successfully',
       showToastOnError: true,
@@ -46,10 +34,6 @@ export function useUpdateUser() {
   );
 }
 
-/**
- * Generate API key hook
- * Generates a new API key for the authenticated user
- */
 export function useGenerateApiKey() {
   const queryClient = useQueryClient();
 

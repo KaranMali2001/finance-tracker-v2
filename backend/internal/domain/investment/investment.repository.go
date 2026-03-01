@@ -12,11 +12,11 @@ import (
 )
 
 type InvestmentRepository struct {
-	queries *generated.Queries
+	queries investmentQuerier
 	tm      *database.TxManager
 }
 
-func NewInvestMentRepository(q *generated.Queries, tm *database.TxManager) *InvestmentRepository {
+func NewInvestMentRepository(q investmentQuerier, tm *database.TxManager) *InvestmentRepository {
 	return &InvestmentRepository{
 		queries: q,
 		tm:      tm,
@@ -43,8 +43,6 @@ func (r *InvestmentRepository) CreateNewGoal(c context.Context, payload *CreateG
 		queries = r.queries.WithTx(tx)
 	}
 
-	// Parse target_date string to time.Time
-	// Try multiple formats: YYYY-MM-DD (date only) and ISO 8601 datetime formats
 	var targetDate time.Time
 	var err error
 	dateFormats := []string{
@@ -90,37 +88,30 @@ func (r *InvestmentRepository) GetGoalsWithFilter(c context.Context, params *Get
 		UserID: clerkID,
 	}
 
-	// status
 	if params.Status != nil {
 		body.Status = utils.StringPtrToText(params.Status)
 	}
 
-	// priority
 	if params.Priority != nil {
 		body.Priority = utils.UintToInt4(uint(*params.Priority))
 	}
 
-	// target_amount <= max_amount
 	if params.TargetAmountLessThan != nil {
 		body.MaxAmount = utils.Float64PtrToNum(params.TargetAmountLessThan)
 	}
 
-	// target_amount >= min_amount
 	if params.TargetAmountGreaterThan != nil {
 		body.MinAmount = utils.Float64PtrToNum(params.TargetAmountGreaterThan)
 	}
 
-	// created_at >= created_after
 	if params.CreatedAtAfter != nil {
 		body.CreatedAfter = utils.TimestampToPgtype(*params.CreatedAtAfter)
 	}
 
-	// target_date <= target_before
 	if params.TargetDateBefore != nil {
 		body.TargetBefore = utils.TimeToDate(*params.TargetDateBefore)
 	}
 
-	// target_date >= target_after
 	if params.TargetDateAfter != nil {
 		body.TargetAfter = utils.TimeToDate(*params.TargetDateAfter)
 	}
@@ -181,20 +172,15 @@ func (r *InvestmentRepository) UpdateGoal(
 		UserID: userID,
 	}
 
-	// Column1 -> name (varchar)
 	if params != nil && params.Name != nil {
 		body.Column1 = *params.Name
 	}
 
-	// Column2 -> target_amount (numeric)
 	if params != nil {
 		body.Column2 = utils.Float64PtrToNum(params.TargetAmount)
 	}
 
-	// Column3 -> target_date (date)
 	if params != nil && params.TargetDate != nil {
-		// Parse target_date string to time.Time
-		// Try multiple formats: YYYY-MM-DD (date only) and ISO 8601 datetime formats
 		var targetDate time.Time
 		var err error
 		dateFormats := []string{
@@ -216,22 +202,18 @@ func (r *InvestmentRepository) UpdateGoal(
 		body.Column3 = utils.TimeToDate(targetDate)
 	}
 
-	// Column4 -> status (varchar)
 	if params != nil && params.Status != nil {
 		body.Column4 = *params.Status
 	}
 
-	// Column5 -> priority (int)
 	if params != nil && params.Priority != nil {
 		body.Column5 = int32(*params.Priority)
 	}
 
-	// Column6 -> current_amount (numeric)
 	if params != nil {
 		body.Column6 = utils.Float64PtrToNum(params.CurrentAmount)
 	}
 
-	// Column7 -> achieved_at (timestamp)
 	if params != nil {
 		body.Column7 = utils.TimestampPtrToPgtype(params.AchievedAt)
 	}

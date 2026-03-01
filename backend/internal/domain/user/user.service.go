@@ -1,25 +1,23 @@
 package user
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/labstack/echo/v4"
 	"github.com/skip2/go-qrcode"
 )
 
 type UserService struct {
-	server     *server.Server
-	repository *UserRepository
+	repository userRepository
 }
 
-func NewUserService(s *server.Server, r *UserRepository) *UserService {
+func NewUserService(r userRepository) *UserService {
 	return &UserService{
-		server:     s,
 		repository: r,
 	}
 }
@@ -71,4 +69,8 @@ func (s *UserService) UpdateUserInternal(c echo.Context, payload *UpdateUserInte
 
 func (s *UserService) GetUserByApiKey(c echo.Context, apiKey string) (*User, error) {
 	return s.repository.GetUserByApiKey(c.Request().Context(), apiKey)
+}
+
+func (s *UserService) GetReconciliationThreshold(ctx context.Context, clerkId string) (int, error) {
+	return s.repository.GetReconciliationThreshold(ctx, clerkId)
 }

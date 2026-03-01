@@ -18,7 +18,7 @@ type InvestmentHandler struct {
 func NewInvestmentHandler(s *server.Server, service *InvestmentService) *InvestmentHandler {
 	return &InvestmentHandler{
 		server:  s,
-		base:    handler.NewHandler(s),
+		base:    handler.NewHandler(),
 		service: service,
 	}
 }

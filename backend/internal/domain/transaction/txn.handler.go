@@ -18,7 +18,7 @@ type TxnHandler struct {
 func NewTxnHandler(s *server.Server, service *TxnService) *TxnHandler {
 	return &TxnHandler{
 		server:  s,
-		base:    handler.NewHandler(s),
+		base:    handler.NewHandler(),
 		service: service,
 	}
 }
@@ -117,7 +117,6 @@ func (h *TxnHandler) UpdateTxn(c echo.Context) error {
 		h.base,
 		func(c echo.Context, payload *UpdateTxnReq) (*Transaction, error) {
 			clerkId := middleware.GetUserID(c)
-			// Get ID from path parameter
 			id := c.Param("id")
 			payload.Id = id
 			return h.service.UpdateTxn(c, payload, clerkId)

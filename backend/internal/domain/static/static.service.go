@@ -2,19 +2,16 @@ package static
 
 import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/labstack/echo/v4"
 )
 
 type StaticService struct {
-	server *server.Server
-	repo   *StaticRepository
+	repo staticRepository
 }
 
-func NewStaticService(s *server.Server, r *StaticRepository) *StaticService {
+func NewStaticService(r staticRepository) *StaticService {
 	return &StaticService{
-		server: s,
-		repo:   r,
+		repo: r,
 	}
 }
 

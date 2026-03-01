@@ -6,21 +6,18 @@ import (
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type TxnRepository struct {
-	server  *server.Server
-	queries *generated.Queries
+	queries txnQuerier
 	tm      *database.TxManager
 }
 
-func NewTxnRepository(s *server.Server, q *generated.Queries, tm *database.TxManager) *TxnRepository {
+func NewTxnRepository(q txnQuerier, tm *database.TxManager) *TxnRepository {
 	return &TxnRepository{
-		server:  s,
 		queries: q,
 		tm:      tm,
 	}
@@ -51,7 +48,6 @@ func txnFromDb(t *generated.Transaction) *Transaction {
 }
 
 func (r *TxnRepository) CreateTxns(c context.Context, clerkId string, payload *CreateTxnReq) (*Transaction, error) {
-	// Default to today's date if TransactionDate is not provided
 	queries := r.queries
 	if tx := r.tm.GetTx(c); tx != nil {
 		queries = queries.WithTx(tx)

@@ -13,11 +13,9 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/shared"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/errs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/handler"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
 	"github.com/google/uuid"
@@ -27,7 +25,6 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-// Bank statement Excel column indices (0-based). Header: Sl. No. | Transaction Date | Value Date | Description | Chq/Ref No. | Amount | Dr/Cr | Balance
 const (
 	colTxnDate     = 1
 	colDescription = 3
@@ -37,22 +34,20 @@ const (
 )
 
 type ReconService struct {
-	server         *server.Server
-	repo           *ReconRepository
+	repo           reconRepository
 	tm             *database.TxManager
-	queries        *generated.Queries
-	taskService    *tasks.TaskService
-	balanceUpdater *shared.BalanceUpdater
+	taskService    reconTaskService
+	balanceUpdater balanceApplier
+	userService    userThresholdProvider
 }
 
-func NewReconService(s *server.Server, repo *ReconRepository, tm *database.TxManager, queries *generated.Queries, taskService *tasks.TaskService, balanceUpdater *shared.BalanceUpdater) *ReconService {
+func NewReconService(repo reconRepository, tm *database.TxManager, taskService reconTaskService, balanceUpdater balanceApplier, userService userThresholdProvider) *ReconService {
 	return &ReconService{
-		server:         s,
 		repo:           repo,
 		tm:             tm,
-		queries:        queries,
 		taskService:    taskService,
 		balanceUpdater: balanceUpdater,
+		userService:    userService,
 	}
 }
 
@@ -177,11 +172,10 @@ func (s *ReconService) ParseAndProcessStatement(c echo.Context, payload *ParseEx
 			log.Error().Err(err).Msg("Failed to update parse summary")
 		}
 
-		// Fetch user's reconciliation threshold, default to 70 if unavailable
 		threshold := 70
-		if s.queries != nil {
-			if user, err := s.queries.GetAuthUser(ctx, payload.UserId); err == nil {
-				threshold = utils.Int4ToInt(user.ReconciliationThreshold)
+		if s.userService != nil {
+			if t, err := s.userService.GetReconciliationThreshold(ctx, payload.UserId); err == nil {
+				threshold = t
 			}
 		}
 
@@ -220,19 +214,13 @@ func (s *ReconService) ParseAndProcessStatement(c echo.Context, payload *ParseEx
 	}
 }
 
-// RunReconciliationJob is the main entry point called by the background task handler.
-// It fetches statement rows, partitions them into tail (auto-create) and overlap (score),
-// runs the matching algorithm in memory, and writes all results in one batch.
-func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankReconciliationPayload, log *zerolog.Logger) error {
+func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.BankReconciliationPayload, log *zerolog.Logger) error {
 	logMem("start", log)
 
-	// Step 1: Mark upload as PROCESSING
 	if err := s.repo.UpdateUploadProcessingStatus(ctx, payload.UploadID, generated.UploadProcessingStatusPROCESSING, uuid.Nil); err != nil {
 		log.Error().Err(err).Msg("[recon] failed to mark upload PROCESSING")
-		// non-fatal, continue
 	}
 
-	// Step 2: Fetch all non-duplicate statement transactions sorted by date
 	stmtTxns, err := s.repo.GetStatementTransactionsForProcessing(ctx, payload.UploadID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch statement transactions: %w", err)
@@ -244,16 +232,13 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankRec
 	logMem("after_stmt_fetch", log)
 	log.Info().Int("stmt_count", len(stmtTxns)).Msg("[recon] fetched statement transactions")
 
-	// Step 3: Get max date of existing app transactions for this account
 	maxAppDate, err := s.repo.GetMaxAppTransactionDate(ctx, payload.AccountID)
 	if err != nil {
 		return fmt.Errorf("failed to get max app transaction date: %w", err)
 	}
 
-	// Step 4: Partition into tail rows (beyond max app date) and overlap rows
 	var tailRows, overlapRows []StatementTransaction
 	if maxAppDate == nil {
-		// No app transactions at all — everything is new
 		tailRows = stmtTxns
 	} else {
 		for _, st := range stmtTxns {
@@ -272,14 +257,10 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankRec
 		Int("overlap_rows", len(overlapRows)).
 		Msg("[recon] partitioned statement rows")
 
-	// Step 5: Bulk fetch app transactions only if we have overlap rows
 	var appTxns []AppTransaction
 	if len(overlapRows) > 0 {
 		minDate, maxDate, err := s.repo.GetStatementDateRange(ctx, payload.UploadID)
 		if errors.Is(err, ErrNoDateRange) {
-			// All overlap rows have no parseable date (e.g. all were duplicates at
-			// query time). Skip app-transaction fetch — scoring will produce
-			// MISSING_IN_APP for every overlap row.
 			log.Warn().Str("upload_id", payload.UploadID.String()).
 				Msg("[recon] no date range for overlap rows, skipping app-txn fetch")
 		} else if err != nil {
@@ -296,9 +277,6 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankRec
 		}
 	}
 
-	// Step 6: Build in-memory indexes from app transactions
-	// dateMap key: "YYYY-MM-DD|TYPE" → candidates for ±2 day window lookups
-	// exactMap key: "AMOUNT|TYPE|YYYY-MM-DD" → fast exact-match path
 	dateMap := make(map[string][]AppTransaction, len(appTxns))
 	exactMap := make(map[string]*AppTransaction, len(appTxns))
 	for i := range appTxns {
@@ -310,9 +288,8 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankRec
 	}
 	logMem("after_indexing", log)
 
-	// Step 7: Score overlap rows
 	results := make([]ReconciliationResult, 0, len(overlapRows)+len(tailRows))
-	var highConfMatches []ReconciliationResult // need to also call MarkTransactionAutoVerified
+	var highConfMatches []ReconciliationResult
 
 	for _, st := range overlapRows {
 		if st.TransactionDate == nil {
@@ -328,7 +305,6 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankRec
 			stmtRef = *st.ReferenceNumber
 		}
 
-		// Fast path: exact amount + type + same day
 		exactKey := fmt.Sprintf("%.2f|%s|%s", st.Amount, st.Type, stmtDate)
 		if match, ok := exactMap[exactKey]; ok {
 			appID := match.ID
@@ -348,12 +324,10 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankRec
 			}
 			results = append(results, res)
 			highConfMatches = append(highConfMatches, res)
-			// Remove from exactMap so it can't be matched twice
 			delete(exactMap, exactKey)
 			continue
 		}
 
-		// Scoring path: check candidates from ±2 day window
 		var bestMatch *AppTransaction
 		var bestScore int
 		var bestSignals MatchSignals
@@ -397,7 +371,6 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankRec
 			results = append(results, res)
 
 		default:
-			// No match found — will be auto-created below
 			res.ResultType = string(generated.ReconciliationResultTypeMISSINGINAPP)
 			res.ConfidenceScore = 0
 			results = append(results, res)
@@ -406,33 +379,28 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankRec
 	logMem("after_scoring", log)
 	log.Info().Int("results_so_far", len(results)).Msg("[recon] scoring complete")
 
-	// Step 8: Auto-create transactions for tail rows + MISSING_IN_APP overlap rows
 	autoCreateParams := make([]generated.CreateTxnBatchParams, 0)
-	autoCreateResultIdxs := make([]int, 0) // tracks which result index needs the new txn ID
+	autoCreateResultIdxs := make([]int, 0)
 
-	// Tail rows (beyond max app date) — these are straightforwardly new
 	for _, st := range tailRows {
 		if st.TransactionDate == nil {
 			continue
 		}
 		params := stmtTxnToCreateParams(payload.UserID, payload.AccountID, st)
 		autoCreateParams = append(autoCreateParams, params)
-		autoCreateResultIdxs = append(autoCreateResultIdxs, -1) // -1 = tail, add result after
 		results = append(results, ReconciliationResult{
 			UploadID:               payload.UploadID,
 			StatementTransactionID: st.ID,
 			AppTransactionID:       nil,
 			ResultType:             string(generated.ReconciliationResultTypeMISSINGINAPP),
-			ConfidenceScore:        100, // beyond max date = definitively new
+			ConfidenceScore:        100,
 			MatchStatus:            "pending",
 		})
-		autoCreateResultIdxs[len(autoCreateResultIdxs)-1] = len(results) - 1
+		autoCreateResultIdxs = append(autoCreateResultIdxs, len(results)-1)
 	}
 
-	// MISSING_IN_APP from overlap scoring
 	for i, res := range results {
 		if res.ResultType == string(generated.ReconciliationResultTypeMISSINGINAPP) && res.AppTransactionID == nil {
-			// Find the original stmt txn
 			for _, st := range overlapRows {
 				if st.ID == res.StatementTransactionID && st.TransactionDate != nil {
 					params := stmtTxnToCreateParams(payload.UserID, payload.AccountID, st)
@@ -444,13 +412,11 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankRec
 		}
 	}
 
-	// Batch create all auto transactions
 	if len(autoCreateParams) > 0 {
 		newIDs, err := s.repo.CreateAutoTransactionsBatch(ctx, autoCreateParams)
 		if err != nil {
 			return fmt.Errorf("failed to auto-create transactions: %w", err)
 		}
-		// Link new IDs back into the results
 		for i, resultIdx := range autoCreateResultIdxs {
 			if i < len(newIDs) && resultIdx >= 0 && resultIdx < len(results) {
 				id := newIDs[i]
@@ -459,8 +425,6 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankRec
 		}
 		log.Info().Int("auto_created", len(newIDs)).Msg("[recon] auto-created transactions")
 
-		// Update account balance and user lifetime metrics for auto-created transactions.
-		// Pre-compute totals in one pass so ApplyBatch makes exactly 2 DB calls.
 		if s.balanceUpdater != nil {
 			var totalIncome, totalExpense, totalBalance float64
 			for _, p := range autoCreateParams {
@@ -477,13 +441,11 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankRec
 			}
 			if err := s.balanceUpdater.ApplyBatch(ctx, payload.UserID, payload.AccountID, totalIncome, totalExpense, totalBalance); err != nil {
 				log.Error().Err(err).Msg("[recon] failed to update balances after auto-create")
-				// non-fatal: transactions are already committed; log and continue
 			}
 		}
 	}
 	logMem("after_auto_create", log)
 
-	// Step 9: Mark high-confidence app transactions as AUTO_VERIFIED
 	for _, res := range highConfMatches {
 		if res.AppTransactionID != nil {
 			if err := s.repo.MarkTransactionAutoVerified(ctx, *res.AppTransactionID, res.StatementTransactionID); err != nil {
@@ -493,14 +455,12 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankRec
 	}
 	logMem("after_auto_verify", log)
 
-	// Step 10: Batch insert all reconciliation results
 	if err := s.repo.InsertReconciliationResults(ctx, results); err != nil {
 		return fmt.Errorf("failed to insert reconciliation results: %w", err)
 	}
 	logMem("after_batch_insert", log)
 	log.Info().Int("total_results", len(results)).Msg("[recon] inserted all reconciliation results")
 
-	// Step 11: Mark upload as COMPLETED
 	if err := s.repo.UpdateUploadProcessingStatus(ctx, payload.UploadID, generated.UploadProcessingStatusCOMPLETED, uuid.Nil); err != nil {
 		log.Error().Err(err).Msg("[recon] failed to mark upload COMPLETED")
 	}
@@ -508,11 +468,9 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload BankRec
 	return nil
 }
 
-// scoreMatch computes the confidence score between a statement transaction and an app transaction candidate.
 func scoreMatch(stmtAmount float64, stmtDesc, stmtRef string, stmtDate time.Time, at *AppTransaction) (MatchSignals, int) {
 	signals := MatchSignals{}
 
-	// Date score (max 40)
 	daysDiff := int(stmtDate.Sub(at.TransactionDate).Hours() / 24)
 	if daysDiff < 0 {
 		daysDiff = -daysDiff
@@ -527,7 +485,6 @@ func scoreMatch(stmtAmount float64, stmtDesc, stmtRef string, stmtDate time.Time
 		signals.DateScore = 20
 	}
 
-	// Amount score (max 35)
 	amountDiff := stmtAmount - at.Amount
 	if amountDiff < 0 {
 		amountDiff = -amountDiff
@@ -548,7 +505,6 @@ func scoreMatch(stmtAmount float64, stmtDesc, stmtRef string, stmtDate time.Time
 		signals.AmountScore = 15
 	}
 
-	// Description score (max 15) — token Jaccard, no external lib
 	similarity := tokenJaccard(stmtDesc, at.Description)
 	signals.DescriptionSimilarity = similarity
 	switch {
@@ -560,7 +516,6 @@ func scoreMatch(stmtAmount float64, stmtDesc, stmtRef string, stmtDate time.Time
 		signals.DescriptionScore = 5
 	}
 
-	// Reference number score (max 10) — exact match only
 	if stmtRef != "" && at.ReferenceNumber != "" && stmtRef == at.ReferenceNumber {
 		signals.ReferenceScore = 10
 		signals.ReferenceMatch = true
@@ -570,8 +525,6 @@ func scoreMatch(stmtAmount float64, stmtDesc, stmtRef string, stmtDate time.Time
 	return signals, total
 }
 
-// tokenJaccard computes Jaccard similarity between word token sets of two strings.
-// No external library — uses strings.Fields + a simple map intersection.
 func tokenJaccard(a, b string) float64 {
 	setA := tokenSet(a)
 	setB := tokenSet(b)
@@ -599,7 +552,6 @@ func tokenSet(s string) map[string]bool {
 	return set
 }
 
-// stmtTxnToCreateParams builds a CreateTxnBatchParams for auto-creating a transaction from a statement row.
 func stmtTxnToCreateParams(userID string, accountID uuid.UUID, st StatementTransaction) generated.CreateTxnBatchParams {
 	source := generated.NullTransactionSource{
 		TransactionSource: generated.TransactionSourceSTATEMENTAUTO,
@@ -626,7 +578,6 @@ func stmtTxnToCreateParams(userID string, accountID uuid.UUID, st StatementTrans
 	}
 }
 
-// logMem logs current Go runtime memory stats at a named phase for profiling.
 func logMem(phase string, log *zerolog.Logger) {
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)

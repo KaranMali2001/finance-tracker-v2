@@ -212,14 +212,6 @@ type ReconciliationResult struct {
 	MatchStatus            string // "pending" — default user_action
 }
 
-// BankReconciliationPayload is the job payload enqueued to Asynq.
-type BankReconciliationPayload struct {
-	UploadID                uuid.UUID `json:"upload_id"`
-	AccountID               uuid.UUID `json:"account_id"`
-	UserID                  string    `json:"user_id"`
-	ReconciliationThreshold int       `json:"reconciliation_threshold"`
-}
-
 // GetResultsReq is used for fetching reconciliation results for an upload.
 type GetResultsReq struct {
 	UploadId uuid.UUID `param:"upload_id" validate:"required"`

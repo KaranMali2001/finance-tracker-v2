@@ -50,15 +50,13 @@ export function useApiMutation<TData, TVariables = void>(
   return useMutation<TData, unknown, TVariables>({
     mutationFn: async (variables: TVariables) => {
       try {
-        return await fetcher(mutationFn(variables), {
-          showToastOnError: false, // We'll handle it in onError
-          errorMessage,
-        });
+        return await fetcher(mutationFn(variables));
       } catch (error) {
         const apiError = parseApiError(error);
         if (customOnError) {
           customOnError(error);
-        } else if (showToastOnError) {
+        }
+        if (showToastOnError) {
           toast.error(errorMessage || apiError.message || 'Operation failed');
         }
         throw error;

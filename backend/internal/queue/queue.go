@@ -93,7 +93,7 @@ func (j *JobService) handleBankReconciliationTask(ctx context.Context, t *asynq.
 		}
 	}
 
-	var payload reconciliation.BankReconciliationPayload
+	var payload tasks.BankReconciliationPayload
 	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
 		errMsg := err.Error()
 		if job != nil {
