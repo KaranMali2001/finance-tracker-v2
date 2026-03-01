@@ -2,18 +2,15 @@ package account
 
 import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/labstack/echo/v4"
 )
 
 type AccService struct {
-	s *server.Server
-	r *AccRepo
+	r accountRepository
 }
 
-func NewAccountService(s *server.Server, r *AccRepo) *AccService {
+func NewAccountService(r accountRepository) *AccService {
 	return &AccService{
-		s: s,
 		r: r,
 	}
 }

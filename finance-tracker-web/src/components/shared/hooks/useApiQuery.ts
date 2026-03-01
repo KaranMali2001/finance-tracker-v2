@@ -35,16 +35,13 @@ export function useApiQuery<TData>(
     queryKey,
     queryFn: async () => {
       try {
-        return await fetcher(queryFn(), {
-          showToastOnError: false, // We'll handle it in onError
-          errorMessage,
-          onError,
-        });
+        return await fetcher(queryFn());
       } catch (error) {
         const apiError = parseApiError(error);
         if (onError) {
           onError(error);
-        } else if (showToastOnError) {
+        }
+        if (showToastOnError) {
           toast.error(errorMessage || apiError.message || 'Failed to load data');
         }
         throw error;

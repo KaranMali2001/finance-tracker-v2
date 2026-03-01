@@ -43,11 +43,10 @@ function getStatusLabel(status?: string) {
 }
 
 export default function InvestmentsPage() {
-  const { data: goals, isLoading, error, refetch, isFetching } = useInvestmentGoals();
+  const { data: goals, isLoading, error, refetch } = useInvestmentGoals();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  // Show loading state while fetching or when data hasn't been loaded yet
-  if (isLoading || isFetching || goals === undefined) {
+  if (isLoading || goals === undefined) {
     return (
       <PageShell
         title="Investment Portfolio"
@@ -74,7 +73,6 @@ export default function InvestmentsPage() {
     );
   }
 
-  // Only show empty state when data has been fetched and is actually empty
   if (goals.length === 0) {
     return (
       <PageShell

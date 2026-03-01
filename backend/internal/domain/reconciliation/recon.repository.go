@@ -15,11 +15,11 @@ import (
 )
 
 type ReconRepository struct {
-	queries *generated.Queries
+	queries reconQuerier
 	tm      *database.TxManager
 }
 
-func NewReconRepository(queries *generated.Queries, tm *database.TxManager) *ReconRepository {
+func NewReconRepository(queries reconQuerier, tm *database.TxManager) *ReconRepository {
 	return &ReconRepository{queries: queries, tm: tm}
 }
 
@@ -92,16 +92,12 @@ func (r *ReconRepository) GetUploadByID(ctx context.Context, payload *GetUploadB
 	return &UploadDetail{UploadListItem: item, UpdatedAt: utils.TimestampToTimePtr(row.UpdatedAt)}, nil
 }
 
-// DeleteUpload deletes the upload and all related data in one transaction: nullifies transactions.statement_txn_id, deletes transaction_reconciliation, statement_transactions, then bank_statement_uploads.
 func (r *ReconRepository) DeleteUpload(ctx context.Context, uploadID uuid.UUID, userID string) error {
 	queries := r.queries
 	if tx := r.tm.GetTx(ctx); tx != nil {
 		queries = queries.WithTx(tx)
 	}
 	uploadIDPg := utils.UUIDToPgtype(uploadID)
-	// if err := queries.NullifyTransactionsStatementTxnByUploadID(ctx, uploadIDPg); err != nil {
-	// 	return err
-	// }
 	if err := queries.DeleteTransactionReconciliationByUploadID(ctx, uploadIDPg); err != nil {
 		return err
 	}
@@ -288,9 +284,6 @@ func (r *ReconRepository) UpdateParseSummary(ctx context.Context, uploadID uuid.
 	})
 }
 
-// ErrNoDateRange is returned by GetStatementDateRange when the upload has no
-// non-duplicate, non-deleted rows with a parseable transaction date (e.g. all
-// rows were duplicates).
 var ErrNoDateRange = errors.New("no statement transactions with a valid date found for upload")
 
 func (r *ReconRepository) GetStatementDateRange(ctx context.Context, uploadID uuid.UUID) (minDate, maxDate time.Time, err error) {
@@ -302,11 +295,9 @@ func (r *ReconRepository) GetStatementDateRange(ctx context.Context, uploadID uu
 	if err != nil {
 		return time.Time{}, time.Time{}, err
 	}
-	// MIN/MAX returns nil when the filtered set is empty (e.g. all rows are duplicates).
 	if row.MinDate == nil || row.MaxDate == nil {
 		return time.Time{}, time.Time{}, ErrNoDateRange
 	}
-	// pgx returns the aggregate result as interface{} — type-assert to time.Time.
 	minT, ok1 := row.MinDate.(time.Time)
 	maxT, ok2 := row.MaxDate.(time.Time)
 	if !ok1 || !ok2 {

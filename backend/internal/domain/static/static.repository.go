@@ -3,19 +3,15 @@ package static
 import (
 	"context"
 
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
 )
 
 type StaticRepository struct {
-	server  *server.Server
-	queries *generated.Queries
+	queries staticQuerier
 }
 
-func NewStaticRepository(s *server.Server, q *generated.Queries) *StaticRepository {
+func NewStaticRepository(q staticQuerier) *StaticRepository {
 	return &StaticRepository{
-		server:  s,
 		queries: q,
 	}
 }

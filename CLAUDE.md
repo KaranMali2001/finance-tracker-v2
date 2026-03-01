@@ -224,12 +224,38 @@ task clean
 ### Adding a New Domain Module
 
 1. Create `backend/internal/domain/<module>/` directory
-2. Create files: `<module>.handler.go`, `<module>.service.go`, `<module>.repository.go`, `<module>.router.go`, `<module>.dto.go`
+2. Create files: `<module>.handler.go`, `<module>.service.go`, `<module>.repository.go`, `<module>.router.go`, `<module>.dto.go`, `<module>.interfaces.go`
 3. Implement `Module` struct with `RegisterRoutes(g *echo.Group)` method
 4. Add SQL queries in `backend/internal/database/queries/<module>/`
 5. Register module in [backend/cmd/backend/main.go](backend/cmd/backend/main.go)
 6. Create frontend page in `finance-tracker-web/src/app/(protected)/dashboard/<module>/`
 7. Create components in `finance-tracker-web/src/components/<module>Components/`
+
+**Interface Segregation for New Modules:**
+Every domain module must define narrow per-consumer interfaces in `<module>.interfaces.go`. Each interface should contain only the methods that specific consumer actually calls — never embed a full concrete type.
+
+```go
+// <module>.interfaces.go
+package <module>
+
+// <module>Querier is the subset of generated.Queries used by this domain's repository.
+type <module>Querier interface {
+    SomeQuery(ctx context.Context, params generated.SomeParams) (generated.SomeRow, error)
+    // only methods this repo actually calls
+}
+
+// cross-module interfaces — define here, satisfied implicitly by other domain's types
+type userProvider interface {
+    GetUserByClerkId(ctx context.Context, clerkId string) (*user.User, error)
+}
+```
+
+Constructor signatures must NOT accept `*server.Server` or `*generated.Queries`:
+- Repository constructors: `NewXRepo(q xQuerier, tm *database.TxManager) *XRepository`
+- Service constructors: `NewXService(repo xRepository, ...) *XService`
+- Handler constructors: `NewXHandler(s *server.Server, svc xService) *XHandler`
+
+`*server.Server` flows only to handlers (for `middleware.NewAuthMiddleware`). Services and repos must be fully decoupled from it.
 
 ### Database Schema Changes
 
@@ -243,6 +269,31 @@ task clean
 Currently no test infrastructure is set up. When adding tests:
 - Backend: Use Go's testing package, consider testify for assertions
 - Frontend: Use Vitest or Jest with React Testing Library
+
+**Backend Test Structure:**
+Tests live alongside the code they test (`_test.go` files in the same package). No separate `mocks/` directory — mock types are defined inline in the test file.
+
+```
+backend/internal/domain/transaction/
+  txn.service.go
+  txn.service_test.go     ← tests for service
+  txn.repository_test.go  ← tests for repository helpers/pure functions
+```
+
+**Testing with Clerk Auth:**
+Clerk is bypassed entirely in tests. The `clerkId` string is injected directly as a parameter. For handler tests, stub the middleware:
+
+```go
+c.Set(middleware.UserIDKey, "test_clerk_id")
+```
+
+Never mock Clerk itself. The auth check happens at the middleware layer; everything below it operates on a plain string user ID.
+
+**Test Priority Order:**
+1. Pure functions first: `computeDeltas`, `scoreMatch`, `tokenJaccard`, date parsers
+2. Service unit tests: mock the repository interface, test business logic
+3. Repository integration tests (optional): use a real test DB or pgx mock
+4. Handler tests: stub middleware, test request parsing and response shaping
 
 ## Environment Configuration
 
@@ -290,6 +341,19 @@ See `backend/.env.example` for required variables.
 ## AI Instructions
 
 Rules that Claude Code must follow in this codebase.
+
+### Code Style
+
+**No inline comments.** Do not add comments that restate what the code already says. Omit all:
+- Struct field label comments (e.g. `// Target date filter`)
+- Function step comments (e.g. `// Step 1: Parse date`)
+- Parameter/variable explanation comments (e.g. `// Get ID from path parameter`)
+
+The only acceptable comments are format annotation labels in `dateFormats` slices and any non-obvious algorithmic decisions. When in doubt, omit.
+
+**`ai-feature-plans/`** — Architecture and design plans for significant features live in this folder at the repo root. When designing a new feature (multi-domain, background job, new algorithm), create a plan file here before writing code.
+
+---
 
 ### Code Generation — Never Write, Always Generate
 

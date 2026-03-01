@@ -2,10 +2,6 @@ package transaction
 
 import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/shared"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/static"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/user"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	aiservices "github.com/KaranMali2001/finance-tracker-v2-backend/internal/services/aiServices"
@@ -18,17 +14,17 @@ type Module struct {
 
 type Deps struct {
 	Server         *server.Server
-	Queries        *generated.Queries
-	UserRepo       *user.UserRepository
+	Queries        txnQuerier
+	UserRepo       userProvider
 	GeminiSvc      *aiservices.GeminiService
-	StaticRepo     *static.StaticRepository
+	StaticRepo     staticProvider
 	Tm             *database.TxManager
-	BalanceUpdater *shared.BalanceUpdater
+	BalanceUpdater balanceApplier
 }
 
 func NewTxnModule(deps Deps) *Module {
-	repo := NewTxnRepository(deps.Server, deps.Queries, deps.Tm)
-	service := NewTxnService(deps.Server, repo, deps.UserRepo, deps.GeminiSvc, deps.StaticRepo, deps.Tm, deps.BalanceUpdater)
+	repo := NewTxnRepository(deps.Queries, deps.Tm)
+	service := NewTxnService(repo, deps.UserRepo, deps.GeminiSvc, deps.StaticRepo, deps.Tm, deps.BalanceUpdater)
 	handler := NewTxnHandler(deps.Server, service)
 
 	return &Module{

@@ -9,30 +9,25 @@ import (
 	"path/filepath"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/shared"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/static"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/user"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/handler"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	aiservices "github.com/KaranMali2001/finance-tracker-v2-backend/internal/services/aiServices"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
 type TxnService struct {
-	s              *server.Server
-	r              *TxnRepository
-	userRepo       *user.UserRepository
+	r              txnRepository
+	userRepo       userProvider
 	geminiSvc      *aiservices.GeminiService
-	staticRepo     *static.StaticRepository
+	staticRepo     staticProvider
 	tm             *database.TxManager
-	balanceUpdater *shared.BalanceUpdater
+	balanceUpdater balanceApplier
 }
 
-func NewTxnService(s *server.Server, r *TxnRepository, userRepo *user.UserRepository, geminiSvc *aiservices.GeminiService, staticRepo *static.StaticRepository, tm *database.TxManager, balanceUpdater *shared.BalanceUpdater) *TxnService {
+func NewTxnService(r txnRepository, userRepo userProvider, geminiSvc *aiservices.GeminiService, staticRepo staticProvider, tm *database.TxManager, balanceUpdater balanceApplier) *TxnService {
 	return &TxnService{
-		s:              s,
 		r:              r,
 		userRepo:       userRepo,
 		geminiSvc:      geminiSvc,
@@ -77,7 +72,6 @@ func (s *TxnService) SoftDeleteTxns(c echo.Context, payload *SoftDeleteTxnsReq, 
 		if err != nil {
 			return err
 		}
-		// Group deltas by account so we make exactly 2 DB calls per account.
 		type accountDelta struct {
 			incomeDelta  float64
 			expenseDelta float64
@@ -138,7 +132,6 @@ func (s *TxnService) ParseTxnImage(c echo.Context, payload *ParseTxnImgReq, cler
 		log.Error().Err(err).Msgf("Error while updating the Attempt of user ID %v", clerkId)
 		return nil, err
 	}
-	// TODO:FallBack to Global Category Object,Same for merchant
 	cats, err := s.staticRepo.GetCategories(c.Request().Context())
 	if err != nil {
 		log.Error().Err(err).Msg("Error while getting Categories from the static service")

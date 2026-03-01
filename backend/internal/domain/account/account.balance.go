@@ -1,4 +1,4 @@
-package shared
+package account
 
 import (
 	"context"
@@ -8,19 +8,14 @@ import (
 	"github.com/google/uuid"
 )
 
-// BalanceUpdater applies account balance and user lifetime metric changes
-// atomically for a transaction or a batch of transactions.
-// It is safe to share between TxnService and ReconService.
 type BalanceUpdater struct {
-	queries *generated.Queries
+	queries balanceQuerier
 }
 
-func NewBalanceUpdater(q *generated.Queries) *BalanceUpdater {
+func NewBalanceUpdater(q balanceQuerier) *BalanceUpdater {
 	return &BalanceUpdater{queries: q}
 }
 
-// Apply updates lifetime metrics + account balance for a single transaction.
-// Must be called inside a TxManager.WithTx block when atomicity is required.
 func (b *BalanceUpdater) Apply(ctx context.Context, userID string, accountID uuid.UUID, txnType string, amount float64) error {
 	incomeDelta, expenseDelta, balanceDelta := computeDeltas(txnType, amount)
 	if err := b.queries.AdjustUserLifetimeMetrics(ctx, generated.AdjustUserLifetimeMetricsParams{
@@ -37,9 +32,6 @@ func (b *BalanceUpdater) Apply(ctx context.Context, userID string, accountID uui
 	})
 }
 
-// ApplyBatch applies balance effects for multiple transactions in exactly 2 DB
-// calls regardless of batch size. The caller pre-computes the three totals by
-// ranging over autoCreateParams before calling this function.
 func (b *BalanceUpdater) ApplyBatch(ctx context.Context, userID string, accountID uuid.UUID, incomeDelta, expenseDelta, balanceDelta float64) error {
 	if incomeDelta == 0 && expenseDelta == 0 && balanceDelta == 0 {
 		return nil
@@ -58,13 +50,6 @@ func (b *BalanceUpdater) ApplyBatch(ctx context.Context, userID string, accountI
 	})
 }
 
-// Reverse undoes a single transaction's balance effects (used on soft-delete).
-func (b *BalanceUpdater) Reverse(ctx context.Context, userID string, accountID uuid.UUID, txnType string, amount float64) error {
-	return b.Apply(ctx, userID, accountID, txnType, -amount)
-}
-
-// computeDeltas returns the income, expense, and account balance deltas for a
-// given transaction type and amount.
 func computeDeltas(txnType string, amount float64) (incomeDelta, expenseDelta, balanceDelta float64) {
 	switch txnType {
 	case "CREDIT", "INCOME", "REFUND", "INVESTMENT":

@@ -15,11 +15,11 @@ type SmsHandler struct {
 	base    handler.Handler
 }
 
-func NewSmsHanlder(server *server.Server, svc *SmsService) *SmsHandler {
+func NewSmsHandler(server *server.Server, svc *SmsService) *SmsHandler {
 	return &SmsHandler{
 		server:  server,
 		service: svc,
-		base:    handler.NewHandler(server),
+		base:    handler.NewHandler(),
 	}
 }
 

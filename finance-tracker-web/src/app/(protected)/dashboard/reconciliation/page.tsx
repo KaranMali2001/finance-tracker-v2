@@ -21,7 +21,7 @@ import { useState } from 'react';
 import { ReconciliationUploadForm } from '@/components/reconciliationComponents/ReconciliationUploadForm/ReconciliationUploadForm';
 
 export default function ReconciliationPage() {
-  const { data: uploads, isLoading, error, refetch, isFetching } = useReconciliationUploads();
+  const { data: uploads, isLoading, error, refetch } = useReconciliationUploads();
   const deleteUpload = useDeleteReconciliationUpload();
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isCloseConfirmOpen, setIsCloseConfirmOpen] = useState(false);
@@ -35,7 +35,7 @@ export default function ReconciliationPage() {
     }
   }
 
-  if (isLoading || isFetching || uploads === undefined) {
+  if (isLoading || uploads === undefined) {
     return (
       <PageShell
         title="Reconciliation"

@@ -2,11 +2,8 @@ package reconciliation
 
 import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/shared"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
 	"github.com/labstack/echo/v4"
 )
 
@@ -17,15 +14,16 @@ type Module struct {
 
 type Deps struct {
 	Server         *server.Server
-	Queries        *generated.Queries
+	Queries        reconQuerier
 	TxnManager     *database.TxManager
-	TaskService    *tasks.TaskService
-	BalanceUpdater *shared.BalanceUpdater
+	TaskService    reconTaskService
+	BalanceUpdater balanceApplier
+	UserService    userThresholdProvider
 }
 
 func NewReconiliationModule(deps Deps) *Module {
 	repo := NewReconRepository(deps.Queries, deps.TxnManager)
-	service := NewReconService(deps.Server, repo, deps.TxnManager, deps.Queries, deps.TaskService, deps.BalanceUpdater)
+	service := NewReconService(repo, deps.TxnManager, deps.TaskService, deps.BalanceUpdater, deps.UserService)
 	handler := NewReconHandler(deps.Server, service)
 
 	return &Module{

@@ -10,10 +10,10 @@ import (
 )
 
 type JobRepository struct {
-	queries *generated.Queries
+	queries jobQuerier
 }
 
-func NewJobRepository(q *generated.Queries) *JobRepository {
+func NewJobRepository(q jobQuerier) *JobRepository {
 	return &JobRepository{
 		queries: q,
 	}
@@ -22,7 +22,6 @@ func NewJobRepository(q *generated.Queries) *JobRepository {
 func jobFromDb(job *generated.Job) *Job {
 	var result *string
 	if len(job.Result) > 0 {
-		// result is stored as JSONB. If it's a JSON string, unwrap it.
 		var decoded string
 		if err := json.Unmarshal(job.Result, &decoded); err == nil {
 			result = &decoded
@@ -99,8 +98,6 @@ func (r *JobRepository) UpdateJob(c context.Context, body *UpdateJob) (*Job, err
 
 	var result []byte
 	if body.Result != nil {
-		// jobs.result is JSONB in DB, so ensure we always write valid JSON.
-		// For a plain message, store it as a JSON string.
 		b, err := json.Marshal(*body.Result)
 		if err != nil {
 			return nil, err

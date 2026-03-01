@@ -1,7 +1,6 @@
 package static
 
 import (
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/labstack/echo/v4"
@@ -14,12 +13,12 @@ type Module struct {
 }
 type Dependencies struct {
 	Server  *server.Server
-	Queries *generated.Queries
+	Queries staticQuerier
 }
 
 func NewModule(deps Dependencies) *Module {
-	repo := NewStaticRepository(deps.Server, deps.Queries)
-	service := NewStaticService(deps.Server, repo)
+	repo := NewStaticRepository(deps.Queries)
+	service := NewStaticService(repo)
 	handler := NewStaticHandler(deps.Server, service)
 
 	return &Module{
@@ -27,10 +26,6 @@ func NewModule(deps Dependencies) *Module {
 		staticSvc: service,
 		repo:      repo,
 	}
-}
-
-func (m *Module) GetService() *StaticService {
-	return m.staticSvc
 }
 
 func (m *Module) GetRepository() *StaticRepository {

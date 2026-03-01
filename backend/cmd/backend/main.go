@@ -31,7 +31,6 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/investment"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/reconciliation"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/shared"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/sms"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/static"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/system"
@@ -59,26 +58,25 @@ func main() {
 	defer loggerService.Shutdown()
 	log := logger.NewLoggerWithService(cfg.Observability, loggerService)
 
-	// Initialize Clerk SDK with secret key for token validation
 	clerk.SetKey(cfg.Auth.SecretKey)
 	log.Info().Msg("Clerk SDK initialized")
 	server, err := server.New(cfg, log, loggerService)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create server")
+	}
+
 	db, err := database.New(cfg, log, loggerService)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create database")
 	}
 
 	defer db.Close()
-	// starting db connection
-
-	// registerting all the modules
 	queries := generated.New(server.DB.Pool)
 	globalSvcs, err := services.NewServices(cfg, log)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to start global services")
 	}
 	jobModule := jobs.NewModule(jobs.Deps{
-		Server:  server,
 		Queries: queries,
 	})
 	qClient := asynq.NewClient(asynq.RedisClientOpt{
@@ -87,7 +85,13 @@ func main() {
 	taskService := tasks.NewTaskService(globalSvcs, jobModule.GetJobRepository(), qClient)
 
 	databaseTxnManager := database.NewTxManager(server.DB.Pool)
-	balanceUpdater := shared.NewBalanceUpdater(queries)
+	balanceUpdater := account.NewBalanceUpdater(queries)
+
+	userModule := user.NewModule(user.Deps{
+		Server:     server,
+		Queries:    queries,
+		TxnManager: databaseTxnManager,
+	})
 
 	reconciliationModule := reconciliation.NewReconiliationModule(reconciliation.Deps{
 		Server:         server,
@@ -95,9 +99,9 @@ func main() {
 		TxnManager:     databaseTxnManager,
 		TaskService:    taskService,
 		BalanceUpdater: balanceUpdater,
+		UserService:    userModule.GetUserService(),
 	})
 
-	// create new job service
 	q := queue.NewJobService(log, cfg, taskService, qClient, jobModule.GetJobRepository(), reconciliationModule.GetService())
 
 	if err := q.Start(); err != nil {
@@ -107,20 +111,11 @@ func main() {
 		log.Fatal().Err(err).Msg("failed to migrate database")
 	}
 
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create server")
-	}
-
 	systemModule := system.NewModule(system.Dependencies{Server: server})
 	authModule := auth.NewModule(auth.Dependencies{
 		Server:      server,
 		Queries:     queries,
 		TaskService: taskService,
-	})
-	userModule := user.NewModule(user.Deps{
-		Server:     server,
-		Queries:    queries,
-		TxnManager: databaseTxnManager,
 	})
 	accountModule := account.NewAccountModule(account.Deps{
 		Server:  server,
@@ -169,14 +164,12 @@ func main() {
 	server.SetupHTTPServer(r)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 
-	// Start server
 	go func() {
 		if err = server.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatal().Err(err).Msg("failed to start server")
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown the server
 	<-ctx.Done()
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout*time.Second)
 

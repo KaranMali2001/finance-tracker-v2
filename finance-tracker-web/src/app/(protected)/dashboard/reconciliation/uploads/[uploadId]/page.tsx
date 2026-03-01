@@ -6,6 +6,7 @@ import {
 } from '@/components/shared/hooks/useReconciliation';
 import { ConfirmDialog } from '@/components/shared/dialog/ConfirmDialog';
 import { ErrorState, LoadingState, PageShell } from '@/components/shared/layout';
+import { formatRupees } from '@/components/shared/utils/currency';
 import { TanStackTable, type TanStackTableColumn } from '@/components/shared/table';
 import { Button } from '@/components/ui/button';
 import type {
@@ -35,6 +36,89 @@ export default function ReconciliationUploadDetailPage() {
   const deleteUpload = useDeleteReconciliationUpload();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  const reconTransactionColumns: TanStackTableColumn<ReconTransaction>[] = useMemo(
+    () => [
+      {
+        id: 'row',
+        header: 'Row',
+        width: 'col-span-1',
+        cell: (txn: ReconTransaction) => (
+          <span className="font-mono text-muted-foreground">{txn.row_number}</span>
+        ),
+      },
+      {
+        id: 'date',
+        header: 'Date',
+        width: 'col-span-2',
+        cell: (txn: ReconTransaction) => (
+          <span className="whitespace-nowrap">
+            {txn.transaction_date ? format(new Date(txn.transaction_date), 'dd MMM yyyy') : '—'}
+          </span>
+        ),
+      },
+      {
+        id: 'description',
+        header: 'Description',
+        width: 'col-span-3',
+        cell: (txn: ReconTransaction) => (
+          <span className="max-w-[200px] truncate block" title={txn.description ?? ''}>
+            {txn.description ?? '—'}
+          </span>
+        ),
+      },
+      {
+        id: 'amount',
+        header: 'Amount',
+        width: 'col-span-2',
+        cell: (txn: ReconTransaction) => (
+          <span className="font-mono whitespace-nowrap">{formatRupees(txn.amount ?? 0)}</span>
+        ),
+      },
+      {
+        id: 'type',
+        header: 'Type',
+        width: 'col-span-2',
+        cell: (txn: ReconTransaction) => (
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+              txn.type === 'CREDIT'
+                ? 'bg-emerald-100 text-emerald-800'
+                : 'bg-rose-100 text-rose-800'
+            }`}
+          >
+            {txn.type}
+          </span>
+        ),
+      },
+      {
+        id: 'reference',
+        header: 'Reference',
+        width: 'col-span-1',
+        cell: (txn: ReconTransaction) => (
+          <span className="font-mono text-xs text-muted-foreground">
+            {txn.reference_number ?? '—'}
+          </span>
+        ),
+      },
+      {
+        id: 'status',
+        header: 'Status',
+        width: 'col-span-1',
+        cell: (txn: ReconTransaction) =>
+          txn.is_duplicate ? (
+            <span className="inline-flex items-center rounded-full border border-yellow-400 px-2 py-0.5 text-xs font-medium text-yellow-700">
+              Duplicate
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full border border-emerald-400 px-2 py-0.5 text-xs font-medium text-emerald-700">
+              Inserted
+            </span>
+          ),
+      },
+    ],
+    []
+  );
+
   if (isLoading) {
     return (
       <PageShell title="Upload details" description="Bank statement upload">
@@ -58,87 +142,6 @@ export default function ReconciliationUploadDetailPage() {
       </PageShell>
     );
   }
-
-  const reconTransactionColumns: TanStackTableColumn<ReconTransaction>[] = useMemo(
-    () => [
-      {
-        id: 'row',
-        header: 'Row',
-        width: 'col-span-1',
-        cell: (txn) => <span className="font-mono text-muted-foreground">{txn.row_number}</span>,
-      },
-      {
-        id: 'date',
-        header: 'Date',
-        width: 'col-span-2',
-        cell: (txn) => (
-          <span className="whitespace-nowrap">
-            {txn.transaction_date ? format(new Date(txn.transaction_date), 'dd MMM yyyy') : '—'}
-          </span>
-        ),
-      },
-      {
-        id: 'description',
-        header: 'Description',
-        width: 'col-span-3',
-        cell: (txn) => (
-          <span className="max-w-[200px] truncate block" title={txn.description ?? ''}>
-            {txn.description ?? '—'}
-          </span>
-        ),
-      },
-      {
-        id: 'amount',
-        header: 'Amount',
-        width: 'col-span-2',
-        cell: (txn) => (
-          <span className="font-mono whitespace-nowrap">
-            {(txn.amount ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-          </span>
-        ),
-      },
-      {
-        id: 'type',
-        header: 'Type',
-        width: 'col-span-2',
-        cell: (txn) => (
-          <span
-            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
-              txn.type === 'CREDIT' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}
-          >
-            {txn.type}
-          </span>
-        ),
-      },
-      {
-        id: 'reference',
-        header: 'Reference',
-        width: 'col-span-1',
-        cell: (txn) => (
-          <span className="font-mono text-xs text-muted-foreground">
-            {txn.reference_number ?? '—'}
-          </span>
-        ),
-      },
-      {
-        id: 'status',
-        header: 'Status',
-        width: 'col-span-1',
-        cell: (txn) =>
-          txn.is_duplicate ? (
-            <span className="inline-flex items-center rounded-full border border-yellow-400 px-2 py-0.5 text-xs font-medium text-yellow-700">
-              Duplicate
-            </span>
-          ) : (
-            <span className="inline-flex items-center rounded-full border border-green-400 px-2 py-0.5 text-xs font-medium text-green-700">
-              Inserted
-            </span>
-          ),
-      },
-    ],
-    []
-  );
 
   return (
     <PageShell

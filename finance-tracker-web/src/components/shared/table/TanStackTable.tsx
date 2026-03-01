@@ -113,7 +113,6 @@ export function TanStackTable<T extends Record<string, unknown>>({
 }: TanStackTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  // ─── Column defs (TanStack Table core) ────────────────────────────────────
   const columnDefs = useMemo<ColumnDef<T, unknown>[]>(
     () =>
       columns.map((col) => ({
@@ -153,9 +152,6 @@ export function TanStackTable<T extends Record<string, unknown>>({
     onSort?.(columnId, newDir);
   };
 
-  // ─── Grid geometry ─────────────────────────────────────────────────────────
-  // Use inline CSS gridTemplateColumns so Tailwind JIT doesn't need to know
-  // the total column count at build time.
   const { gridStyle } = useMemo(() => {
     let total = columns.reduce((sum, col) => sum + resolveSpan(col.span ?? col.width), 0);
     if (rowActions) total += resolveSpan(rowActions.span ?? rowActions.width);
@@ -168,9 +164,8 @@ export function TanStackTable<T extends Record<string, unknown>>({
     };
   }, [columns, rowActions]);
 
-  // ─── Memoised row ─────────────────────────────────────────────────────────
-  const TableRow = useCallback(
-    ({ row, index }: { row: T; index: number }) => {
+  const renderRow = useCallback(
+    (row: T, index: number) => {
       const rowId = getRowId ? getRowId(row) : index;
       const isDeletingThisRow =
         rowActions?.deletingRowId != null &&
@@ -229,9 +224,6 @@ export function TanStackTable<T extends Record<string, unknown>>({
     [columns, gridStyle, rowActions, getRowId]
   );
 
-  const MemoizedTableRow = React.memo(TableRow);
-
-  // ─── Table content ─────────────────────────────────────────────────────────
   const tableContent = (
     <>
       {/* Header */}
@@ -275,13 +267,7 @@ export function TanStackTable<T extends Record<string, unknown>>({
       {/* Body */}
       <div>
         {data.length > 0 ? (
-          data.map((row, index) => (
-            <MemoizedTableRow
-              key={String(getRowId ? getRowId(row) : index)}
-              row={row}
-              index={index}
-            />
-          ))
+          data.map((row, index) => renderRow(row, index))
         ) : (
           <div className="py-12 text-center">
             {EmptyIcon && <EmptyIcon className="mx-auto mb-4 h-12 w-12 text-stone-300" />}

@@ -3,7 +3,16 @@
 import type { ReconciliationResultRow } from '@/components/shared/hooks/useReconciliation';
 import { useUpdateReconciliationResultStatus } from '@/components/shared/hooks/useReconciliation';
 import { TanStackTable, type TanStackTableColumn } from '@/components/shared/table';
+import { formatRupees } from '@/components/shared/utils/currency';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { internal_domain_reconciliation_BulkUpdateResultStatusReq } from '@/generated/api';
 import { format } from 'date-fns';
 import {
@@ -17,9 +26,6 @@ import {
 import { useMemo, useState } from 'react';
 
 const UA = internal_domain_reconciliation_BulkUpdateResultStatusReq.user_action;
-const PAGE_SIZE = 10;
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 type StatusFilter = 'all' | 'needs_review' | 'accepted' | 'rejected' | 'auto_accepted';
 type TypeFilter = 'all' | 'DEBIT' | 'CREDIT';
@@ -62,8 +68,6 @@ const RESULT_TYPE_LABEL: Record<string, string> = {
   UNMATCHED: 'Unmatched',
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function isSettledRow(row: ReconciliationResultRow) {
   return (
     row.user_action === 'accepted' ||
@@ -105,8 +109,6 @@ function hasActiveFilters(f: Filters) {
     f.confMax !== 100
   );
 }
-
-// ─── Filter panel ─────────────────────────────────────────────────────────────
 
 function FilterPanel({
   filters,
@@ -162,18 +164,18 @@ function FilterPanel({
           Filters
         </span>
         {hasActiveFilters(filters) && (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onReset}
-            className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 font-medium"
+            className="h-auto px-2 py-1 text-xs text-amber-600 hover:text-amber-700 font-medium"
           >
-            <X className="h-3 w-3" />
+            <X className="h-3 w-3 mr-1" />
             Reset all
-          </button>
+          </Button>
         )}
       </div>
 
-      {/* Status */}
       <div className="space-y-2">
         <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">Status</p>
         <div className="flex flex-wrap gap-1.5">
@@ -186,11 +188,12 @@ function FilterPanel({
               { key: 'auto_accepted', label: 'Auto-accepted', count: counts.auto_accepted },
             ] as { key: StatusFilter; label: string; count: number }[]
           ).map(({ key, label, count }) => (
-            <button
+            <Button
               key={key}
-              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => set('status', key)}
-              className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${
+              className={`h-auto gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
                 filters.status === key
                   ? 'border-amber-500 bg-amber-50 text-amber-800'
                   : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'
@@ -206,12 +209,11 @@ function FilterPanel({
               >
                 {count}
               </span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
-      {/* Type */}
       <div className="space-y-2">
         <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">
           Transaction Type
@@ -224,11 +226,12 @@ function FilterPanel({
               { key: 'CREDIT', label: `Credit (${counts.CREDIT})` },
             ] as { key: TypeFilter; label: string }[]
           ).map(({ key, label }) => (
-            <button
+            <Button
               key={key}
-              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => set('txnType', key)}
-              className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${
+              className={`h-auto rounded-full px-2.5 py-1 text-xs font-medium ${
                 filters.txnType === key
                   ? key === 'DEBIT'
                     ? 'border-rose-400 bg-rose-50 text-rose-700'
@@ -239,12 +242,11 @@ function FilterPanel({
               }`}
             >
               {label}
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
-      {/* Match type */}
       <div className="space-y-2">
         <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">
           Match Type
@@ -267,11 +269,12 @@ function FilterPanel({
               { key: 'UNMATCHED', label: 'Unmatched', count: counts.UNMATCHED },
             ] as { key: MatchFilter; label: string; count: number }[]
           ).map(({ key, label, count }) => (
-            <button
+            <Button
               key={key}
-              type="button"
+              variant="outline"
+              size="sm"
               onClick={() => set('match', key)}
-              className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-all ${
+              className={`h-auto gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
                 filters.match === key
                   ? 'border-amber-500 bg-amber-50 text-amber-800'
                   : 'border-stone-200 bg-white text-stone-500 hover:border-stone-300'
@@ -287,12 +290,11 @@ function FilterPanel({
               >
                 {count}
               </span>
-            </button>
+            </Button>
           ))}
         </div>
       </div>
 
-      {/* Confidence range */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">
@@ -342,56 +344,45 @@ function FilterPanel({
   );
 }
 
-// ─── Row modal ────────────────────────────────────────────────────────────────
-
 function RowModal({
   row,
   uploadId,
-  onClose,
+  open,
+  onOpenChange,
 }: {
   row: ReconciliationResultRow;
   uploadId: string;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const { mutate, isPending } = useUpdateReconciliationResultStatus();
   const settled = isSettledRow(row);
   const signals = row.match_signals as Record<string, boolean> | null | undefined;
   const confPct = Math.round(row.confidence_score ?? 0);
-  const amountStr = (row.stmt_amount ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
   function handleAction(action: typeof UA.ACCEPTED | typeof UA.REJECTED) {
-    mutate({ uploadId, body: { upload_id: uploadId, result_ids: [row.id!], user_action: action } });
-    onClose();
+    if (!row.id) return;
+    mutate({ uploadId, body: { upload_id: uploadId, result_ids: [row.id], user_action: action } });
+    onOpenChange(false);
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]"
-      onClick={onClose}
-    >
-      <div
-        className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="p-0 gap-0 max-w-lg">
+        <DialogHeader className="px-6 py-4 border-b border-stone-100">
           <div className="flex items-center gap-2">
-            <span
-              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                RESULT_TYPE_STYLE[row.result_type ?? ''] ?? 'bg-stone-100 text-stone-600'
-              }`}
-            >
-              {RESULT_TYPE_LABEL[row.result_type ?? ''] ?? row.result_type?.replace(/_/g, ' ')}
-            </span>
+            <DialogTitle className="text-base">
+              <span
+                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                  RESULT_TYPE_STYLE[row.result_type ?? ''] ?? 'bg-stone-100 text-stone-600'
+                }`}
+              >
+                {RESULT_TYPE_LABEL[row.result_type ?? ''] ?? row.result_type?.replace(/_/g, ' ')}
+              </span>
+            </DialogTitle>
             <span className="text-xs font-mono text-stone-400">Row {row.stmt_row_number}</span>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        </DialogHeader>
 
         <div className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
           <div className="rounded-xl border border-stone-100 bg-stone-50 p-4">
@@ -412,7 +403,8 @@ function RowModal({
                     row.stmt_type === 'CREDIT' ? 'text-emerald-600' : 'text-rose-600'
                   }`}
                 >
-                  {row.stmt_type === 'DEBIT' ? '−' : '+'}₹{amountStr}
+                  {row.stmt_type === 'DEBIT' ? '−' : '+'}
+                  {formatRupees(row.stmt_amount ?? 0)}
                 </p>
               </div>
               <div className="col-span-2">
@@ -480,9 +472,9 @@ function RowModal({
           </div>
         </div>
 
-        <div className="border-t border-stone-100 px-6 py-4 bg-stone-50/60 flex items-center justify-between">
+        <DialogFooter className="border-t border-stone-100 px-6 py-4 bg-stone-50/60">
           {settled ? (
-            <div className="flex items-center gap-1.5 text-sm">
+            <div className="flex items-center gap-1.5 text-sm w-full">
               {row.match_status === 'auto_accepted' ? (
                 <>
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -501,7 +493,7 @@ function RowModal({
               )}
             </div>
           ) : (
-            <div className="flex gap-3 ml-auto">
+            <>
               <Button
                 variant="outline"
                 className="border-rose-300 text-rose-600 hover:bg-rose-50"
@@ -519,15 +511,13 @@ function RowModal({
                 <CheckCircle2 className="h-4 w-4 mr-1.5" />
                 Accept
               </Button>
-            </div>
+            </>
           )}
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
-
-// ─── Bulk action bar ──────────────────────────────────────────────────────────
 
 function BulkBar({
   selectedIds,
@@ -571,44 +561,37 @@ function BulkBar({
         <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
         Accept all
       </Button>
-      <button
-        type="button"
-        onClick={onClear}
-        className="flex h-7 w-7 items-center justify-center rounded-lg text-stone-400 hover:bg-stone-100"
-      >
+      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClear}>
         <X className="h-3.5 w-3.5" />
-      </button>
+      </Button>
     </div>
   );
 }
 
-// ─── Column definitions ───────────────────────────────────────────────────────
-
 function buildColumns(
   selected: Set<string>,
-  pageRows: ReconciliationResultRow[],
+  _pageRows: ReconciliationResultRow[],
   onToggleRow: (id: string) => void,
-  onToggleAll: () => void,
+  _onToggleAll: () => void,
   onOpenModal: (row: ReconciliationResultRow) => void
 ): TanStackTableColumn<ReconciliationResultRow>[] {
-  const pageIds = pageRows.map((r) => r.id!).filter(Boolean);
-  const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
-
   return [
     {
       id: 'checkbox',
       header: '',
       span: 1,
-      cell: (row) => (
-        <div onClick={(e) => e.stopPropagation()}>
-          <input
-            type="checkbox"
-            checked={selected.has(row.id!)}
-            onChange={() => onToggleRow(row.id!)}
-            className="h-3.5 w-3.5 rounded accent-amber-500 cursor-pointer"
-          />
-        </div>
-      ),
+      cell: (row) => {
+        const rowId = row.id ?? '';
+        return (
+          <div onClick={(e) => e.stopPropagation()}>
+            <Checkbox
+              checked={selected.has(rowId)}
+              onCheckedChange={() => onToggleRow(rowId)}
+              aria-label={`Select row ${row.stmt_row_number}`}
+            />
+          </div>
+        );
+      },
     },
     {
       id: 'stmt_row_number',
@@ -634,14 +617,14 @@ function buildColumns(
       header: 'Description',
       span: 5,
       cell: (row) => (
-        <button
-          type="button"
-          className="w-full text-left text-sm text-stone-800 truncate hover:text-amber-700 transition-colors"
+        <Button
+          variant="link"
+          className="w-full justify-start p-0 h-auto text-sm text-stone-800 truncate hover:text-amber-700 hover:no-underline"
           title={row.stmt_description ?? ''}
           onClick={() => onOpenModal(row)}
         >
           {row.stmt_description ?? '—'}
-        </button>
+        </Button>
       ),
     },
     {
@@ -656,8 +639,8 @@ function buildColumns(
             row.stmt_type === 'CREDIT' ? 'text-emerald-600' : 'text-rose-600'
           }`}
         >
-          {row.stmt_type === 'DEBIT' ? '−' : '+'}₹
-          {(row.stmt_amount ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          {row.stmt_type === 'DEBIT' ? '−' : '+'}
+          {formatRupees(row.stmt_amount ?? 0)}
         </span>
       ),
     },
@@ -721,10 +704,11 @@ function buildColumns(
       cell: (row) => {
         const settled = isSettledRow(row);
         return (
-          <button
-            type="button"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-auto p-0"
             onClick={() => onOpenModal(row)}
-            className="flex items-center justify-end w-full"
             title="View details"
           >
             {!settled ? (
@@ -736,14 +720,12 @@ function buildColumns(
             ) : (
               <XCircle className="h-4 w-4 text-rose-400" />
             )}
-          </button>
+          </Button>
         );
       },
     },
   ];
 }
-
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export function ReconciliationReviewTable({
   results,
@@ -769,7 +751,6 @@ export function ReconciliationReviewTable({
   const [modalRow, setModalRow] = useState<ReconciliationResultRow | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  // Client-side filter applied on the current page only
   const pageRows = useMemo(() => applyFilters(results, filters), [results, filters]);
 
   function toggleRow(id: string) {
@@ -781,7 +762,7 @@ export function ReconciliationReviewTable({
   }
 
   function toggleAll() {
-    const pageIds = pageRows.map((r) => r.id!).filter(Boolean);
+    const pageIds = pageRows.filter((r) => r.id).map((r) => r.id as string);
     const allSelected = pageIds.every((id) => selected.has(id));
     if (allSelected) {
       setSelected((prev) => {
@@ -816,13 +797,13 @@ export function ReconciliationReviewTable({
 
   return (
     <div className="space-y-3 pb-20">
-      {/* Toolbar */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => setShowFilters((v) => !v)}
-            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all ${
+            className={`gap-1.5 ${
               showFilters || activeFilterCount > 0
                 ? 'border-amber-500 bg-amber-50 text-amber-700'
                 : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300'
@@ -835,22 +816,22 @@ export function ReconciliationReviewTable({
                 {activeFilterCount}
               </span>
             )}
-          </button>
+          </Button>
           {activeFilterCount > 0 && (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => handleFilterChange(DEFAULT_FILTERS)}
-              className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-600"
+              className="h-auto px-2 py-1 text-xs text-stone-400 hover:text-stone-600"
             >
-              <X className="h-3 w-3" />
+              <X className="h-3 w-3 mr-1" />
               Clear
-            </button>
+            </Button>
           )}
         </div>
         <span className="text-xs text-stone-400">{total} total rows</span>
       </div>
 
-      {/* Filter panel */}
       {showFilters && (
         <FilterPanel
           filters={filters}
@@ -860,7 +841,6 @@ export function ReconciliationReviewTable({
         />
       )}
 
-      {/* Table */}
       <TanStackTable<ReconciliationResultRow>
         data={pageRows}
         columns={columns}
@@ -876,12 +856,17 @@ export function ReconciliationReviewTable({
         pageSizeOptions={[10, 25, 50, 100]}
       />
 
-      {/* Row detail modal */}
       {modalRow && (
-        <RowModal row={modalRow} uploadId={uploadId} onClose={() => setModalRow(null)} />
+        <RowModal
+          row={modalRow}
+          uploadId={uploadId}
+          open={!!modalRow}
+          onOpenChange={(open) => {
+            if (!open) setModalRow(null);
+          }}
+        />
       )}
 
-      {/* Bulk action bar */}
       {selectedIds.length > 0 && (
         <BulkBar
           selectedIds={selectedIds}

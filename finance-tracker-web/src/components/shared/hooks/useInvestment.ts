@@ -22,11 +22,6 @@ interface InvestmentGoalFilters {
   createdAtAfter?: string;
 }
 
-/**
- * Get investment goals with optional filters hook
- * Fetches investment goals for the authenticated user with optional filters
- * Only fetches when Clerk is loaded and user is signed in
- */
 export function useInvestmentGoals(filters?: InvestmentGoalFilters) {
   const { isLoaded, isSignedIn } = useAuth();
 
@@ -54,22 +49,17 @@ export function useInvestmentGoals(filters?: InvestmentGoalFilters) {
         filters?.createdAtAfter
       ),
     {
-      enabled: isLoaded && isSignedIn, // Only fetch when Clerk is loaded and user is signed in
+      enabled: isLoaded && isSignedIn,
       showToastOnError: true,
     }
   );
 }
 
-/**
- * Get investment goal by ID hook
- * Fetches a specific investment goal by ID for the authenticated user
- * Only fetches when Clerk is loaded, user is signed in, and ID is provided
- */
 export function useInvestmentGoalById(id?: string) {
   const { isLoaded, isSignedIn } = useAuth();
 
   return useApiQuery<internal_domain_investment_Goal>(
-    ['investment-goal', id],
+    ['investment-goals', id],
     () => {
       if (!id) {
         throw new Error('Goal ID is required');
@@ -77,16 +67,12 @@ export function useInvestmentGoalById(id?: string) {
       return InvestmentService.getInvestmentGoal1(id);
     },
     {
-      enabled: isLoaded && isSignedIn && !!id, // Only fetch when Clerk is loaded, user is signed in, and ID is provided
+      enabled: isLoaded && isSignedIn && !!id,
       showToastOnError: true,
     }
   );
 }
 
-/**
- * Create investment goal hook
- * Creates a new investment goal for the authenticated user
- */
 export function useCreateInvestmentGoal() {
   const queryClient = useQueryClient();
 
@@ -94,7 +80,6 @@ export function useCreateInvestmentGoal() {
     (data) => InvestmentService.postInvestmentGoal(data),
     {
       onSuccess: () => {
-        // Invalidate and refetch investment goals list
         queryClient.invalidateQueries({ queryKey: ['investment-goals'] });
       },
       showToastOnSuccess: true,
@@ -104,10 +89,6 @@ export function useCreateInvestmentGoal() {
   );
 }
 
-/**
- * Delete investment goal hook
- * Deletes an existing investment goal for the authenticated user
- */
 export function useDeleteInvestmentGoal() {
   const queryClient = useQueryClient();
 
@@ -121,10 +102,6 @@ export function useDeleteInvestmentGoal() {
   });
 }
 
-/**
- * Update investment goal hook
- * Updates an existing investment goal for the authenticated user
- */
 export function useUpdateInvestmentGoal() {
   const queryClient = useQueryClient();
 
@@ -137,10 +114,8 @@ export function useUpdateInvestmentGoal() {
     },
     {
       onSuccess: (_, variables) => {
-        // Invalidate and refetch investment goals list
         queryClient.invalidateQueries({ queryKey: ['investment-goals'] });
-        // Invalidate specific goal
-        queryClient.invalidateQueries({ queryKey: ['investment-goal', variables.id] });
+        queryClient.invalidateQueries({ queryKey: ['investment-goals', variables.id] });
       },
       showToastOnSuccess: true,
       successMessage: 'Investment goal updated successfully',

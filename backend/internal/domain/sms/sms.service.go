@@ -1,19 +1,16 @@
 package sms
 
 import (
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/labstack/echo/v4"
 )
 
 type SmsService struct {
-	server *server.Server
-	r      *SmsRepository
+	r smsRepository
 }
 
-func NewSmsService(s *server.Server, r *SmsRepository) *SmsService {
+func NewSmsService(r smsRepository) *SmsService {
 	return &SmsService{
-		server: s,
-		r:      r,
+		r: r,
 	}
 }
 

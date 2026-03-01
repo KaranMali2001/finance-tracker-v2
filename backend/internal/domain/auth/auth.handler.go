@@ -11,6 +11,7 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/labstack/echo/v4"
+	svix "github.com/svix/svix-webhooks/go"
 )
 
 type AuthHandler struct {
@@ -19,10 +20,18 @@ type AuthHandler struct {
 	service *AuthService
 }
 
+func verifyClerkWebhook(body []byte, headers http.Header, signingSecret string) error {
+	wh, err := svix.NewWebhook(signingSecret)
+	if err != nil {
+		return err
+	}
+	return wh.Verify(body, headers)
+}
+
 func NewAuthHandler(s *server.Server, service *AuthService) *AuthHandler {
 	return &AuthHandler{
 		server:  s,
-		base:    handler.NewHandler(s),
+		base:    handler.NewHandler(),
 		service: service,
 	}
 }
@@ -33,15 +42,12 @@ func (h *AuthHandler) CreateUser(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to read request body")
 	}
 
-	// Restore the body so it can be read again if needed
 	c.Request().Body = io.NopCloser(bytes.NewReader(body))
 
-	// Verify webhook signature using utility function
-	if err := VerifyClerkWebhook(body, c.Request().Header, h.server.Config.Auth.WebhookKey); err != nil {
+	if err := verifyClerkWebhook(body, c.Request().Header, h.server.Config.Auth.WebhookKey); err != nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "invalid webhook signature")
 	}
 
-	// Parse payload to extract only clerk_id and email
 	var webhookPayload ClerkUserCreatedWebhook
 	if err := json.Unmarshal(body, &webhookPayload); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "invalid webhook payload")

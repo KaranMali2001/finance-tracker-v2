@@ -18,7 +18,7 @@ type ReconHandler struct {
 func NewReconHandler(s *server.Server, svc *ReconService) *ReconHandler {
 	return &ReconHandler{
 		server:  s,
-		base:    handler.NewHandler(s),
+		base:    handler.NewHandler(),
 		service: svc,
 	}
 }

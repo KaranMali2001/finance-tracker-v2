@@ -5,16 +5,15 @@ import (
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
 )
 
 type UserRepository struct {
-	queries *generated.Queries
+	queries userQuerier
 	tm      *database.TxManager
 }
 
-func NewUserRepository(s *server.Server, queries *generated.Queries, tm *database.TxManager) *UserRepository {
+func NewUserRepository(queries userQuerier, tm *database.TxManager) *UserRepository {
 	return &UserRepository{
 		queries: queries,
 		tm:      tm,
@@ -87,6 +86,18 @@ func (r *UserRepository) UpdateUserInternal(c context.Context, payload *UpdateUs
 		return nil, err
 	}
 	return userFromDb(&user), nil
+}
+
+func (r *UserRepository) GetReconciliationThreshold(ctx context.Context, clerkId string) (int, error) {
+	queries := r.queries
+	if tx := r.tm.GetTx(ctx); tx != nil {
+		queries = r.queries.WithTx(tx)
+	}
+	user, err := queries.GetAuthUser(ctx, clerkId)
+	if err != nil {
+		return 0, err
+	}
+	return utils.Int4ToInt(user.ReconciliationThreshold), nil
 }
 
 func (r *UserRepository) GetUserByApiKey(c context.Context, apiKey string) (*User, error) {

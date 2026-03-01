@@ -1,8 +1,6 @@
 package jobs
 
 import (
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/labstack/echo/v4"
 )
 
@@ -11,8 +9,7 @@ type Module struct {
 }
 
 type Deps struct {
-	Server  *server.Server
-	Queries *generated.Queries
+	Queries jobQuerier
 }
 
 func NewModule(deps Deps) *Module {
@@ -27,6 +24,4 @@ func (m *Module) GetJobRepository() *JobRepository {
 }
 
 func (m *Module) RegisterRoutes(g *echo.Group) {
-	// Jobs module doesn't expose HTTP endpoints directly
-	// Jobs are managed internally through the queue system
 }

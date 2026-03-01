@@ -18,7 +18,7 @@ func NewStaticHandler(s *server.Server, svc *StaticService) *StaticHandler {
 	return &StaticHandler{
 		server:  s,
 		service: svc,
-		base:    handler.NewHandler(s),
+		base:    handler.NewHandler(),
 	}
 }
 
