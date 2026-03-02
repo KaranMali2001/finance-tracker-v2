@@ -371,16 +371,71 @@ const docTemplate = `{
                 }
             }
         },
+        "/investment/autolink": {
+            "post": {
+                "description": "Enqueues a background job that fuzzy-matches the given transactions against active SIP rules",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Investment"
+                ],
+                "summary": "Enqueue an auto-link job for a batch of transactions",
+                "parameters": [
+                    {
+                        "description": "Transaction IDs to match",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_investment.EnqueueAutoLinkReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/investment/goal": {
             "get": {
-                "description": "Retrieves investment goals for the authenticated user with optional filters",
+                "description": "Retrieves investment goals for the authenticated user",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Investment"
                 ],
-                "summary": "Get investment goals with filters",
+                "summary": "List investment goals with optional filters",
                 "parameters": [
                     {
                         "type": "string",
@@ -390,14 +445,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "format": "date",
                         "description": "Target date before (YYYY-MM-DD)",
                         "name": "target_date_before",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "format": "date",
                         "description": "Target date after (YYYY-MM-DD)",
                         "name": "target_date_after",
                         "in": "query"
@@ -422,14 +475,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "format": "date-time",
-                        "description": "Created at before (ISO 8601)",
-                        "name": "created_at_before",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "format": "date-time",
                         "description": "Created at after (ISO 8601)",
                         "name": "created_at_after",
                         "in": "query"
@@ -534,9 +579,69 @@ const docTemplate = `{
                 }
             }
         },
+        "/investment/goal/{goal_id}/transactions": {
+            "get": {
+                "description": "Returns all linked transactions for the given goal",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Investment"
+                ],
+                "summary": "List goal transactions for a goal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Goal ID",
+                        "name": "goal_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_domain_investment.GoalTransaction"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/investment/goal/{id}": {
             "get": {
-                "description": "Retrieves a specific investment goal by ID for the authenticated user",
+                "description": "Retrieves a specific investment goal by ID",
                 "produces": [
                     "application/json"
                 ],
@@ -600,7 +705,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Updates an existing investment goal for the authenticated user",
+                "description": "Updates an existing investment goal",
                 "consumes": [
                     "application/json"
                 ],
@@ -676,10 +781,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Deletes an existing investment goal for the authenticated user",
-                "produces": [
-                    "application/json"
-                ],
+                "description": "Deletes an investment goal by ID",
                 "tags": [
                     "Investment"
                 ],
@@ -718,6 +820,517 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/investment/link": {
+            "post": {
+                "description": "Creates a goal_transaction record linking a transaction to an investment",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Investment"
+                ],
+                "summary": "Manually link a transaction to an investment rule",
+                "parameters": [
+                    {
+                        "description": "Link request",
+                        "name": "link",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_investment.LinkTransactionReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_investment.GoalTransaction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/investment/link/{id}": {
+            "delete": {
+                "description": "Removes a goal_transaction link and recalculates the investment current_value",
+                "tags": [
+                    "Investment"
+                ],
+                "summary": "Unlink a goal transaction",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "GoalTransaction ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/investment/rule": {
+            "get": {
+                "description": "Lists investment rules for the authenticated user with optional filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Investment"
+                ],
+                "summary": "List investment rules",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Filter by goal ID",
+                        "name": "goal_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by contribution type (one_time|sip)",
+                        "name": "contribution_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by investment type",
+                        "name": "investment_type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_domain_investment.GoalInvestment"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Creates a new investment rule (one-time or SIP) optionally linked to a goal",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Investment"
+                ],
+                "summary": "Create a goal investment rule",
+                "parameters": [
+                    {
+                        "description": "Investment rule",
+                        "name": "investment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_investment.CreateGoalInvestmentReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_investment.GoalInvestment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/investment/rule/{id}": {
+            "get": {
+                "description": "Returns a single investment rule",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Investment"
+                ],
+                "summary": "Get investment rule by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Investment rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_investment.GoalInvestment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an existing investment rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Investment"
+                ],
+                "summary": "Update an investment rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Investment rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Investment update",
+                        "name": "investment",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_investment.UpdateGoalInvestmentReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_domain_investment.GoalInvestment"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes an investment rule by ID",
+                "tags": [
+                    "Investment"
+                ],
+                "summary": "Delete an investment rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Investment rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/investment/rule/{investment_id}/transactions": {
+            "get": {
+                "description": "Returns all linked transactions for the given investment rule",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Investment"
+                ],
+                "summary": "List goal transactions for an investment rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Investment rule ID",
+                        "name": "investment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/internal_domain_investment.GoalTransaction"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -2164,6 +2777,62 @@ const docTemplate = `{
                 }
             }
         },
+        "internal_domain_investment.CreateGoalInvestmentReq": {
+            "type": "object",
+            "required": [
+                "account_id",
+                "contribution_type",
+                "contribution_value",
+                "investment_type"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "auto_invest": {
+                    "type": "boolean"
+                },
+                "contribution_type": {
+                    "type": "string",
+                    "enum": [
+                        "one_time",
+                        "sip"
+                    ]
+                },
+                "contribution_value": {
+                    "type": "number"
+                },
+                "current_value": {
+                    "type": "number"
+                },
+                "description_pattern": {
+                    "type": "string"
+                },
+                "goal_id": {
+                    "type": "string"
+                },
+                "investment_day": {
+                    "type": "integer"
+                },
+                "investment_type": {
+                    "type": "string",
+                    "enum": [
+                        "mutual_fund",
+                        "stock",
+                        "fd",
+                        "ppf",
+                        "nps",
+                        "gold",
+                        "real_estate",
+                        "crypto",
+                        "other"
+                    ]
+                },
+                "merchant_name_pattern": {
+                    "type": "string"
+                }
+            }
+        },
         "internal_domain_investment.CreateGoalReq": {
             "type": "object",
             "required": [
@@ -2189,6 +2858,21 @@ const docTemplate = `{
                 },
                 "target_date": {
                     "type": "string"
+                }
+            }
+        },
+        "internal_domain_investment.EnqueueAutoLinkReq": {
+            "type": "object",
+            "required": [
+                "transaction_ids"
+            ],
+            "properties": {
+                "transaction_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -2223,6 +2907,170 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_investment.GoalInvestment": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "string"
+                },
+                "auto_invest": {
+                    "type": "boolean"
+                },
+                "contribution_type": {
+                    "type": "string"
+                },
+                "contribution_value": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "current_value": {
+                    "type": "number"
+                },
+                "description_pattern": {
+                    "type": "string"
+                },
+                "goal_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "investment_day": {
+                    "type": "integer"
+                },
+                "investment_type": {
+                    "type": "string"
+                },
+                "merchant_name_pattern": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_investment.GoalTransaction": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "expected_amount": {
+                    "type": "number"
+                },
+                "goal_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "investment_id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "transaction_date": {
+                    "type": "string"
+                },
+                "transaction_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_investment.LinkTransactionReq": {
+            "type": "object",
+            "required": [
+                "amount",
+                "investment_id",
+                "transaction_date",
+                "transaction_id"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "expected_amount": {
+                    "type": "number"
+                },
+                "investment_id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "transaction_date": {
+                    "type": "string"
+                },
+                "transaction_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_domain_investment.UpdateGoalInvestmentReq": {
+            "type": "object",
+            "required": [
+                "id"
+            ],
+            "properties": {
+                "auto_invest": {
+                    "type": "boolean"
+                },
+                "contribution_type": {
+                    "type": "string",
+                    "enum": [
+                        "one_time",
+                        "sip"
+                    ]
+                },
+                "contribution_value": {
+                    "type": "number"
+                },
+                "current_value": {
+                    "type": "number"
+                },
+                "description_pattern": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "investment_day": {
+                    "type": "integer"
+                },
+                "investment_type": {
+                    "type": "string",
+                    "enum": [
+                        "mutual_fund",
+                        "stock",
+                        "fd",
+                        "ppf",
+                        "nps",
+                        "gold",
+                        "real_estate",
+                        "crypto",
+                        "other"
+                    ]
+                },
+                "merchant_name_pattern": {
                     "type": "string"
                 }
             }

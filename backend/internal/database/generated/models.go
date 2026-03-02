@@ -62,6 +62,7 @@ const (
 	JobTypeWEBHOOK            JobType = "WEBHOOK"
 	JobTypeBANKRECONCILIATION JobType = "BANK_RECONCILIATION"
 	JobTypeREPORTS            JobType = "REPORTS"
+	JobTypeINVESTMENTAUTOLINK JobType = "INVESTMENT_AUTO_LINK"
 )
 
 func (e *JobType) Scan(src interface{}) error {
@@ -460,17 +461,20 @@ type Goal struct {
 }
 
 type GoalInvestment struct {
-	ID                pgtype.UUID
-	GoalID            pgtype.UUID
-	InvestmentType    string
-	ContributionType  string
-	ContributionValue pgtype.Numeric
-	CurrentValue      pgtype.Numeric
-	AccountID         pgtype.UUID
-	AutoInvest        pgtype.Bool
-	InvestmentDay     pgtype.Int4
-	CreatedAt         pgtype.Timestamp
-	UpdatedAt         pgtype.Timestamp
+	ID                  pgtype.UUID
+	GoalID              pgtype.UUID
+	InvestmentType      string
+	ContributionType    string
+	ContributionValue   pgtype.Numeric
+	CurrentValue        pgtype.Numeric
+	AccountID           pgtype.UUID
+	AutoInvest          pgtype.Bool
+	InvestmentDay       pgtype.Int4
+	CreatedAt           pgtype.Timestamp
+	UpdatedAt           pgtype.Timestamp
+	UserID              string
+	MerchantNamePattern pgtype.Text
+	DescriptionPattern  pgtype.Text
 }
 
 type GoalTransaction struct {
@@ -483,6 +487,8 @@ type GoalTransaction struct {
 	Notes           pgtype.Text
 	CreatedAt       pgtype.Timestamp
 	UpdatedAt       pgtype.Timestamp
+	Source          string
+	ExpectedAmount  pgtype.Numeric
 }
 
 type Job struct {
@@ -576,6 +582,8 @@ type RecurringTransaction struct {
 	DeletedAt             pgtype.Timestamp
 	CreatedAt             pgtype.Timestamp
 	UpdatedAt             pgtype.Timestamp
+	RecurringType         string
+	GoalInvestmentID      pgtype.UUID
 }
 
 type SmsLog struct {

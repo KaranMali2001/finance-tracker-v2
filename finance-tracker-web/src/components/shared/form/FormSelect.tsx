@@ -90,7 +90,7 @@ function FormSelect<
               field.onChange(value);
               setSearch(''); // Reset search when value is selected
             }}
-            value={field.value ?? ''}
+            value={field.value || undefined}
             disabled={disabled}
           >
             <FormControl>

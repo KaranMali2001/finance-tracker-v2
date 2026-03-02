@@ -14,6 +14,7 @@ const (
 	JobTypeWEBHOOK            JobType = "WEBHOOK"
 	JobTypeBANKRECONCILIATION JobType = "BANK_RECONCILIATION"
 	JobTypeREPORTS            JobType = "REPORTS"
+	JobTypeINVESTMENTAUTOLINK JobType = "INVESTMENT_AUTO_LINK"
 )
 
 type JobStatus string

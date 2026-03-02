@@ -1,5 +1,6 @@
 'use client';
 
+import type React from 'react';
 import {
   Sidebar,
   SidebarContent,
@@ -10,6 +11,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   useSidebar,
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
@@ -19,10 +23,12 @@ import {
   ChevronLeft,
   FileSpreadsheet,
   Landmark,
+  LayoutDashboard,
   LogOut,
   MessageSquare,
   Receipt,
   Target,
+  TrendingUp,
   User,
   Wallet,
 } from 'lucide-react';
@@ -36,7 +42,12 @@ export function DashboardSidebar() {
   const router = useRouter();
   const { toggleSidebar } = useSidebar();
 
-  const navigationItems = [
+  const navigationItems: {
+    title: string;
+    url: string;
+    icon: React.ElementType;
+    children?: { title: string; url: string; icon: React.ElementType }[];
+  }[] = [
     {
       title: 'Accounts',
       url: '/dashboard/accounts',
@@ -53,9 +64,26 @@ export function DashboardSidebar() {
       icon: FileSpreadsheet,
     },
     {
+      title: 'Investment Dashboard',
+      url: '/dashboard/investments/overview',
+      icon: LayoutDashboard,
+    },
+    {
       title: 'Investments',
       url: '/dashboard/investments',
       icon: Target,
+      children: [
+        {
+          title: 'Goals',
+          url: '/dashboard/investments',
+          icon: Target,
+        },
+        {
+          title: 'My Investments',
+          url: '/dashboard/investments/rules',
+          icon: TrendingUp,
+        },
+      ],
     },
     {
       title: 'SMS Logs',
@@ -112,12 +140,35 @@ export function DashboardSidebar() {
                 const isActive = pathname === item.url || pathname.startsWith(item.url + '/');
                 return (
                   <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive && !item.children}
+                      tooltip={item.title}
+                    >
                       <Link href={item.url} className="flex items-center gap-2">
                         <Icon className="h-4 w-4" />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
+                    {item.children && isActive && (
+                      <SidebarMenuSub>
+                        {item.children.map((child) => {
+                          const ChildIcon = child.icon;
+                          const isChildActive =
+                            pathname === child.url || pathname.startsWith(child.url + '/');
+                          return (
+                            <SidebarMenuSubItem key={child.url}>
+                              <SidebarMenuSubButton asChild isActive={isChildActive}>
+                                <Link href={child.url} className="flex items-center gap-2">
+                                  <ChildIcon className="h-3.5 w-3.5" />
+                                  <span>{child.title}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
+                      </SidebarMenuSub>
+                    )}
                   </SidebarMenuItem>
                 );
               })}

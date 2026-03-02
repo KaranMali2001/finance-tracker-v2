@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"mime/multipart"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
@@ -215,7 +214,7 @@ func (s *ReconService) ParseAndProcessStatement(c echo.Context, payload *ParseEx
 }
 
 func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.BankReconciliationPayload, log *zerolog.Logger) error {
-	logMem("start", log)
+	utils.LogMem("start", log)
 
 	if err := s.repo.UpdateUploadProcessingStatus(ctx, payload.UploadID, generated.UploadProcessingStatusPROCESSING, uuid.Nil); err != nil {
 		log.Error().Err(err).Msg("[recon] failed to mark upload PROCESSING")
@@ -229,7 +228,7 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.B
 		log.Info().Str("upload_id", payload.UploadID.String()).Msg("[recon] no statement transactions to process")
 		return s.repo.UpdateUploadProcessingStatus(ctx, payload.UploadID, generated.UploadProcessingStatusCOMPLETED, uuid.Nil)
 	}
-	logMem("after_stmt_fetch", log)
+	utils.LogMem("after_stmt_fetch", log)
 	log.Info().Int("stmt_count", len(stmtTxns)).Msg("[recon] fetched statement transactions")
 
 	maxAppDate, err := s.repo.GetMaxAppTransactionDate(ctx, payload.AccountID)
@@ -273,7 +272,7 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.B
 				return fmt.Errorf("failed to fetch app transactions: %w", err)
 			}
 			log.Info().Int("app_txn_count", len(appTxns)).Msg("[recon] fetched app transactions")
-			logMem("after_app_fetch", log)
+			utils.LogMem("after_app_fetch", log)
 		}
 	}
 
@@ -286,7 +285,7 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.B
 		exactKey := fmt.Sprintf("%.2f|%s|%s", at.Amount, at.Type, at.TransactionDate.Format("2006-01-02"))
 		exactMap[exactKey] = at
 	}
-	logMem("after_indexing", log)
+	utils.LogMem("after_indexing", log)
 
 	results := make([]ReconciliationResult, 0, len(overlapRows)+len(tailRows))
 	var highConfMatches []ReconciliationResult
@@ -316,7 +315,7 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.B
 				ConfidenceScore:        95,
 				MatchSignals: MatchSignals{
 					DateDiffDays: 0, AmountDiff: 0, AmountDiffPct: 0,
-					DescriptionSimilarity: tokenJaccard(stmtDesc, match.Description),
+					DescriptionSimilarity: utils.TokenJaccard(stmtDesc, match.Description),
 					ReferenceMatch:        stmtRef != "" && stmtRef == match.ReferenceNumber,
 					DateScore:             40, AmountScore: 35, DescriptionScore: 0, ReferenceScore: 0,
 				},
@@ -376,7 +375,7 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.B
 			results = append(results, res)
 		}
 	}
-	logMem("after_scoring", log)
+	utils.LogMem("after_scoring", log)
 	log.Info().Int("results_so_far", len(results)).Msg("[recon] scoring complete")
 
 	autoCreateParams := make([]generated.CreateTxnBatchParams, 0)
@@ -444,7 +443,7 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.B
 			}
 		}
 	}
-	logMem("after_auto_create", log)
+	utils.LogMem("after_auto_create", log)
 
 	for _, res := range highConfMatches {
 		if res.AppTransactionID != nil {
@@ -453,18 +452,18 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.B
 			}
 		}
 	}
-	logMem("after_auto_verify", log)
+	utils.LogMem("after_auto_verify", log)
 
 	if err := s.repo.InsertReconciliationResults(ctx, results); err != nil {
 		return fmt.Errorf("failed to insert reconciliation results: %w", err)
 	}
-	logMem("after_batch_insert", log)
+	utils.LogMem("after_batch_insert", log)
 	log.Info().Int("total_results", len(results)).Msg("[recon] inserted all reconciliation results")
 
 	if err := s.repo.UpdateUploadProcessingStatus(ctx, payload.UploadID, generated.UploadProcessingStatusCOMPLETED, uuid.Nil); err != nil {
 		log.Error().Err(err).Msg("[recon] failed to mark upload COMPLETED")
 	}
-	logMem("done", log)
+	utils.LogMem("done", log)
 	return nil
 }
 
@@ -505,7 +504,7 @@ func scoreMatch(stmtAmount float64, stmtDesc, stmtRef string, stmtDate time.Time
 		signals.AmountScore = 15
 	}
 
-	similarity := tokenJaccard(stmtDesc, at.Description)
+	similarity := utils.TokenJaccard(stmtDesc, at.Description)
 	signals.DescriptionSimilarity = similarity
 	switch {
 	case similarity >= 0.7:
@@ -523,33 +522,6 @@ func scoreMatch(stmtAmount float64, stmtDesc, stmtRef string, stmtDate time.Time
 
 	total := signals.DateScore + signals.AmountScore + signals.DescriptionScore + signals.ReferenceScore
 	return signals, total
-}
-
-func tokenJaccard(a, b string) float64 {
-	setA := tokenSet(a)
-	setB := tokenSet(b)
-	if len(setA) == 0 && len(setB) == 0 {
-		return 0
-	}
-	intersection := 0
-	for t := range setA {
-		if setB[t] {
-			intersection++
-		}
-	}
-	union := len(setA) + len(setB) - intersection
-	if union == 0 {
-		return 0
-	}
-	return float64(intersection) / float64(union)
-}
-
-func tokenSet(s string) map[string]bool {
-	set := make(map[string]bool)
-	for _, t := range strings.Fields(strings.ToLower(s)) {
-		set[t] = true
-	}
-	return set
 }
 
 func stmtTxnToCreateParams(userID string, accountID uuid.UUID, st StatementTransaction) generated.CreateTxnBatchParams {
@@ -576,18 +548,6 @@ func stmtTxnToCreateParams(userID string, accountID uuid.UUID, st StatementTrans
 		Source:          source,
 		StatementTxnID:  utils.UUIDToPgtype(st.ID),
 	}
-}
-
-func logMem(phase string, log *zerolog.Logger) {
-	var m runtime.MemStats
-	runtime.ReadMemStats(&m)
-	log.Info().
-		Str("phase", phase).
-		Str("alloc_mb", fmt.Sprintf("%.2f", float64(m.Alloc)/1024/1024)).
-		Str("total_alloc_mb", fmt.Sprintf("%.2f", float64(m.TotalAlloc)/1024/1024)).
-		Str("sys_mb", fmt.Sprintf("%.2f", float64(m.Sys)/1024/1024)).
-		Uint32("gc_cycles", m.NumGC).
-		Msg("[MEM]")
 }
 
 func parseXlsxRows(r interface {

@@ -117,6 +117,47 @@ definitions:
         example: true
         type: boolean
     type: object
+  internal_domain_investment.CreateGoalInvestmentReq:
+    properties:
+      account_id:
+        type: string
+      auto_invest:
+        type: boolean
+      contribution_type:
+        enum:
+        - one_time
+        - sip
+        type: string
+      contribution_value:
+        type: number
+      current_value:
+        type: number
+      description_pattern:
+        type: string
+      goal_id:
+        type: string
+      investment_day:
+        type: integer
+      investment_type:
+        enum:
+        - mutual_fund
+        - stock
+        - fd
+        - ppf
+        - nps
+        - gold
+        - real_estate
+        - crypto
+        - other
+        type: string
+      merchant_name_pattern:
+        type: string
+    required:
+    - account_id
+    - contribution_type
+    - contribution_value
+    - investment_type
+    type: object
   internal_domain_investment.CreateGoalReq:
     properties:
       current_amount:
@@ -135,6 +176,16 @@ definitions:
     - name
     - target_amount
     - target_date
+    type: object
+  internal_domain_investment.EnqueueAutoLinkReq:
+    properties:
+      transaction_ids:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - transaction_ids
     type: object
   internal_domain_investment.Goal:
     properties:
@@ -158,6 +209,118 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  internal_domain_investment.GoalInvestment:
+    properties:
+      account_id:
+        type: string
+      auto_invest:
+        type: boolean
+      contribution_type:
+        type: string
+      contribution_value:
+        type: number
+      created_at:
+        type: string
+      current_value:
+        type: number
+      description_pattern:
+        type: string
+      goal_id:
+        type: string
+      id:
+        type: string
+      investment_day:
+        type: integer
+      investment_type:
+        type: string
+      merchant_name_pattern:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+    type: object
+  internal_domain_investment.GoalTransaction:
+    properties:
+      amount:
+        type: number
+      created_at:
+        type: string
+      expected_amount:
+        type: number
+      goal_id:
+        type: string
+      id:
+        type: string
+      investment_id:
+        type: string
+      notes:
+        type: string
+      source:
+        type: string
+      transaction_date:
+        type: string
+      transaction_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  internal_domain_investment.LinkTransactionReq:
+    properties:
+      amount:
+        type: number
+      expected_amount:
+        type: number
+      investment_id:
+        type: string
+      notes:
+        type: string
+      transaction_date:
+        type: string
+      transaction_id:
+        type: string
+    required:
+    - amount
+    - investment_id
+    - transaction_date
+    - transaction_id
+    type: object
+  internal_domain_investment.UpdateGoalInvestmentReq:
+    properties:
+      auto_invest:
+        type: boolean
+      contribution_type:
+        enum:
+        - one_time
+        - sip
+        type: string
+      contribution_value:
+        type: number
+      current_value:
+        type: number
+      description_pattern:
+        type: string
+      id:
+        type: string
+      investment_day:
+        type: integer
+      investment_type:
+        enum:
+        - mutual_fund
+        - stock
+        - fd
+        - ppf
+        - nps
+        - gold
+        - real_estate
+        - crypto
+        - other
+        type: string
+      merchant_name_pattern:
+        type: string
+    required:
+    - id
     type: object
   internal_domain_investment.UpdateGoals:
     properties:
@@ -1019,22 +1182,56 @@ paths:
       summary: Health status
       tags:
       - System
+  /investment/autolink:
+    post:
+      consumes:
+      - application/json
+      description: Enqueues a background job that fuzzy-matches the given transactions
+        against active SIP rules
+      parameters:
+      - description: Transaction IDs to match
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_investment.EnqueueAutoLinkReq'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Enqueue an auto-link job for a batch of transactions
+      tags:
+      - Investment
   /investment/goal:
     get:
-      description: Retrieves investment goals for the authenticated user with optional
-        filters
+      description: Retrieves investment goals for the authenticated user
       parameters:
       - description: Goal status
         in: query
         name: status
         type: string
       - description: Target date before (YYYY-MM-DD)
-        format: date
         in: query
         name: target_date_before
         type: string
       - description: Target date after (YYYY-MM-DD)
-        format: date
         in: query
         name: target_date_after
         type: string
@@ -1050,13 +1247,7 @@ paths:
         in: query
         name: priority
         type: integer
-      - description: Created at before (ISO 8601)
-        format: date-time
-        in: query
-        name: created_at_before
-        type: string
       - description: Created at after (ISO 8601)
-        format: date-time
         in: query
         name: created_at_after
         type: string
@@ -1087,7 +1278,7 @@ paths:
             additionalProperties:
               type: string
             type: object
-      summary: Get investment goals with filters
+      summary: List investment goals with optional filters
       tags:
       - Investment
     post:
@@ -1129,9 +1320,49 @@ paths:
       summary: Create a new investment goal
       tags:
       - Investment
+  /investment/goal/{goal_id}/transactions:
+    get:
+      description: Returns all linked transactions for the given goal
+      parameters:
+      - description: Goal ID
+        format: uuid
+        in: path
+        name: goal_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_domain_investment.GoalTransaction'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List goal transactions for a goal
+      tags:
+      - Investment
   /investment/goal/{id}:
     delete:
-      description: Deletes an existing investment goal for the authenticated user
+      description: Deletes an investment goal by ID
       parameters:
       - description: Goal ID
         format: uuid
@@ -1139,8 +1370,6 @@ paths:
         name: id
         required: true
         type: string
-      produces:
-      - application/json
       responses:
         "204":
           description: No Content
@@ -1172,8 +1401,7 @@ paths:
       tags:
       - Investment
     get:
-      description: Retrieves a specific investment goal by ID for the authenticated
-        user
+      description: Retrieves a specific investment goal by ID
       parameters:
       - description: Goal ID
         format: uuid
@@ -1218,7 +1446,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Updates an existing investment goal for the authenticated user
+      description: Updates an existing investment goal
       parameters:
       - description: Goal ID
         format: uuid
@@ -1264,6 +1492,349 @@ paths:
               type: string
             type: object
       summary: Update an investment goal
+      tags:
+      - Investment
+  /investment/link:
+    post:
+      consumes:
+      - application/json
+      description: Creates a goal_transaction record linking a transaction to an investment
+      parameters:
+      - description: Link request
+        in: body
+        name: link
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_investment.LinkTransactionReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_domain_investment.GoalTransaction'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Manually link a transaction to an investment rule
+      tags:
+      - Investment
+  /investment/link/{id}:
+    delete:
+      description: Removes a goal_transaction link and recalculates the investment
+        current_value
+      parameters:
+      - description: GoalTransaction ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Unlink a goal transaction
+      tags:
+      - Investment
+  /investment/rule:
+    get:
+      description: Lists investment rules for the authenticated user with optional
+        filters
+      parameters:
+      - description: Filter by goal ID
+        format: uuid
+        in: query
+        name: goal_id
+        type: string
+      - description: Filter by contribution type (one_time|sip)
+        in: query
+        name: contribution_type
+        type: string
+      - description: Filter by investment type
+        in: query
+        name: investment_type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_domain_investment.GoalInvestment'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List investment rules
+      tags:
+      - Investment
+    post:
+      consumes:
+      - application/json
+      description: Creates a new investment rule (one-time or SIP) optionally linked
+        to a goal
+      parameters:
+      - description: Investment rule
+        in: body
+        name: investment
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_investment.CreateGoalInvestmentReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/internal_domain_investment.GoalInvestment'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a goal investment rule
+      tags:
+      - Investment
+  /investment/rule/{id}:
+    delete:
+      description: Deletes an investment rule by ID
+      parameters:
+      - description: Investment rule ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete an investment rule
+      tags:
+      - Investment
+    get:
+      description: Returns a single investment rule
+      parameters:
+      - description: Investment rule ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_investment.GoalInvestment'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get investment rule by ID
+      tags:
+      - Investment
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing investment rule
+      parameters:
+      - description: Investment rule ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Investment update
+        in: body
+        name: investment
+        required: true
+        schema:
+          $ref: '#/definitions/internal_domain_investment.UpdateGoalInvestmentReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_domain_investment.GoalInvestment'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update an investment rule
+      tags:
+      - Investment
+  /investment/rule/{investment_id}/transactions:
+    get:
+      description: Returns all linked transactions for the given investment rule
+      parameters:
+      - description: Investment rule ID
+        format: uuid
+        in: path
+        name: investment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/internal_domain_investment.GoalTransaction'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List goal transactions for an investment rule
       tags:
       - Investment
   /reconciliation/results/status:

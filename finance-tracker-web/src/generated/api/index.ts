@@ -12,8 +12,14 @@ export type { internal_domain_account_Bank } from './models/internal_domain_acco
 export type { internal_domain_account_CreateAccountReq } from './models/internal_domain_account_CreateAccountReq';
 export type { internal_domain_account_UpdateAccountReq } from './models/internal_domain_account_UpdateAccountReq';
 export type { internal_domain_auth_GetAuthUserResponse } from './models/internal_domain_auth_GetAuthUserResponse';
+export { internal_domain_investment_CreateGoalInvestmentReq } from './models/internal_domain_investment_CreateGoalInvestmentReq';
 export type { internal_domain_investment_CreateGoalReq } from './models/internal_domain_investment_CreateGoalReq';
+export type { internal_domain_investment_EnqueueAutoLinkReq } from './models/internal_domain_investment_EnqueueAutoLinkReq';
 export type { internal_domain_investment_Goal } from './models/internal_domain_investment_Goal';
+export type { internal_domain_investment_GoalInvestment } from './models/internal_domain_investment_GoalInvestment';
+export type { internal_domain_investment_GoalTransaction } from './models/internal_domain_investment_GoalTransaction';
+export type { internal_domain_investment_LinkTransactionReq } from './models/internal_domain_investment_LinkTransactionReq';
+export { internal_domain_investment_UpdateGoalInvestmentReq } from './models/internal_domain_investment_UpdateGoalInvestmentReq';
 export type { internal_domain_investment_UpdateGoals } from './models/internal_domain_investment_UpdateGoals';
 export { internal_domain_reconciliation_BulkUpdateResultStatusReq } from './models/internal_domain_reconciliation_BulkUpdateResultStatusReq';
 export type { internal_domain_reconciliation_BulkUpdateResultStatusRes } from './models/internal_domain_reconciliation_BulkUpdateResultStatusRes';

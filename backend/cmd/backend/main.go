@@ -102,7 +102,14 @@ func main() {
 		UserService:    userModule.GetUserService(),
 	})
 
-	q := queue.NewJobService(log, cfg, taskService, qClient, jobModule.GetJobRepository(), reconciliationModule.GetService())
+	investmentModule := investment.NewInvestmentModule(investment.Deps{
+		Server:      server,
+		Queries:     queries,
+		Tm:          databaseTxnManager,
+		TaskService: taskService,
+	})
+
+	q := queue.NewJobService(log, cfg, taskService, qClient, jobModule.GetJobRepository(), reconciliationModule.GetService(), investmentModule.GetService())
 
 	if err := q.Start(); err != nil {
 		log.Error().Err(err).Msg("failed to start Queue services")
@@ -137,11 +144,6 @@ func main() {
 	smsModule := sms.NewSmsModule(sms.Deps{
 		Server:  server,
 		Queries: queries,
-	})
-	investmentModule := investment.NewInvestmentModule(investment.Deps{
-		Server:  server,
-		Queries: queries,
-		Tm:      databaseTxnManager,
 	})
 
 	log.Info().
