@@ -78,6 +78,33 @@ func (gs *GeminiService) ParseTxn(ctx context.Context, file []byte, categories m
 	return parsedTxn, nil
 }
 
+func (gs *GeminiService) ParseSmsTxn(ctx context.Context, rawSms string, log *zerolog.Logger) (*ParsedTxn, error) {
+	prompt := fmt.Sprintf(`Extract transaction details from this bank SMS message and return ONLY valid JSON with no extra text.
+
+SMS: %s
+
+Return JSON with these fields (use null for unknown values):
+{
+  "amount": <numeric amount>,
+  "account_num": <last 4 digits of account/card number or null>,
+  "type": <"DEBIT" or "CREDIT">,
+  "description": <merchant or transaction description or null>,
+  "reference_number": <UPI ref / transaction ID or null>,
+  "transaction_date": <ISO 8601 date YYYY-MM-DD or null>
+}`, rawSms)
+
+	content := []*genai.Content{
+		{Parts: []*genai.Part{genai.NewPartFromText(prompt)}, Role: genai.RoleUser},
+	}
+	resp, err := gs.GeminiClient.Models.GenerateContent(ctx, gs.Model, content, nil)
+	if err != nil {
+		return nil, err
+	}
+	text := resp.Text()
+	log.Info().Msgf("[sms-llm] Gemini response: %v", text)
+	return parseResponse(text)
+}
+
 func (gs *GeminiService) buildPrompt(categories map[string]string, merchants map[string]string) string {
 	var catList strings.Builder
 	for catId, catName := range categories {

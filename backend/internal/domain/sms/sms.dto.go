@@ -30,6 +30,13 @@ type CreateSmsReq struct {
 	Sender     string    `json:"sender,omitempty"`
 	RawMessage string    `json:"raw_message,omitempty"`
 	ReceivedAt time.Time `json:"received_at,omitempty"`
+
+	ParseStatus     string   `json:"parse_status,omitempty"`
+	Amount          *float64 `json:"amount,omitempty"`
+	AccountNumber   *string  `json:"account_number,omitempty"`
+	TransactionType *string  `json:"transaction_type,omitempty"`
+	Merchant        *string  `json:"merchant,omitempty"`
+	ReferenceNumber *string  `json:"reference_number,omitempty"`
 }
 type DeleteSmsReq struct {
 	SmsId uuid.UUID `param:"id" validate:"required"`

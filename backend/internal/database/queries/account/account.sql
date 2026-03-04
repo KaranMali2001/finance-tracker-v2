@@ -49,3 +49,8 @@ SET current_balance = current_balance + sqlc.arg(delta)::numeric
 WHERE id = sqlc.arg(id)
   AND user_id = sqlc.arg(user_id)
   AND deleted_at IS NULL;
+
+-- name: GetAccountByNumber :one
+SELECT * FROM accounts
+WHERE user_id = $1 AND account_number = $2 AND deleted_at IS NULL
+LIMIT 1;

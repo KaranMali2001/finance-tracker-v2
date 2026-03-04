@@ -3545,13 +3545,31 @@ const docTemplate = `{
         "internal_domain_sms.CreateSmsReq": {
             "type": "object",
             "properties": {
+                "account_number": {
+                    "type": "string"
+                },
+                "amount": {
+                    "type": "number"
+                },
+                "merchant": {
+                    "type": "string"
+                },
+                "parse_status": {
+                    "type": "string"
+                },
                 "raw_message": {
                     "type": "string"
                 },
                 "received_at": {
                     "type": "string"
                 },
+                "reference_number": {
+                    "type": "string"
+                },
                 "sender": {
+                    "type": "string"
+                },
+                "transaction_type": {
                     "type": "string"
                 }
             }

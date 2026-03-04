@@ -11,15 +11,28 @@ import {
   View,
 } from "react-native";
 import { SmsCard } from "../components/SmsCard";
+import { usePendingSms } from "../hooks/usePendingSms";
 import { useSms } from "../hooks/useSms";
 import { useSmsListener } from "../hooks/useSmsListener";
 import { useSmsPermission } from "../hooks/useSmsPermission";
+import { useAppForeground } from "../hooks/useAppForeground";
+import { useSubmitSms } from "../hooks/useSubmitSms";
 import type { ParsedSms } from "../types/sms";
+import { BASE_URL } from "../api/client";
+import { getApiKey } from "../utils/secureStore";
+import { QrScanScreen } from "./QrScanScreen";
 
 export function SmsScreen() {
   const { status, request } = useSmsPermission();
   const { smsList, loading, error, fetchSms } = useSms();
+  const { submit, reset: resetSubmitted, getStatus } = useSubmitSms();
   const [liveIds, setLiveIds] = useState<Set<string>>(new Set());
+  const [displayList, setDisplayList] = useState<ParsedSms[]>([]);
+  const [apiKeyReady, setApiKeyReady] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    getApiKey().then((key) => setApiKeyReady(key !== null));
+  }, []);
 
   useEffect(() => {
     if (status === "granted") {
@@ -27,11 +40,19 @@ export function SmsScreen() {
     }
   }, [status, fetchSms]);
 
-  const [displayList, setDisplayList] = useState<ParsedSms[]>([]);
-
   useEffect(() => {
     setDisplayList(smsList);
   }, [smsList]);
+
+  const handleQrSuccess = useCallback(() => {
+    setDisplayList([]);
+    setLiveIds(new Set());
+    resetSubmitted();
+    setApiKeyReady(true);
+    if (status === "granted") {
+      fetchSms();
+    }
+  }, [resetSubmitted, status, fetchSms]);
 
   const handleLiveSms = useCallback((sms: ParsedSms) => {
     setDisplayList((prev) => {
@@ -40,9 +61,28 @@ export function SmsScreen() {
       return [sms, ...prev];
     });
     setLiveIds((prev) => new Set(prev).add(sms.raw._id));
-  }, []);
+    submit(sms).catch(() => {});
+  }, [submit]);
 
   useSmsListener(status === "granted" ? handleLiveSms : () => {});
+  usePendingSms(status === "granted" ? handleLiveSms : () => {});
+  useAppForeground(useCallback(() => {
+    if (status === "granted") fetchSms();
+  }, [status, fetchSms]));
+
+  if (apiKeyReady === null) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.center}>
+          <ActivityIndicator color="#d9b364" size="large" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!apiKeyReady) {
+    return <QrScanScreen onSuccess={handleQrSuccess} />;
+  }
 
   if (Platform.OS !== "android") {
     return (
@@ -61,7 +101,7 @@ export function SmsScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.center}>
-          <ActivityIndicator color="#6366f1" size="large" />
+          <ActivityIndicator color="#d9b364" size="large" />
           <Text style={styles.emptySubtitle}>Requesting permission...</Text>
         </View>
       </SafeAreaView>
@@ -100,6 +140,9 @@ export function SmsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.urlBanner}>
+        <Text style={styles.urlText} numberOfLines={1}>⚡ {BASE_URL}</Text>
+      </View>
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Transaction SMS</Text>
@@ -121,7 +164,7 @@ export function SmsScreen() {
 
       {loading && displayList.length === 0 ? (
         <View style={styles.center}>
-          <ActivityIndicator color="#6366f1" size="large" />
+          <ActivityIndicator color="#d9b364" size="large" />
           <Text style={styles.emptySubtitle}>Scanning SMS inbox...</Text>
         </View>
       ) : (
@@ -129,13 +172,18 @@ export function SmsScreen() {
           data={displayList}
           keyExtractor={(item: ParsedSms) => item.raw._id}
           renderItem={({ item }: { item: ParsedSms }) => (
-            <SmsCard item={item} isNew={liveIds.has(item.raw._id)} />
+            <SmsCard
+              item={item}
+              isNew={liveIds.has(item.raw._id)}
+              submitStatus={getStatus(item.raw._id)}
+              onSend={() => submit(item)}
+            />
           )}
           refreshControl={
             <RefreshControl
               refreshing={loading}
               onRefresh={() => fetchSms()}
-              tintColor="#6366f1"
+              tintColor="#d9b364"
             />
           }
           ListEmptyComponent={
@@ -158,7 +206,19 @@ export function SmsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0f172a",
+    backgroundColor: "#faf9f7",
+  },
+  urlBanner: {
+    backgroundColor: "#f5f3ef",
+    paddingHorizontal: 16,
+    paddingVertical: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: "#edeae4",
+  },
+  urlText: {
+    color: "#78716c",
+    fontSize: 11,
+    fontFamily: "monospace",
   },
   header: {
     flexDirection: "row",
@@ -167,30 +227,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#1e293b",
+    borderBottomColor: "#edeae4",
+    backgroundColor: "#ffffff",
   },
   title: {
-    color: "#f1f5f9",
+    color: "#433d38",
     fontSize: 20,
     fontWeight: "700",
   },
   subtitle: {
-    color: "#64748b",
+    color: "#78716c",
     fontSize: 13,
     marginTop: 2,
   },
   liveDot: {
-    color: "#22c55e",
+    color: "#4a9e6a",
     fontSize: 10,
   },
   syncButton: {
-    backgroundColor: "#6366f1",
+    backgroundColor: "#d9b364",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
   syncButtonText: {
-    color: "#fff",
+    color: "#ffffff",
     fontWeight: "600",
     fontSize: 13,
   },
@@ -208,25 +269,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   emptyTitle: {
-    color: "#e2e8f0",
+    color: "#433d38",
     fontSize: 18,
     fontWeight: "600",
   },
   emptySubtitle: {
-    color: "#64748b",
+    color: "#78716c",
     fontSize: 14,
     textAlign: "center",
     lineHeight: 20,
   },
   button: {
-    backgroundColor: "#6366f1",
+    backgroundColor: "#d9b364",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 10,
     marginTop: 8,
   },
   buttonText: {
-    color: "#fff",
+    color: "#ffffff",
     fontWeight: "600",
     fontSize: 15,
   },

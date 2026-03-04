@@ -10,6 +10,7 @@ import (
 
 type Module struct {
 	handler *TxnHandler
+	service *TxnService
 }
 
 type Deps struct {
@@ -20,16 +21,22 @@ type Deps struct {
 	StaticRepo     staticProvider
 	Tm             *database.TxManager
 	BalanceUpdater balanceApplier
+	AutoLinker     txnAutoLinker
 }
 
 func NewTxnModule(deps Deps) *Module {
 	repo := NewTxnRepository(deps.Queries, deps.Tm)
-	service := NewTxnService(repo, deps.UserRepo, deps.GeminiSvc, deps.StaticRepo, deps.Tm, deps.BalanceUpdater)
+	service := NewTxnService(repo, deps.UserRepo, deps.GeminiSvc, deps.StaticRepo, deps.Tm, deps.BalanceUpdater, deps.AutoLinker)
 	handler := NewTxnHandler(deps.Server, service)
 
 	return &Module{
 		handler: handler,
+		service: service,
 	}
+}
+
+func (m *Module) GetService() *TxnService {
+	return m.service
 }
 
 func (m *Module) RegisterRoutes(g *echo.Group) {

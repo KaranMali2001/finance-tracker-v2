@@ -11,9 +11,14 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/reconciliation"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
+	"github.com/google/uuid"
 	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
 )
+
+type smsLlmRunner interface {
+	RunLlmParse(ctx context.Context, smsID uuid.UUID, clerkID string, log *zerolog.Logger) error
+}
 
 type JobService struct {
 	Client        *asynq.Client
@@ -24,9 +29,10 @@ type JobService struct {
 	jobRepo       *jobs.JobRepository
 	reconService  *reconciliation.ReconService
 	investService *investment.InvestmentService
+	smsLlmSvc     smsLlmRunner
 }
 
-func NewJobService(logger *zerolog.Logger, cfg *config.Config, taskSvc *tasks.TaskService, client *asynq.Client, jobRepo *jobs.JobRepository, reconService *reconciliation.ReconService, investService *investment.InvestmentService) *JobService {
+func NewJobService(logger *zerolog.Logger, cfg *config.Config, taskSvc *tasks.TaskService, client *asynq.Client, jobRepo *jobs.JobRepository, reconService *reconciliation.ReconService, investService *investment.InvestmentService, smsLlmSvc smsLlmRunner) *JobService {
 	redisAddr := cfg.Redis.Address
 
 	server := asynq.NewServer(
@@ -50,6 +56,7 @@ func NewJobService(logger *zerolog.Logger, cfg *config.Config, taskSvc *tasks.Ta
 		jobRepo:       jobRepo,
 		reconService:  reconService,
 		investService: investService,
+		smsLlmSvc:     smsLlmSvc,
 	}
 }
 
@@ -63,6 +70,9 @@ func (j *JobService) Start() error {
 	})
 	mux.HandleFunc(string(tasks.TaskInvestmentAutoLink), func(ctx context.Context, t *asynq.Task) error {
 		return j.handleInvestmentAutoLinkTask(ctx, t, j.logger)
+	})
+	mux.HandleFunc(string(tasks.TaskLlmSmsParse), func(ctx context.Context, t *asynq.Task) error {
+		return j.handleLlmSmsParseTask(ctx, t, j.logger)
 	})
 
 	j.logger.Info().
@@ -122,7 +132,8 @@ func (j *JobService) handleBankReconciliationTask(ctx context.Context, t *asynq.
 		Int("threshold", payload.ReconciliationThreshold).
 		Msg("[recon] starting reconciliation job")
 
-	if err := j.reconService.RunReconciliationJob(ctx, payload, logger); err != nil {
+	createdIDs, err := j.reconService.RunReconciliationJob(ctx, payload, logger)
+	if err != nil {
 		errMsg := err.Error()
 		if job != nil {
 			status := jobs.JobStatusFailed
@@ -148,6 +159,12 @@ func (j *JobService) handleBankReconciliationTask(ctx context.Context, t *asynq.
 			Result:     &result,
 			FinishedAt: &finishedAt,
 		})
+	}
+
+	if len(createdIDs) > 0 {
+		if err := j.investService.EnqueueAutoLinkCtx(ctx, payload.UserID, createdIDs, logger); err != nil {
+			logger.Error().Err(err).Str("upload_id", payload.UploadID.String()).Msg("[recon] failed to enqueue auto-link after reconciliation")
+		}
 	}
 
 	logger.Info().Str("upload_id", payload.UploadID.String()).Msg("[recon] reconciliation job completed successfully")
@@ -230,5 +247,21 @@ func (j *JobService) handleInvestmentAutoLinkTask(ctx context.Context, t *asynq.
 		Int("unmatched", result.Unmatched).
 		Int("errors", result.Errors).
 		Msg("[invest-autolink] job completed")
+	return nil
+}
+
+func (j *JobService) handleLlmSmsParseTask(ctx context.Context, t *asynq.Task, logger *zerolog.Logger) error {
+	var payload tasks.LlmSmsParsePayload
+	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
+		return fmt.Errorf("failed to unmarshal LLM SMS parse payload: %w", err)
+	}
+
+	logger.Info().Str("sms_id", payload.SmsID.String()).Str("user_id", payload.UserID).Msg("[sms-llm] starting LLM parse")
+
+	if err := j.smsLlmSvc.RunLlmParse(ctx, payload.SmsID, payload.UserID, logger); err != nil {
+		logger.Error().Err(err).Str("sms_id", payload.SmsID.String()).Msg("[sms-llm] LLM parse failed")
+		return err
+	}
+
 	return nil
 }

@@ -18,7 +18,6 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog"
 	"github.com/xuri/excelize/v2"
@@ -213,7 +212,7 @@ func (s *ReconService) ParseAndProcessStatement(c echo.Context, payload *ParseEx
 	}
 }
 
-func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.BankReconciliationPayload, log *zerolog.Logger) error {
+func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.BankReconciliationPayload, log *zerolog.Logger) ([]uuid.UUID, error) {
 	utils.LogMem("start", log)
 
 	if err := s.repo.UpdateUploadProcessingStatus(ctx, payload.UploadID, generated.UploadProcessingStatusPROCESSING, uuid.Nil); err != nil {
@@ -222,18 +221,18 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.B
 
 	stmtTxns, err := s.repo.GetStatementTransactionsForProcessing(ctx, payload.UploadID)
 	if err != nil {
-		return fmt.Errorf("failed to fetch statement transactions: %w", err)
+		return nil, fmt.Errorf("failed to fetch statement transactions: %w", err)
 	}
 	if len(stmtTxns) == 0 {
 		log.Info().Str("upload_id", payload.UploadID.String()).Msg("[recon] no statement transactions to process")
-		return s.repo.UpdateUploadProcessingStatus(ctx, payload.UploadID, generated.UploadProcessingStatusCOMPLETED, uuid.Nil)
+		return nil, s.repo.UpdateUploadProcessingStatus(ctx, payload.UploadID, generated.UploadProcessingStatusCOMPLETED, uuid.Nil)
 	}
 	utils.LogMem("after_stmt_fetch", log)
 	log.Info().Int("stmt_count", len(stmtTxns)).Msg("[recon] fetched statement transactions")
 
 	maxAppDate, err := s.repo.GetMaxAppTransactionDate(ctx, payload.AccountID)
 	if err != nil {
-		return fmt.Errorf("failed to get max app transaction date: %w", err)
+		return nil, fmt.Errorf("failed to get max app transaction date: %w", err)
 	}
 
 	var tailRows, overlapRows []StatementTransaction
@@ -263,13 +262,13 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.B
 			log.Warn().Str("upload_id", payload.UploadID.String()).
 				Msg("[recon] no date range for overlap rows, skipping app-txn fetch")
 		} else if err != nil {
-			return fmt.Errorf("failed to get statement date range: %w", err)
+			return nil, fmt.Errorf("failed to get statement date range: %w", err)
 		} else {
 			from := minDate.AddDate(0, 0, -2)
 			to := maxDate.AddDate(0, 0, 2)
 			appTxns, err = s.repo.GetAppTransactionsInDateRange(ctx, payload.AccountID, from, to)
 			if err != nil {
-				return fmt.Errorf("failed to fetch app transactions: %w", err)
+				return nil, fmt.Errorf("failed to fetch app transactions: %w", err)
 			}
 			log.Info().Int("app_txn_count", len(appTxns)).Msg("[recon] fetched app transactions")
 			utils.LogMem("after_app_fetch", log)
@@ -411,11 +410,13 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.B
 		}
 	}
 
+	var createdIDs []uuid.UUID
 	if len(autoCreateParams) > 0 {
 		newIDs, err := s.repo.CreateAutoTransactionsBatch(ctx, autoCreateParams)
 		if err != nil {
-			return fmt.Errorf("failed to auto-create transactions: %w", err)
+			return nil, fmt.Errorf("failed to auto-create transactions: %w", err)
 		}
+		createdIDs = newIDs
 		for i, resultIdx := range autoCreateResultIdxs {
 			if i < len(newIDs) && resultIdx >= 0 && resultIdx < len(results) {
 				id := newIDs[i]
@@ -455,7 +456,7 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.B
 	utils.LogMem("after_auto_verify", log)
 
 	if err := s.repo.InsertReconciliationResults(ctx, results); err != nil {
-		return fmt.Errorf("failed to insert reconciliation results: %w", err)
+		return nil, fmt.Errorf("failed to insert reconciliation results: %w", err)
 	}
 	utils.LogMem("after_batch_insert", log)
 	log.Info().Int("total_results", len(results)).Msg("[recon] inserted all reconciliation results")
@@ -464,7 +465,7 @@ func (s *ReconService) RunReconciliationJob(ctx context.Context, payload tasks.B
 		log.Error().Err(err).Msg("[recon] failed to mark upload COMPLETED")
 	}
 	utils.LogMem("done", log)
-	return nil
+	return createdIDs, nil
 }
 
 func scoreMatch(stmtAmount float64, stmtDesc, stmtRef string, stmtDate time.Time, at *AppTransaction) (MatchSignals, int) {
@@ -532,18 +533,18 @@ func stmtTxnToCreateParams(userID string, accountID uuid.UUID, st StatementTrans
 	return generated.CreateTxnBatchParams{
 		UserID:          userID,
 		AccountID:       utils.UUIDToPgtype(accountID),
-		ToAccountID:     pgtype.UUID{Valid: false},
-		CategoryID:      pgtype.UUID{Valid: false},
-		MerchantID:      pgtype.UUID{Valid: false},
+		ToAccountID:     utils.UUIDPtrToPgtype(nil),
+		CategoryID:      utils.UUIDPtrToPgtype(nil),
+		MerchantID:      utils.UUIDPtrToPgtype(nil),
 		Type:            generated.TxnType(st.Type),
 		Amount:          utils.Float64PtrToNum(&st.Amount),
 		Description:     utils.StringPtrToText(st.Description),
-		Tags:            pgtype.Text{Valid: false},
-		SmsID:           pgtype.UUID{Valid: false},
-		PaymentMethod:   pgtype.Text{Valid: false},
+		Tags:            utils.StringPtrToText(nil),
+		SmsID:           utils.UUIDPtrToPgtype(nil),
+		PaymentMethod:   utils.StringPtrToText(nil),
 		ReferenceNumber: utils.StringPtrToText(st.ReferenceNumber),
-		IsRecurring:     pgtype.Bool{Valid: false},
-		Notes:           pgtype.Text{Valid: false},
+		IsRecurring:     utils.BoolPtrToBool(nil),
+		Notes:           utils.StringPtrToText(nil),
 		TransactionDate: utils.TimestampToPgtype(*st.TransactionDate),
 		Source:          source,
 		StatementTxnID:  utils.UUIDToPgtype(st.ID),

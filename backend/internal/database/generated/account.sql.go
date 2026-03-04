@@ -149,6 +149,37 @@ func (q *Queries) GetAccountById(ctx context.Context, arg GetAccountByIdParams) 
 	return i, err
 }
 
+const getAccountByNumber = `-- name: GetAccountByNumber :one
+SELECT id, user_id, bank_id, account_number, account_type, account_name, current_balance, is_primary, is_active, created_at, updated_at, deleted_at FROM accounts
+WHERE user_id = $1 AND account_number = $2 AND deleted_at IS NULL
+LIMIT 1
+`
+
+type GetAccountByNumberParams struct {
+	UserID        string
+	AccountNumber string
+}
+
+func (q *Queries) GetAccountByNumber(ctx context.Context, arg GetAccountByNumberParams) (Account, error) {
+	row := q.db.QueryRow(ctx, getAccountByNumber, arg.UserID, arg.AccountNumber)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.BankID,
+		&i.AccountNumber,
+		&i.AccountType,
+		&i.AccountName,
+		&i.CurrentBalance,
+		&i.IsPrimary,
+		&i.IsActive,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const getAccountsByUserId = `-- name: GetAccountsByUserId :many
 SELECT accounts.id, user_id, bank_id, account_number, account_type, account_name, current_balance, is_primary, accounts.is_active, accounts.created_at, accounts.updated_at, deleted_at, banks.id, name, code, banks.is_active, banks.created_at, banks.updated_at FROM accounts LEFT JOIN banks ON accounts.bank_id=banks.id WHERE accounts.user_id=$1 AND accounts.deleted_at IS NULL
 `

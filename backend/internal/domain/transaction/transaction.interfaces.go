@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/rs/zerolog"
 )
 
 // txnQuerier is the narrow slice of generated.Queries that TxnRepository needs.
@@ -50,6 +51,12 @@ type staticProvider interface {
 type balanceApplier interface {
 	Apply(ctx context.Context, userID string, accountID uuid.UUID, txnType string, amount float64) error
 	ApplyBatch(ctx context.Context, userID string, accountID uuid.UUID, incomeDelta, expenseDelta, balanceDelta float64) error
+}
+
+// txnAutoLinker is the subset of investment.InvestmentService used to enqueue
+// investment auto-link jobs after a transaction is created.
+type txnAutoLinker interface {
+	EnqueueAutoLinkCtx(ctx context.Context, clerkID string, txnIDs []uuid.UUID, log *zerolog.Logger) error
 }
 
 // Compile-time check: *generated.Queries must satisfy txnQuerier.

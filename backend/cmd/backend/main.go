@@ -109,11 +109,6 @@ func main() {
 		TaskService: taskService,
 	})
 
-	q := queue.NewJobService(log, cfg, taskService, qClient, jobModule.GetJobRepository(), reconciliationModule.GetService(), investmentModule.GetService())
-
-	if err := q.Start(); err != nil {
-		log.Error().Err(err).Msg("failed to start Queue services")
-	}
 	if err := migrate.MigrateAndSeed(&cfg.Database); err != nil {
 		log.Fatal().Err(err).Msg("failed to migrate database")
 	}
@@ -140,10 +135,25 @@ func main() {
 		StaticRepo:     staticModule.GetRepository(),
 		Tm:             databaseTxnManager,
 		BalanceUpdater: balanceUpdater,
+		AutoLinker:     investmentModule.GetService(),
 	})
+
+	smsLlmService := sms.NewSmsLlmService(queries, globalSvcs.GeminiService, transactionModule.GetService())
+
+	q := queue.NewJobService(log, cfg, taskService, qClient, jobModule.GetJobRepository(), reconciliationModule.GetService(), investmentModule.GetService(), smsLlmService)
+
+	if err := q.Start(); err != nil {
+		log.Error().Err(err).Msg("failed to start Queue services")
+	}
+
 	smsModule := sms.NewSmsModule(sms.Deps{
-		Server:  server,
-		Queries: queries,
+		Server:     server,
+		Queries:    queries,
+		AccQueries: queries,
+		UserSvc:    userModule.GetUserService(),
+
+		TxnSvc:     transactionModule.GetService(),
+		LlmTaskSvc: taskService,
 	})
 
 	log.Info().

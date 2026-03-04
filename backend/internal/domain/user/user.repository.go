@@ -22,6 +22,7 @@ func NewUserRepository(queries userQuerier, tm *database.TxManager) *UserReposit
 
 func userFromDb(user *generated.User) *User {
 	return &User{
+		ClerkId:                      user.ClerkID,
 		Email:                        user.Email,
 		LifetimeIncome:               utils.NumericToFloat64(user.LifetimeIncome),
 		LifetimeExpense:              utils.NumericToFloat64(user.LifetimeExpense),

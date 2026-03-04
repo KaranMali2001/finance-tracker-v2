@@ -100,6 +100,16 @@ func LoadConfig() (*Config, error) {
 		logger.Fatal().Err(err).Msg("could not unmarshal main config")
 	}
 
+	if len(mainConfig.Server.CORSAllowedOrigins) == 1 && strings.Contains(mainConfig.Server.CORSAllowedOrigins[0], ",") {
+		var expanded []string
+		for _, o := range strings.Split(mainConfig.Server.CORSAllowedOrigins[0], ",") {
+			if trimmed := strings.TrimSpace(o); trimmed != "" {
+				expanded = append(expanded, trimmed)
+			}
+		}
+		mainConfig.Server.CORSAllowedOrigins = expanded
+	}
+
 	validate := validator.New()
 
 	err = validate.Struct(mainConfig)
