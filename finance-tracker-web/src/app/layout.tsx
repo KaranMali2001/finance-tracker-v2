@@ -18,40 +18,68 @@ const geistMono = Geist_Mono({
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: '#92400e',
 };
 
+const APP_NAME = 'Wealth Reserve';
+const APP_DESCRIPTION =
+  'Wealth Reserve is a personal finance management app for Indian users. Automatically capture bank transactions via SMS, track investments, reconcile statements, and get deep financial insights — all in one place.';
+
 export const metadata: Metadata = {
-  title: 'Finance Tracker | Personal Financial Management',
-  description:
-    'Track, analyze, and manage your personal finances with automated SMS transaction processing and comprehensive analytics.',
+  metadataBase: new URL('https://wealth-reserve.vercel.app'),
+  title: {
+    default: 'Wealth Reserve | Personal Finance & Investment Tracker',
+    template: '%s | Wealth Reserve',
+  },
+  description: APP_DESCRIPTION,
   keywords: [
-    'finance',
-    'tracker',
-    'personal finance',
-    'budget',
-    'expenses',
-    'transactions',
-    'analytics',
+    'personal finance tracker India',
+    'SMS bank transaction tracker',
+    'investment tracker India',
+    'SIP tracker',
+    'mutual fund tracker',
+    'budget management app',
+    'expense tracker',
+    'bank statement reconciliation',
+    'financial dashboard',
+    'wealth management app',
+    'money tracker India',
+    'UPI transaction tracker',
   ],
-  authors: [{ name: 'Finance Tracker Team' }],
-  robots: 'index, follow',
+  authors: [{ name: 'Wealth Reserve' }],
+  creator: 'Wealth Reserve',
+  publisher: 'Wealth Reserve',
+  applicationName: APP_NAME,
+  category: 'finance',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: '/favicon.svg',
     shortcut: '/favicon.svg',
     apple: '/favicon.svg',
   },
   openGraph: {
-    title: 'Finance Tracker | Personal Financial Management',
-    description:
-      'Track, analyze, and manage your personal finances with automated SMS transaction processing and comprehensive analytics.',
+    title: 'Wealth Reserve | Personal Finance & Investment Tracker',
+    description: APP_DESCRIPTION,
     type: 'website',
-    locale: 'en_US',
+    locale: 'en_IN',
+    siteName: APP_NAME,
+    url: 'https://wealth-reserve.vercel.app',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Finance Tracker | Personal Financial Management',
-    description:
-      'Track, analyze, and manage your personal finances with automated SMS transaction processing and comprehensive analytics.',
+    title: 'Wealth Reserve | Personal Finance & Investment Tracker',
+    description: APP_DESCRIPTION,
+    creator: '@wealthreserve',
   },
 };
 
