@@ -147,9 +147,21 @@ func UintToInt4(u uint) pgtype.Int4 {
 	}
 }
 
-// IntPtrToInt4 converts *int to pgtype.Int4
+// IntPtrToInt4 converts *uint to pgtype.Int4
 // Returns invalid Int4 if the pointer is nil
 func IntPtrToInt4(i *uint) pgtype.Int4 {
+	if i == nil {
+		return pgtype.Int4{Valid: false}
+	}
+	return pgtype.Int4{
+		Int32: int32(*i),
+		Valid: true,
+	}
+}
+
+// SignedIntPtrToInt4 converts *int to pgtype.Int4
+// Returns invalid Int4 if the pointer is nil
+func SignedIntPtrToInt4(i *int) pgtype.Int4 {
 	if i == nil {
 		return pgtype.Int4{Valid: false}
 	}

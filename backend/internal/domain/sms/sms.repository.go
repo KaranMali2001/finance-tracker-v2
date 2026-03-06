@@ -5,16 +5,17 @@ import (
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type SmsRepository struct {
-	q smsQuerier
+	q  smsQuerier
+	aq accountQuerier
 }
 
-func NewSmsRepository(q smsQuerier) *SmsRepository {
-	return &SmsRepository{
-		q: q,
-	}
+func NewSmsRepository(q smsQuerier, aq accountQuerier) *SmsRepository {
+	return &SmsRepository{q: q, aq: aq}
 }
 
 func SmsFromDB(s generated.SmsLog) *SmsLogs {
@@ -74,8 +75,31 @@ func (s *SmsRepository) CreateSms(c context.Context, payload *CreateSmsReq, cler
 		RawMessage: payload.RawMessage,
 		ReceivedAt: utils.TimestampToPgtype(payload.ReceivedAt),
 	}
-
 	sms, err := s.q.CreateSms(c, params)
+	if err != nil {
+		return nil, err
+	}
+	return SmsFromDB(sms), nil
+}
+
+func (s *SmsRepository) GetAccountIdByNumber(ctx context.Context, clerkId, accountNumber string) (*uuid.UUID, error) {
+	acc, err := s.aq.GetAccountByNumber(ctx, generated.GetAccountByNumberParams{
+		UserID:        clerkId,
+		AccountNumber: accountNumber,
+	})
+	if err != nil {
+		return nil, err
+	}
+	id := utils.UUIDToUUID(acc.ID)
+	return &id, nil
+}
+
+func (s *SmsRepository) UpdateSmsParsingStatus(ctx context.Context, smsID uuid.UUID, status string, errMsg *string) (*SmsLogs, error) {
+	sms, err := s.q.UpdateSmsParsingStatus(ctx, generated.UpdateSmsParsingStatusParams{
+		ID:            utils.UUIDToPgtype(smsID),
+		ParsingStatus: pgtype.Text{String: status, Valid: true},
+		ErrorMessage:  utils.StringPtrToText(errMsg),
+	})
 	if err != nil {
 		return nil, err
 	}

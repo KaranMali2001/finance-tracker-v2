@@ -71,6 +71,22 @@ func (s *UserService) GetUserByApiKey(c echo.Context, apiKey string) (*User, err
 	return s.repository.GetUserByApiKey(c.Request().Context(), apiKey)
 }
 
+func (s *UserService) GetClerkIdByApiKey(c echo.Context, apiKey string) (string, error) {
+	u, err := s.repository.GetUserByApiKey(c.Request().Context(), apiKey)
+	if err != nil {
+		return "", err
+	}
+	return u.ClerkId, nil
+}
+
 func (s *UserService) GetReconciliationThreshold(ctx context.Context, clerkId string) (int, error) {
 	return s.repository.GetReconciliationThreshold(ctx, clerkId)
+}
+
+func (s *UserService) GetUseLlmParsing(ctx context.Context, clerkId string) (bool, error) {
+	u, err := s.repository.GetUserByClerkId(ctx, clerkId)
+	if err != nil {
+		return false, err
+	}
+	return u.UseLlmParsing, nil
 }

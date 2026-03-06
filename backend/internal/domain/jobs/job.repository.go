@@ -6,7 +6,6 @@ import (
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type JobRepository struct {
@@ -89,12 +88,7 @@ func (r *JobRepository) UpdateJob(c context.Context, body *UpdateJob) (*Job, err
 		status = generated.NullJobStatus{Valid: false}
 	}
 
-	var attempts pgtype.Int4
-	if body.Attempts != nil {
-		attempts = utils.UintPtrToInt4(body.Attempts)
-	} else {
-		attempts = pgtype.Int4{Valid: false}
-	}
+	attempts := utils.UintPtrToInt4(body.Attempts)
 
 	var result []byte
 	if body.Result != nil {
@@ -105,19 +99,8 @@ func (r *JobRepository) UpdateJob(c context.Context, body *UpdateJob) (*Job, err
 		result = b
 	}
 
-	var lastError pgtype.Text
-	if body.LastError != nil {
-		lastError = utils.StringPtrToText(body.LastError)
-	} else {
-		lastError = pgtype.Text{Valid: false}
-	}
-
-	var finishedAt pgtype.Timestamp
-	if body.FinishedAt != nil {
-		finishedAt = utils.TimestampPtrToPgtype(body.FinishedAt)
-	} else {
-		finishedAt = pgtype.Timestamp{Valid: false}
-	}
+	lastError := utils.StringPtrToText(body.LastError)
+	finishedAt := utils.TimestampPtrToPgtype(body.FinishedAt)
 
 	params := generated.UpdateJobParams{
 		ID:         utils.UUIDToPgtype(body.ID),

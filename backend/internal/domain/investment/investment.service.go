@@ -91,6 +91,16 @@ func (s *InvestmentService) GetGoalTransactionsByGoal(c echo.Context, goalID uui
 // against the user's active SIP rules. Always enqueues — never inlines.
 func (s *InvestmentService) EnqueueAutoLink(c echo.Context, clerkID string, txnIDs []uuid.UUID) error {
 	log := zerolog.Ctx(c.Request().Context())
+	return s.enqueueAutoLinkCtx(c.Request().Context(), clerkID, txnIDs, log)
+}
+
+// EnqueueAutoLinkCtx is the context-based variant used by non-HTTP callers
+// (e.g. CreateTxn service, reconciliation queue handler).
+func (s *InvestmentService) EnqueueAutoLinkCtx(ctx context.Context, clerkID string, txnIDs []uuid.UUID, log *zerolog.Logger) error {
+	return s.enqueueAutoLinkCtx(ctx, clerkID, txnIDs, log)
+}
+
+func (s *InvestmentService) enqueueAutoLinkCtx(ctx context.Context, clerkID string, txnIDs []uuid.UUID, log *zerolog.Logger) error {
 	task, err := s.taskService.NewInvestmentAutoLinkTask(tasks.InvestmentAutoLinkPayload{
 		UserID:         clerkID,
 		TransactionIDs: txnIDs,
@@ -98,7 +108,7 @@ func (s *InvestmentService) EnqueueAutoLink(c echo.Context, clerkID string, txnI
 	if err != nil {
 		return err
 	}
-	return s.taskService.EnqueueTask(c.Request().Context(), task, clerkID, log, jobs.JobTypeINVESTMENTAUTOLINK)
+	return s.taskService.EnqueueTask(ctx, task, clerkID, log, jobs.JobTypeINVESTMENTAUTOLINK)
 }
 
 // RunAutoLinkJob is called by the Asynq worker handler.

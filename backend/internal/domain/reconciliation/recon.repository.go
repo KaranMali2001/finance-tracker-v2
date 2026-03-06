@@ -417,10 +417,7 @@ func (r *ReconRepository) InsertReconciliationResults(ctx context.Context, resul
 		if err != nil {
 			return err
 		}
-		appTxnID := pgtype.UUID{Valid: false}
-		if res.AppTransactionID != nil {
-			appTxnID = utils.UUIDToPgtype(*res.AppTransactionID)
-		}
+		appTxnID := utils.UUIDPtrToPgtype(res.AppTransactionID)
 		args = append(args, generated.InsertReconciliationResultBatchParams{
 			UploadID:               utils.UUIDToPgtype(res.UploadID),
 			StatementTransactionID: utils.UUIDToPgtype(res.StatementTransactionID),
@@ -570,7 +567,7 @@ func parsedTxnToBatchParam(row ParsedTxns) generated.InsertStatementTransactions
 		Description:     utils.StringPtrToText(row.Description),
 		Amount:          utils.Float64PtrToNum(&row.Amount),
 		Type:            string(row.Type),
-		Balance:         pgtype.Numeric{Valid: false},
+		Balance:         utils.Float64PtrToNum(nil),
 		ReferenceNumber: utils.StringPtrToText(row.ReferenceNumber),
 		RawRowHash:      *row.RawRowHash,
 		RowNumber:       int32(row.RowNumber),

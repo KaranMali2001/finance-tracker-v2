@@ -31,9 +31,26 @@ export default function SmsPage() {
 
   const getParsingStatusColor = (status?: string) => {
     if (!status) return 'bg-stone-100 text-stone-600 border-stone-200';
-    if (status === 'success') return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-    if (status === 'failed') return 'bg-red-50 text-red-700 border-red-200';
-    return 'bg-amber-50 text-amber-700 border-amber-200';
+    if (status === 'success' || status === 'llm_success')
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    if (status === 'failed' || status === 'llm_failed')
+      return 'bg-red-50 text-red-700 border-red-200';
+    if (status === 'llm_processing') return 'bg-blue-50 text-blue-700 border-blue-200';
+    if (status === 'llm_success_no_account') return 'bg-amber-50 text-amber-700 border-amber-200';
+    return 'bg-stone-100 text-stone-600 border-stone-200';
+  };
+
+  const getParsingStatusLabel = (status?: string) => {
+    if (!status) return 'Pending';
+    const labels: Record<string, string> = {
+      success: 'Success',
+      failed: 'Failed',
+      llm_success: 'LLM Success',
+      llm_failed: 'LLM Failed',
+      llm_processing: 'LLM Processing',
+      llm_success_no_account: 'No Account',
+    };
+    return labels[status] ?? status;
   };
 
   const handleDeleteClick = useCallback((sms: internal_domain_sms_SmsLogs) => {
@@ -115,7 +132,7 @@ export default function SmsPage() {
           <span
             className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getParsingStatusColor(sms.parsing_status)}`}
           >
-            {sms.parsing_status || 'N/A'}
+            {getParsingStatusLabel(sms.parsing_status)}
           </span>
         ),
       },

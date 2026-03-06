@@ -142,3 +142,90 @@ func (q *Queries) GetSmses(ctx context.Context, userID string) ([]SmsLog, error)
 	}
 	return items, nil
 }
+
+const updateSmsLlmResult = `-- name: UpdateSmsLlmResult :one
+UPDATE sms_logs
+SET llm_parse_attempted = $2,
+    llm_parsed          = $3,
+    llm_response        = $4,
+    parsing_status      = $5,
+    error_message       = $6,
+    updated_at          = NOW()
+WHERE id = $1
+RETURNING id, user_id, sender, raw_message, received_at, parsing_status, error_message, retry_count, llm_parsed, llm_parse_attempted, llm_response, created_at, last_retry_at, updated_at
+`
+
+type UpdateSmsLlmResultParams struct {
+	ID                pgtype.UUID
+	LlmParseAttempted pgtype.Bool
+	LlmParsed         pgtype.Bool
+	LlmResponse       pgtype.Text
+	ParsingStatus     pgtype.Text
+	ErrorMessage      pgtype.Text
+}
+
+func (q *Queries) UpdateSmsLlmResult(ctx context.Context, arg UpdateSmsLlmResultParams) (SmsLog, error) {
+	row := q.db.QueryRow(ctx, updateSmsLlmResult,
+		arg.ID,
+		arg.LlmParseAttempted,
+		arg.LlmParsed,
+		arg.LlmResponse,
+		arg.ParsingStatus,
+		arg.ErrorMessage,
+	)
+	var i SmsLog
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Sender,
+		&i.RawMessage,
+		&i.ReceivedAt,
+		&i.ParsingStatus,
+		&i.ErrorMessage,
+		&i.RetryCount,
+		&i.LlmParsed,
+		&i.LlmParseAttempted,
+		&i.LlmResponse,
+		&i.CreatedAt,
+		&i.LastRetryAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateSmsParsingStatus = `-- name: UpdateSmsParsingStatus :one
+UPDATE sms_logs
+SET parsing_status = $2,
+    error_message  = $3,
+    updated_at     = NOW()
+WHERE id = $1
+RETURNING id, user_id, sender, raw_message, received_at, parsing_status, error_message, retry_count, llm_parsed, llm_parse_attempted, llm_response, created_at, last_retry_at, updated_at
+`
+
+type UpdateSmsParsingStatusParams struct {
+	ID            pgtype.UUID
+	ParsingStatus pgtype.Text
+	ErrorMessage  pgtype.Text
+}
+
+func (q *Queries) UpdateSmsParsingStatus(ctx context.Context, arg UpdateSmsParsingStatusParams) (SmsLog, error) {
+	row := q.db.QueryRow(ctx, updateSmsParsingStatus, arg.ID, arg.ParsingStatus, arg.ErrorMessage)
+	var i SmsLog
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Sender,
+		&i.RawMessage,
+		&i.ReceivedAt,
+		&i.ParsingStatus,
+		&i.ErrorMessage,
+		&i.RetryCount,
+		&i.LlmParsed,
+		&i.LlmParseAttempted,
+		&i.LlmResponse,
+		&i.CreatedAt,
+		&i.LastRetryAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}

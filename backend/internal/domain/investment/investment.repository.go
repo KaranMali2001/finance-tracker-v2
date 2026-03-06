@@ -10,7 +10,6 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const (
@@ -234,15 +233,12 @@ func (r *InvestmentRepository) CreateGoalInvestment(ctx context.Context, payload
 		CurrentValue:        utils.Float64PtrToNum(payload.CurrentValue),
 		AccountID:           utils.UUIDToPgtype(payload.AccountID),
 		AutoInvest:          utils.BoolPtrToBool(payload.AutoInvest),
-		InvestmentDay:       pgtype.Int4{Valid: false},
+		InvestmentDay:       utils.SignedIntPtrToInt4(payload.InvestmentDay),
 		MerchantNamePattern: utils.StringPtrToText(payload.MerchantNamePattern),
 		DescriptionPattern:  utils.StringPtrToText(payload.DescriptionPattern),
 	}
 	if payload.GoalID != nil {
 		arg.GoalID = utils.UUIDToPgtype(*payload.GoalID)
-	}
-	if payload.InvestmentDay != nil {
-		arg.InvestmentDay = utils.IntToInt4(*payload.InvestmentDay)
 	}
 
 	gi, err := q.CreateGoalInvestment(ctx, arg)
@@ -548,7 +544,7 @@ func (r *InvestmentRepository) matchAndLink(
 			ExpectedAmount:  bestRule.ExpectedAmount,
 			Source:          sourceAutoSIP,
 			TransactionDate: utils.TimestampToPgtype(time.Now()),
-			Notes:           pgtype.Text{Valid: false},
+			Notes:           utils.StringPtrToText(nil),
 		}
 
 		if _, err := q.CreateGoalTransaction(ctx, arg); err != nil {

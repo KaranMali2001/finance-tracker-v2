@@ -15,6 +15,7 @@ import (
 	aiservices "github.com/KaranMali2001/finance-tracker-v2-backend/internal/services/aiServices"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog"
 )
 
 type TxnService struct {
@@ -24,9 +25,10 @@ type TxnService struct {
 	staticRepo     staticProvider
 	tm             *database.TxManager
 	balanceUpdater balanceApplier
+	autoLinker     txnAutoLinker
 }
 
-func NewTxnService(r txnRepository, userRepo userProvider, geminiSvc *aiservices.GeminiService, staticRepo staticProvider, tm *database.TxManager, balanceUpdater balanceApplier) *TxnService {
+func NewTxnService(r txnRepository, userRepo userProvider, geminiSvc *aiservices.GeminiService, staticRepo staticProvider, tm *database.TxManager, balanceUpdater balanceApplier, autoLinker txnAutoLinker) *TxnService {
 	return &TxnService{
 		r:              r,
 		userRepo:       userRepo,
@@ -34,6 +36,7 @@ func NewTxnService(r txnRepository, userRepo userProvider, geminiSvc *aiservices
 		staticRepo:     staticRepo,
 		tm:             tm,
 		balanceUpdater: balanceUpdater,
+		autoLinker:     autoLinker,
 	}
 }
 
@@ -57,6 +60,42 @@ func (s *TxnService) CreateTxn(c echo.Context, payload *CreateTxnReq, clerkId st
 	}
 
 	log.Info().Msg("User Lifetime balance and account balance updated successfully")
+
+	txnID, err := uuid.Parse(result.Id)
+	if err == nil {
+		if err := s.autoLinker.EnqueueAutoLinkCtx(c.Request().Context(), clerkId, []uuid.UUID{txnID}, log); err != nil {
+			log.Error().Err(err).Msg("failed to enqueue auto-link after transaction creation")
+		}
+	}
+
+	return result, nil
+}
+
+func (s *TxnService) CreateTxnCtx(ctx context.Context, payload *CreateTxnReq, clerkId string) (*Transaction, error) {
+	log := zerolog.Ctx(ctx)
+	var result *Transaction
+	err := s.tm.WithTx(ctx, func(c context.Context) error {
+		txn, err := s.r.CreateTxns(c, clerkId, payload)
+		if err != nil {
+			return err
+		}
+		result = txn
+		if err := s.balanceUpdater.Apply(c, clerkId, payload.AccountId, string(txn.Type), txn.Amount); err != nil {
+			return err
+		}
+		return nil
+	}, log)
+	if err != nil {
+		return nil, err
+	}
+
+	txnID, err := uuid.Parse(result.Id)
+	if err == nil {
+		if err := s.autoLinker.EnqueueAutoLinkCtx(ctx, clerkId, []uuid.UUID{txnID}, log); err != nil {
+			log.Error().Err(err).Msg("failed to enqueue auto-link after transaction creation")
+		}
+	}
+
 	return result, nil
 }
 

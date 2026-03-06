@@ -8,26 +8,38 @@ import (
 
 type Module struct {
 	handler *SmsHandler
+	server  *server.Server
+	userSvc smsUserProvider
 }
+
 type Deps struct {
-	Server  *server.Server
-	Queries smsQuerier
+	Server     *server.Server
+	Queries    smsQuerier
+	AccQueries accountQuerier
+	UserSvc    smsUserProvider
+
+	TxnSvc     smsTxnCreator
+	LlmTaskSvc smsLlmTaskEnqueuer
 }
 
 func NewSmsModule(deps Deps) *Module {
-	repo := NewSmsRepository(deps.Queries)
-	service := NewSmsService(repo)
+	repo := NewSmsRepository(deps.Queries, deps.AccQueries)
+	service := NewSmsService(repo, deps.TxnSvc, deps.LlmTaskSvc, deps.UserSvc)
 	handler := NewSmsHandler(deps.Server, service)
 
 	return &Module{
 		handler: handler,
+		server:  deps.Server,
+		userSvc: deps.UserSvc,
 	}
 }
 
 func (m *Module) RegisterRoutes(g *echo.Group) {
-	authMiddleware := middleware.NewAuthMiddleware(m.handler.server).RequireAuth
-	g.GET("/sms", m.handler.GetSmses, authMiddleware)
-	g.GET("/sms/:id", m.handler.GetSmsById, authMiddleware)
-	g.POST("/sms", m.handler.CreateSms, authMiddleware)
-	g.DELETE("/sms/:id", m.handler.DeleteSms, authMiddleware)
+	clerkAuth := middleware.NewAuthMiddleware(m.server).RequireAuth
+	deviceAuth := middleware.NewDeviceAuthMiddleware(m.userSvc).RequireDeviceAuth
+
+	g.GET("/sms", m.handler.GetSmses, clerkAuth)
+	g.GET("/sms/:id", m.handler.GetSmsById, clerkAuth)
+	g.POST("/sms", m.handler.CreateSms, deviceAuth)
+	g.DELETE("/sms/:id", m.handler.DeleteSms, clerkAuth)
 }

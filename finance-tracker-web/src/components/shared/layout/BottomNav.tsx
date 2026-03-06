@@ -7,9 +7,9 @@ import { usePathname } from 'next/navigation';
 
 const NAV_ITEMS = [
   { title: 'Accounts', url: '/dashboard/accounts', icon: Wallet },
-  { title: 'Txns', url: '/dashboard/transactions', icon: Receipt },
-  { title: 'Invest', url: '/dashboard/investments', icon: Target },
-  { title: 'Recon', url: '/dashboard/reconciliation', icon: FileSpreadsheet },
+  { title: 'Transactions', url: '/dashboard/transactions', icon: Receipt },
+  { title: 'Investments', url: '/dashboard/investments', icon: Target },
+  { title: 'Reconciliation', url: '/dashboard/reconciliation', icon: FileSpreadsheet },
   { title: 'SMS', url: '/dashboard/sms', icon: MessageSquare },
   { title: 'Profile', url: '/dashboard/profile', icon: User },
 ];
@@ -50,7 +50,7 @@ export function BottomNav() {
                 />
                 <span
                   className={cn(
-                    'text-[10px] font-medium leading-none',
+                    'text-[9px] font-medium leading-none truncate w-full text-center px-0.5',
                     isActive ? 'text-amber-700' : 'text-stone-500'
                   )}
                 >
