@@ -1,5 +1,5 @@
-function DashboardPage() {
-  return <div>DashboardPage</div>;
-}
+import DashboardA from './dashboards/DashboardA';
 
-export default DashboardPage;
+export default function DashboardPage() {
+  return <DashboardA />;
+}

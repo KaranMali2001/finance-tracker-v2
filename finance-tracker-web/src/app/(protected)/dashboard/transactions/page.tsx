@@ -1,6 +1,12 @@
 'use client';
 
-import { ConfirmDialog } from '@/components/shared/dialog';
+import {
+  ConfirmDialog,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/shared/dialog';
 import { useAccounts } from '@/components/shared/hooks/useAccount';
 import { useCategories, useMerchants } from '@/components/shared/hooks/useStatic';
 import { useDeleteTransactions, useTransactions } from '@/components/shared/hooks/useTransaction';
@@ -8,7 +14,9 @@ import { ErrorState, PageShell } from '@/components/shared/layout';
 import { TanStackTable, type TanStackTableColumn } from '@/components/shared/table';
 import type { Transaction } from '@/components/shared/types';
 import { formatDate, formatRupees, getTypeColor } from '@/components/shared/utils';
+import { TransactionEditForm } from '@/components/transactionComponents/TransactionEditForm/TransactionEditForm';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -17,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ChevronDown, Filter, Plus, Receipt, Search, X } from 'lucide-react';
+import { ChevronDown, Filter, Pencil, Plus, Receipt, Search, Trash2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useMemo, useState } from 'react';
@@ -39,6 +47,9 @@ export default function TransactionsPage() {
   const { data: accounts } = useAccounts();
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { mutate: deleteTransactions, isPending: isDeleting } = useDeleteTransactions();
   const router = useRouter();
 
@@ -47,7 +58,6 @@ export default function TransactionsPage() {
   const [pageSize, setPageSize] = useState(25);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
-  // Filter and paginate transactions
   const { filteredTransactions, totalPages } = useMemo(() => {
     if (!transactions) {
       return { filteredTransactions: [], totalPages: 0 };
@@ -55,7 +65,6 @@ export default function TransactionsPage() {
 
     let filtered: Transaction[] = [...transactions];
 
-    // Apply filters
     if (filters.accountId) {
       filtered = filtered.filter((txn) => txn.account_id === filters.accountId);
     }
@@ -91,7 +100,6 @@ export default function TransactionsPage() {
       });
     }
 
-    // Sort by date descending (most recent first)
     filtered.sort((a, b) => {
       const dateA = a.transaction_date ?? a.created_at ?? '';
       const dateB = b.transaction_date ?? b.created_at ?? '';
@@ -143,6 +151,43 @@ export default function TransactionsPage() {
     setTransactionToDelete(null);
   };
 
+  const handleBulkDelete = () => {
+    if (selectedIds.size === 0) return;
+    deleteTransactions(
+      { ids: Array.from(selectedIds) },
+      {
+        onSuccess: () => {
+          setIsBulkDeleteDialogOpen(false);
+          setSelectedIds(new Set());
+        },
+      }
+    );
+  };
+
+  const toggleSelectAll = useCallback(() => {
+    if (selectedIds.size === filteredTransactions.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredTransactions.map((t) => t.id ?? '')));
+    }
+  }, [selectedIds.size, filteredTransactions]);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const allSelected =
+    filteredTransactions.length > 0 && selectedIds.size === filteredTransactions.length;
+  const someSelected = selectedIds.size > 0 && !allSelected;
+
   const hasActiveFilters =
     filters.accountId ||
     filters.categoryId ||
@@ -154,6 +199,19 @@ export default function TransactionsPage() {
 
   const transactionColumns: TanStackTableColumn<Transaction>[] = useMemo(
     () => [
+      {
+        id: 'select',
+        header: '',
+        span: 1,
+        cell: (txn) => (
+          <Checkbox
+            checked={selectedIds.has(txn.id ?? '')}
+            onCheckedChange={() => toggleSelect(txn.id ?? '')}
+            aria-label="Select row"
+            onClick={(e) => e.stopPropagation()}
+          />
+        ),
+      },
       {
         id: 'date',
         header: 'DATE',
@@ -221,7 +279,7 @@ export default function TransactionsPage() {
         ),
       },
     ],
-    []
+    [selectedIds, toggleSelect]
   );
 
   if (error) {
@@ -260,10 +318,8 @@ export default function TransactionsPage() {
     >
       {/* Filters Section */}
       <div className="mb-6 rounded-xl border border-stone-200 bg-white shadow-sm">
-        {/* Always-visible: search + filter toggle */}
         <div className="p-4">
           <div className="flex items-center gap-3">
-            {/* Search input */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-500" />
               <Input
@@ -275,7 +331,6 @@ export default function TransactionsPage() {
               />
             </div>
 
-            {/* Filter toggle button */}
             <Button
               type="button"
               variant="outline"
@@ -288,7 +343,6 @@ export default function TransactionsPage() {
             >
               <Filter className="h-4 w-4" />
               <span className="hidden sm:inline">Filters</span>
-              {/* Active non-search filter count */}
               {(filters.accountId || filters.categoryId || filters.type) && (
                 <span className="flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white">
                   {[filters.accountId, filters.categoryId, filters.type].filter(Boolean).length}
@@ -299,7 +353,6 @@ export default function TransactionsPage() {
               />
             </Button>
 
-            {/* Clear all (only shown when any filter active) */}
             {hasActiveFilters && (
               <Button
                 type="button"
@@ -315,18 +368,13 @@ export default function TransactionsPage() {
           </div>
         </div>
 
-        {/* Collapsible filter selects */}
         {isFiltersOpen && (
           <div className="border-t border-stone-100 p-4 pt-3">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {/* Account Filter */}
               <Select
                 value={filters.accountId || '__all__'}
                 onValueChange={(v) =>
-                  handleFilterChange({
-                    ...filters,
-                    accountId: v === '__all__' ? undefined : v,
-                  })
+                  handleFilterChange({ ...filters, accountId: v === '__all__' ? undefined : v })
                 }
               >
                 <SelectTrigger className="px-3 py-2 text-sm rounded-lg border border-stone-300 bg-white text-stone-900">
@@ -342,14 +390,10 @@ export default function TransactionsPage() {
                 </SelectContent>
               </Select>
 
-              {/* Category Filter */}
               <Select
                 value={filters.categoryId || '__all__'}
                 onValueChange={(v) =>
-                  handleFilterChange({
-                    ...filters,
-                    categoryId: v === '__all__' ? undefined : v,
-                  })
+                  handleFilterChange({ ...filters, categoryId: v === '__all__' ? undefined : v })
                 }
               >
                 <SelectTrigger className="px-3 py-2 text-sm rounded-lg border border-stone-300 bg-white text-stone-900">
@@ -365,14 +409,10 @@ export default function TransactionsPage() {
                 </SelectContent>
               </Select>
 
-              {/* Type Filter */}
               <Select
                 value={filters.type || '__all__'}
                 onValueChange={(v) =>
-                  handleFilterChange({
-                    ...filters,
-                    type: v === '__all__' ? undefined : v,
-                  })
+                  handleFilterChange({ ...filters, type: v === '__all__' ? undefined : v })
                 }
               >
                 <SelectTrigger className="px-3 py-2 text-sm rounded-lg border border-stone-300 bg-white text-stone-900">
@@ -393,7 +433,37 @@ export default function TransactionsPage() {
         )}
       </div>
 
-      {/* Transactions Table */}
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5">
+          <span className="text-sm font-medium text-amber-800">
+            {selectedIds.size} transaction{selectedIds.size !== 1 ? 's' : ''} selected
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setIsBulkDeleteDialogOpen(true)}
+            className="flex items-center gap-1.5"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+      {/* Select-all header row */}
+      <div className="mb-1 flex items-center gap-2 px-1">
+        <Checkbox
+          checked={allSelected}
+          data-state={someSelected ? 'indeterminate' : allSelected ? 'checked' : 'unchecked'}
+          onCheckedChange={toggleSelectAll}
+          aria-label="Select all"
+        />
+        <span className="text-xs text-stone-500">
+          {allSelected ? 'Deselect all' : 'Select all on this page'}
+        </span>
+      </div>
+
       <TanStackTable<Transaction>
         data={filteredTransactions}
         columns={transactionColumns}
@@ -411,6 +481,34 @@ export default function TransactionsPage() {
           width: 'col-span-1',
           onDelete: handleDeleteClick,
           deletingRowId: isDeleting && transactionToDelete ? transactionToDelete.id : undefined,
+          render: (txn) => (
+            <div className="flex items-center justify-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-stone-500 hover:bg-amber-50 hover:text-amber-700"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTransactionToEdit(txn as Transaction);
+                }}
+                title="Edit transaction"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteClick(txn as Transaction);
+                }}
+                title="Delete transaction"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ),
         }}
         emptyMessage={
           hasActiveFilters ? 'No transactions match your filters' : 'No transactions found'
@@ -426,6 +524,26 @@ export default function TransactionsPage() {
         }
       />
 
+      {/* Edit Dialog */}
+      <Dialog
+        open={!!transactionToEdit}
+        onOpenChange={(open) => !open && setTransactionToEdit(null)}
+      >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Transaction</DialogTitle>
+          </DialogHeader>
+          {transactionToEdit && (
+            <TransactionEditForm
+              transaction={transactionToEdit}
+              onSuccess={() => setTransactionToEdit(null)}
+              onCancel={() => setTransactionToEdit(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Single delete confirm */}
       <ConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
@@ -440,6 +558,19 @@ export default function TransactionsPage() {
         destructive
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
+      />
+
+      {/* Bulk delete confirm */}
+      <ConfirmDialog
+        open={isBulkDeleteDialogOpen}
+        onOpenChange={setIsBulkDeleteDialogOpen}
+        title="Delete Transactions"
+        description={`Are you sure you want to delete ${selectedIds.size} transaction${selectedIds.size !== 1 ? 's' : ''}? This action cannot be undone.`}
+        confirmText="Delete All"
+        cancelText="Cancel"
+        destructive
+        onConfirm={handleBulkDelete}
+        onCancel={() => setIsBulkDeleteDialogOpen(false)}
       />
     </PageShell>
   );

@@ -13,9 +13,10 @@ import { ErrorState, PageShell } from '@/components/shared/layout';
 import { TanStackTable, type TanStackTableColumn } from '@/components/shared/table';
 import { formatDate } from '@/components/shared/utils';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import type { internal_domain_sms_SmsLogs } from '@/generated/api';
-import { MessageSquare, Plus, Search } from 'lucide-react';
+import { MessageSquare, Plus, Search, Trash2 } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { SmsCreateForm } from '../../../../components/smsComponents/SmsCreateForm/SmsCreateForm';
 
@@ -25,6 +26,8 @@ export default function SmsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [smsToDelete, setSmsToDelete] = useState<internal_domain_sms_SmsLogs | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [searchFilter, setSearchFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -77,6 +80,15 @@ export default function SmsPage() {
     setSmsToDelete(null);
   };
 
+  const handleBulkDelete = () => {
+    const ids = Array.from(selectedIds);
+    setIsBulkDeleteDialogOpen(false);
+    setSelectedIds(new Set());
+    for (const id of ids) {
+      deleteSms({ id });
+    }
+  };
+
   const { filteredSmses, totalPages } = useMemo(() => {
     if (!smses) return { filteredSmses: [], totalPages: 0 };
 
@@ -104,8 +116,44 @@ export default function SmsPage() {
     return { filteredSmses: paginated, totalPages: total || 1 };
   }, [smses, searchFilter, page, pageSize]);
 
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    if (selectedIds.size === filteredSmses.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredSmses.map((s) => s.id ?? '')));
+    }
+  }, [selectedIds.size, filteredSmses]);
+
+  const allSelected = filteredSmses.length > 0 && selectedIds.size === filteredSmses.length;
+  const someSelected = selectedIds.size > 0 && !allSelected;
+
   const smsColumns: TanStackTableColumn<internal_domain_sms_SmsLogs>[] = useMemo(
     () => [
+      {
+        id: 'select',
+        header: '',
+        span: 1,
+        cell: (sms) => (
+          <Checkbox
+            checked={selectedIds.has(sms.id ?? '')}
+            onCheckedChange={() => toggleSelect(sms.id ?? '')}
+            aria-label="Select row"
+            onClick={(e) => e.stopPropagation()}
+          />
+        ),
+      },
       {
         id: 'sender',
         header: 'SENDER',
@@ -155,7 +203,7 @@ export default function SmsPage() {
         ),
       },
     ],
-    []
+    [selectedIds, toggleSelect]
   );
 
   if (error) {
@@ -205,6 +253,37 @@ export default function SmsPage() {
             className="w-full pl-10 pr-3 py-2 text-sm rounded-lg border border-stone-300 bg-white text-stone-900 placeholder:text-stone-400 focus:border-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-600/20 transition-all"
           />
         </div>
+      </div>
+
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="mb-4 flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5">
+          <span className="text-sm font-medium text-amber-800">
+            {selectedIds.size} SMS log{selectedIds.size !== 1 ? 's' : ''} selected
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setIsBulkDeleteDialogOpen(true)}
+            className="flex items-center gap-1.5"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+      {/* Select-all header row */}
+      <div className="mb-1 flex items-center gap-2 px-1">
+        <Checkbox
+          checked={allSelected}
+          data-state={someSelected ? 'indeterminate' : allSelected ? 'checked' : 'unchecked'}
+          onCheckedChange={toggleSelectAll}
+          aria-label="Select all"
+        />
+        <span className="text-xs text-stone-500">
+          {allSelected ? 'Deselect all' : 'Select all on this page'}
+        </span>
       </div>
 
       {/* SMS Table */}
@@ -258,6 +337,18 @@ export default function SmsPage() {
         destructive
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
+      />
+
+      <ConfirmDialog
+        open={isBulkDeleteDialogOpen}
+        onOpenChange={setIsBulkDeleteDialogOpen}
+        title="Delete SMS Logs"
+        description={`Are you sure you want to delete ${selectedIds.size} SMS log${selectedIds.size !== 1 ? 's' : ''}? This action cannot be undone.`}
+        confirmText="Delete All"
+        cancelText="Cancel"
+        destructive
+        onConfirm={handleBulkDelete}
+        onCancel={() => setIsBulkDeleteDialogOpen(false)}
       />
     </PageShell>
   );

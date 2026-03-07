@@ -727,6 +727,7 @@ type User struct {
 	QrString                       pgtype.Text
 	// Confidence threshold (0-100) for auto-verification. Default: 70
 	ReconciliationThreshold pgtype.Int4
+	MonthlyBudget           pgtype.Numeric
 }
 
 type UserNotification struct {

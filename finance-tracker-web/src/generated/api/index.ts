@@ -54,6 +54,7 @@ export type { internal_domain_user_User } from './models/internal_domain_user_Us
 
 export { AccountService } from './services/AccountService';
 export { AuthService } from './services/AuthService';
+export { DashboardService } from './services/DashboardService';
 export { InvestmentService } from './services/InvestmentService';
 export { ReconciliationService } from './services/ReconciliationService';
 export { SmsService } from './services/SmsService';

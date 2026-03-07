@@ -28,6 +28,7 @@ import (
 	docs "github.com/KaranMali2001/finance-tracker-v2-backend/internal/docs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/account"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/auth"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/dashboard"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/investment"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/reconciliation"
@@ -138,6 +139,11 @@ func main() {
 		AutoLinker:     investmentModule.GetService(),
 	})
 
+	dashboardModule := dashboard.NewDashboardModule(dashboard.Deps{
+		Server:  server,
+		Queries: queries,
+	})
+
 	smsLlmService := sms.NewSmsLlmService(queries, globalSvcs.GeminiService, transactionModule.GetService())
 
 	q := queue.NewJobService(log, cfg, taskService, qClient, jobModule.GetJobRepository(), reconciliationModule.GetService(), investmentModule.GetService(), smsLlmService)
@@ -161,7 +167,7 @@ func main() {
 		Msg("CORS configuration loaded")
 	r := router.NewRouter(server,
 		[]router.RouteRegistrar{systemModule},
-		[]router.RouteRegistrar{authModule, userModule, accountModule, staticModule, transactionModule, smsModule, investmentModule, reconciliationModule},
+		[]router.RouteRegistrar{authModule, userModule, accountModule, staticModule, transactionModule, smsModule, investmentModule, reconciliationModule, dashboardModule},
 	)
 	docs.SwaggerInfo.Title = "Finance Tracker API"
 	docs.SwaggerInfo.Description = "API documentation for Finance Tracker services."

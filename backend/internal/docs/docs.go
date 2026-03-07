@@ -345,6 +345,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/dashboard/stream": {
+            "get": {
+                "description": "Opens a Server-Sent Events stream. Each card's data is emitted as a separate event as soon as the query finishes. Event names: net_worth_trend, spend_by_category, budget_health, goal_progress, account_balances, portfolio_mix, done.",
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Stream dashboard data via SSE",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "date_from",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "date_to",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Returns health information about infrastructure dependencies.",

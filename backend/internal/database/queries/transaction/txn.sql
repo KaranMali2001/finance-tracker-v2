@@ -73,7 +73,7 @@ SET
     amount = COALESCE($4, t.amount),
     description = COALESCE($5, t.description),
     transaction_date = COALESCE($6, t.transaction_date),
-     type = COALESCE(NULLIF($7::text, ''), t.type)
+     type = COALESCE(NULLIF($7::text, '')::txn_type, t.type)
 FROM accounts a
 WHERE t.id = $1
   AND a.id = t.account_id

@@ -27,8 +27,6 @@ import {
   LogOut,
   MessageSquare,
   Receipt,
-  Target,
-  TrendingUp,
   User,
   Wallet,
 } from 'lucide-react';
@@ -49,6 +47,11 @@ export function DashboardSidebar() {
     children?: { title: string; url: string; icon: React.ElementType }[];
   }[] = [
     {
+      title: 'Dashboard',
+      url: '/dashboard',
+      icon: LayoutDashboard,
+    },
+    {
       title: 'Accounts',
       url: '/dashboard/accounts',
       icon: Wallet,
@@ -62,28 +65,6 @@ export function DashboardSidebar() {
       title: 'Reconciliation',
       url: '/dashboard/reconciliation',
       icon: FileSpreadsheet,
-    },
-    {
-      title: 'Investment Dashboard',
-      url: '/dashboard/investments/overview',
-      icon: LayoutDashboard,
-    },
-    {
-      title: 'Investments',
-      url: '/dashboard/investments',
-      icon: Target,
-      children: [
-        {
-          title: 'Goals',
-          url: '/dashboard/investments',
-          icon: Target,
-        },
-        {
-          title: 'My Investments',
-          url: '/dashboard/investments/rules',
-          icon: TrendingUp,
-        },
-      ],
     },
     {
       title: 'SMS Logs',
@@ -137,7 +118,10 @@ export function DashboardSidebar() {
             <SidebarMenu>
               {navigationItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.url || pathname.startsWith(item.url + '/');
+                const isActive =
+                  item.url === '/dashboard'
+                    ? pathname === '/dashboard'
+                    : pathname === item.url || pathname.startsWith(item.url + '/');
                 return (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton

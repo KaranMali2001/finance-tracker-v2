@@ -1177,6 +1177,43 @@ paths:
       summary: Get authenticated user
       tags:
       - Auth
+  /dashboard/stream:
+    get:
+      description: 'Opens a Server-Sent Events stream. Each card''s data is emitted
+        as a separate event as soon as the query finishes. Event names: net_worth_trend,
+        spend_by_category, budget_health, goal_progress, account_balances, portfolio_mix,
+        done.'
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: date_from
+        required: true
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: date_to
+        required: true
+        type: string
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Stream dashboard data via SSE
+      tags:
+      - Dashboard
   /health:
     get:
       description: Returns health information about infrastructure dependencies.

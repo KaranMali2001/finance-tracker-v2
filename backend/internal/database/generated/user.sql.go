@@ -31,7 +31,7 @@ func (q *Queries) AdjustUserLifetimeMetrics(ctx context.Context, arg AdjustUserL
 }
 
 const getAuthUser = `-- name: GetAuthUser :one
-SELECT clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string, reconciliation_threshold FROM users WHERE clerk_id=$1
+SELECT clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string, reconciliation_threshold, monthly_budget FROM users WHERE clerk_id=$1
 `
 
 func (q *Queries) GetAuthUser(ctx context.Context, clerkID string) (User, error) {
@@ -53,12 +53,13 @@ func (q *Queries) GetAuthUser(ctx context.Context, clerkID string) (User, error)
 		&i.ApiKey,
 		&i.QrString,
 		&i.ReconciliationThreshold,
+		&i.MonthlyBudget,
 	)
 	return i, err
 }
 
 const getUserByApiKey = `-- name: GetUserByApiKey :one
-SELECT clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string, reconciliation_threshold FROM users WHERE api_key=$1
+SELECT clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string, reconciliation_threshold, monthly_budget FROM users WHERE api_key=$1
 `
 
 func (q *Queries) GetUserByApiKey(ctx context.Context, apiKey pgtype.Text) (User, error) {
@@ -80,6 +81,7 @@ func (q *Queries) GetUserByApiKey(ctx context.Context, apiKey pgtype.Text) (User
 		&i.ApiKey,
 		&i.QrString,
 		&i.ReconciliationThreshold,
+		&i.MonthlyBudget,
 	)
 	return i, err
 }
@@ -87,7 +89,7 @@ func (q *Queries) GetUserByApiKey(ctx context.Context, apiKey pgtype.Text) (User
 const insertUser = `-- name: InsertUser :one
 INSERT INTO users (email, clerk_id)
 VALUES ($1, $2)
-RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string, reconciliation_threshold
+RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string, reconciliation_threshold, monthly_budget
 `
 
 type InsertUserParams struct {
@@ -114,6 +116,7 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, e
 		&i.ApiKey,
 		&i.QrString,
 		&i.ReconciliationThreshold,
+		&i.MonthlyBudget,
 	)
 	return i, err
 }
@@ -124,7 +127,7 @@ UPDATE users SET
   database_url=COALESCE($2, database_url),
   lifetime_income=COALESCE($3, lifetime_income),
   lifetime_expense=COALESCE($4, lifetime_expense)
-WHERE clerk_id=$5 RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string, reconciliation_threshold
+WHERE clerk_id=$5 RETURNING clerk_id, email, database_url, lifetime_income, lifetime_expense, use_llm_parsing, llm_parse_credits, is_active, created_at, updated_at, transaction_image_parse_attempts, transaction_image_parse_successes, api_key, qr_string, reconciliation_threshold, monthly_budget
 `
 
 type UpdateUserParams struct {
@@ -160,6 +163,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		&i.ApiKey,
 		&i.QrString,
 		&i.ReconciliationThreshold,
+		&i.MonthlyBudget,
 	)
 	return i, err
 }
