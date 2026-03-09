@@ -43,6 +43,8 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/services"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/awslabs/aws-lambda-go-api-proxy/httpadapter"
 	"github.com/clerk/clerk-sdk-go/v2"
 )
 
@@ -184,6 +186,11 @@ func main() {
 		Str("swagger_ui", fmt.Sprintf("http://localhost:%s/swagger/index.html", cfg.Server.Port)).
 		Str("swagger_json", fmt.Sprintf("http://localhost:%s/swagger/doc.json", cfg.Server.Port)).
 		Msg("Swagger docs available")
+
+	if os.Getenv("AWS_LAMBDA_FUNCTION_NAME") != "" {
+		lambda.Start(httpadapter.NewV2(r).ProxyWithContext)
+		return
+	}
 
 	srv.SetupHTTPServer(r)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)

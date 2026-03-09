@@ -1,6 +1,10 @@
 import type { ApiRequestOptions } from '@/generated/api/core/ApiRequestOptions';
 import { OpenAPI } from '@/generated/api/core/OpenAPI';
 
+if (process.env.NEXT_PUBLIC_API_URL) {
+  OpenAPI.BASE = process.env.NEXT_PUBLIC_API_URL;
+}
+
 type TokenProvider = () => Promise<string | null | undefined>;
 
 // Singleton state to track if client is configured (CLIENT-SIDE ONLY)
