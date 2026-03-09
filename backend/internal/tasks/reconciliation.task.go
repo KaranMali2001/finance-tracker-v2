@@ -1,28 +1,22 @@
 package tasks
 
 import (
-	"encoding/json"
-	"fmt"
+	"context"
 
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
 	"github.com/google/uuid"
-	"github.com/hibiken/asynq"
+	"github.com/rs/zerolog"
 )
 
 // BankReconciliationPayload is the job payload for reconciliation:process tasks.
-// Mirrors reconciliation.BankReconciliationPayload — same JSON tags so it
-// round-trips cleanly through Asynq.
 type BankReconciliationPayload struct {
+	JobID                   string    `json:"job_id"`
 	UploadID                uuid.UUID `json:"upload_id"`
 	AccountID               uuid.UUID `json:"account_id"`
 	UserID                  string    `json:"user_id"`
 	ReconciliationThreshold int       `json:"reconciliation_threshold"`
 }
 
-// NewBankReconciliationTask creates an asynq task for the reconciliation job.
-func (ts *TaskService) NewBankReconciliationTask(payload BankReconciliationPayload) (*asynq.Task, error) {
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal reconciliation payload: %w", err)
-	}
-	return NewTaskWithConfig(TaskBankReconciliation, payloadBytes)
+func (ts *TaskService) EnqueueBankReconciliation(ctx context.Context, payload BankReconciliationPayload, logger *zerolog.Logger) error {
+	return ts.EnqueueTask(ctx, jobs.JobTypeBANKRECONCILIATION, payload, payload.UserID, logger)
 }

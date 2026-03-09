@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/dispatcher"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/services"
-	"github.com/hibiken/asynq"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 )
 
@@ -17,146 +17,66 @@ type TaskType string
 const (
 	TaskWelcomeEmail       TaskType = "email:welcome"
 	TaskBankReconciliation TaskType = "reconciliation:process"
+	TaskPing               TaskType = "system:ping"
 )
-
-type QueueName string
-
-const (
-	QueueCritical QueueName = "critical"
-	QueueDefault  QueueName = "default"
-	QueueLow      QueueName = "low"
-)
-
-type QueueConfig struct {
-	QueueName  QueueName
-	MaxRetries int
-	Timeout    time.Duration
-}
-
-var (
-	// CriticalQueueConfig is for urgent tasks that need immediate processing
-	CriticalQueueConfig = QueueConfig{
-		QueueName:  QueueCritical,
-		MaxRetries: 5,
-		Timeout:    30 * time.Second,
-	}
-
-	// DefaultQueueConfig is for normal priority tasks
-	DefaultQueueConfig = QueueConfig{
-		QueueName:  QueueDefault,
-		MaxRetries: 3,
-		Timeout:    30 * time.Second,
-	}
-
-	// LowQueueConfig is for low priority tasks that can be delayed
-	LowQueueConfig = QueueConfig{
-		QueueName:  QueueLow,
-		MaxRetries: 2,
-		Timeout:    10 * time.Minute,
-	}
-)
-
-type TaskConfig struct {
-	Type        TaskType
-	QueueConfig *QueueConfig
-	Description string
-}
-
-var TaskRegistry = map[TaskType]TaskConfig{
-	TaskWelcomeEmail: {
-		Type:        TaskWelcomeEmail,
-		QueueConfig: &DefaultQueueConfig,
-		Description: "Sends welcome email to newly registered users",
-	},
-	TaskBankReconciliation: {
-		Type:        TaskBankReconciliation,
-		QueueConfig: &LowQueueConfig,
-		Description: "Runs transaction matching algorithm for a bank statement upload",
-	},
-}
 
 type TaskService struct {
-	registry      map[TaskType]TaskConfig
 	services      *services.Services
 	jobRepository *jobs.JobRepository
-	client        *asynq.Client
+	dispatcher    dispatcher.Dispatcher
 }
 
-// NewTaskService creates a new TaskService instance
-func NewTaskService(services *services.Services, jobRepository *jobs.JobRepository, client *asynq.Client) *TaskService {
+func NewTaskService(svcs *services.Services, jobRepository *jobs.JobRepository, disp dispatcher.Dispatcher) *TaskService {
 	return &TaskService{
-		registry:      TaskRegistry,
-		services:      services,
+		services:      svcs,
 		jobRepository: jobRepository,
-		client:        client,
+		dispatcher:    disp,
 	}
 }
 
-func GetTaskConfig(taskType TaskType) (TaskConfig, bool) {
-	config, exists := TaskRegistry[taskType]
-	return config, exists
-}
-
-// NewTaskOptions creates asynq task options from QueueConfig
-func NewTaskOptions(config TaskConfig) []asynq.Option {
-	if config.QueueConfig == nil {
-		// Fallback to default if queue config is nil
-		config.QueueConfig = &DefaultQueueConfig
-	}
-
-	opts := []asynq.Option{
-		asynq.Queue(string(config.QueueConfig.QueueName)),
-		asynq.MaxRetry(config.QueueConfig.MaxRetries),
-		asynq.Timeout(config.QueueConfig.Timeout),
-	}
-	return opts
-}
-
-// NewTaskWithConfig creates a new asynq task with the specified config
-func NewTaskWithConfig(taskType TaskType, payload []byte) (*asynq.Task, error) {
-	config, exists := GetTaskConfig(taskType)
-	if !exists {
-		return nil, fmt.Errorf("unknown task type: %s", taskType)
-	}
-
-	opts := NewTaskOptions(config)
-	return asynq.NewTask(string(taskType), payload, opts...), nil
-}
-
-func (ts *TaskService) EnqueueTask(ctx context.Context, task *asynq.Task, userId string, logger *zerolog.Logger, jobType jobs.JobType) error {
-	info, err := ts.client.EnqueueContext(ctx, task)
+func (ts *TaskService) EnqueueTask(ctx context.Context, jobType jobs.JobType, payload any, userId string, logger *zerolog.Logger) error {
+	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("failed to enqueue task: %w", err)
+		return fmt.Errorf("failed to marshal task payload: %w", err)
 	}
-	job, err := ts.jobRepository.CreateNewJob(ctx, &jobs.CreateJob{
+
+	jobID := uuid.NewString()
+
+	payloadWithID, err := injectJobID(payloadBytes, jobID)
+	if err != nil {
+		return fmt.Errorf("failed to inject job_id into payload: %w", err)
+	}
+
+	_, err = ts.jobRepository.CreateNewJob(ctx, &jobs.CreateJob{
 		UserId:    userId,
 		JobType:   jobType,
-		JobId:     info.ID,
-		Payload:   task.Payload(),
+		JobId:     jobID,
+		Payload:   payloadWithID,
 		Attempts:  0,
 		QueueName: "default",
 		Metadata:  nil,
 		Status:    jobs.JobStatusPending,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to create job: %w", err)
+		return fmt.Errorf("failed to create job record: %w", err)
 	}
-	logger.Info().Str("SuccessFully Created Job %s", job.JobId).Msg("Job created successfully")
-	return nil
+
+	logger.Info().Str("job_id", jobID).Str("job_type", string(jobType)).Msg("job created, dispatching")
+
+	return ts.dispatcher.Dispatch(ctx, dispatcher.JobPayload{
+		Type:    string(jobType),
+		Payload: payloadWithID,
+	})
 }
 
-func (ts *TaskService) NewTask(taskType TaskType, payload any, userId string, logger *zerolog.Logger) (*asynq.Task, error) {
-	// Marshal payload to JSON
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal task payload: %w", err)
+// injectJobID merges job_id into an already-marshalled JSON object payload.
+func injectJobID(payloadBytes []byte, jobID string) (json.RawMessage, error) {
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(payloadBytes, &m); err != nil {
+		return nil, err
 	}
-
-	// Use existing NewTaskWithConfig to create task with proper config
-	task, err := NewTaskWithConfig(taskType, payloadBytes)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create task: %w", err)
-	}
-
-	return task, nil
+	idBytes, _ := json.Marshal(jobID)
+	m["job_id"] = idBytes
+	result, err := json.Marshal(m)
+	return result, err
 }

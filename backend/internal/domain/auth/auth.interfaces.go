@@ -4,8 +4,6 @@ import (
 	"context"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
-	"github.com/hibiken/asynq"
 	"github.com/rs/zerolog"
 )
 
@@ -22,6 +20,5 @@ type authRepository interface {
 }
 
 type authTaskService interface {
-	NewWelcomeEmailTask(userEmail string) (*asynq.Task, error)
-	EnqueueTask(ctx context.Context, task *asynq.Task, userId string, logger *zerolog.Logger, jobType jobs.JobType) error
+	EnqueueWelcomeEmail(ctx context.Context, userEmail string, userId string, logger *zerolog.Logger) error
 }

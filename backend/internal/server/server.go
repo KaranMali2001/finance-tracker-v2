@@ -10,9 +10,6 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/config"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/logger"
-	"github.com/hibiken/asynq"
-	"github.com/newrelic/go-agent/v3/integrations/nrredis-v9"
-	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog"
 )
 
@@ -21,7 +18,6 @@ type Server struct {
 	Logger        *zerolog.Logger
 	LoggerService *logger.LoggerService
 	DB            *database.Database
-	Redis         *redis.Client
 
 	httpServer *http.Server
 }
@@ -32,34 +28,12 @@ func New(cfg *config.Config, logger *zerolog.Logger, loggerService *logger.Logge
 		return nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
-	// Redis client with New Relic integration
-	redisClient := redis.NewClient(&redis.Options{
-		Addr: cfg.Redis.Address,
-	})
-
-	// Add New Relic Redis hooks if available
-	if loggerService != nil && loggerService.GetApplication() != nil {
-		redisClient.AddHook(nrredis.NewHook(redisClient.Options()))
-	}
-
-	// Test Redis connection
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := redisClient.Ping(ctx).Err(); err != nil {
-		logger.Error().Err(err).Msg("Failed to connect to Redis, continuing without Redis")
-		// Don't fail startup if Redis is unavailable
-	}
-
-	server := &Server{
+	return &Server{
 		Config:        cfg,
 		Logger:        logger,
 		LoggerService: loggerService,
 		DB:            db,
-		Redis:         redisClient,
-	}
-
-	return server, nil
+	}, nil
 }
 
 func (s *Server) SetupHTTPServer(handler http.Handler) {
@@ -85,20 +59,13 @@ func (s *Server) Start() error {
 	return s.httpServer.ListenAndServe()
 }
 
-func (s *Server) Shutdown(ctx context.Context, qClient *asynq.Client) error {
+func (s *Server) Shutdown(ctx context.Context) error {
 	if err := s.httpServer.Shutdown(ctx); err != nil {
 		return fmt.Errorf("failed to shutdown HTTP server: %w", err)
 	}
 
 	if err := s.DB.Close(); err != nil {
 		return fmt.Errorf("failed to close database connection: %w", err)
-	}
-	if err := qClient.Close(); err != nil {
-		return fmt.Errorf("failed to close queue client: %w", err)
-	}
-
-	if err := s.Redis.Close(); err != nil {
-		return fmt.Errorf("failed to close redis client: %w", err)
 	}
 
 	return nil

@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
 	"github.com/labstack/echo/v4"
 )
@@ -28,15 +27,11 @@ func (s *AuthService) CreateUser(c echo.Context, user *UserCreateRequest) (*User
 	}
 
 	logger.Info().Str("event", "user_created").Str("user_id", userData.Id).Msg("User created successfully")
-	task, err := s.authTaskService.NewWelcomeEmailTask(userData.Email)
-	if err != nil {
-		logger.Error().Err(err).Msg("failed to create new email task")
+	if err := s.authTaskService.EnqueueWelcomeEmail(c.Request().Context(), userData.Email, userData.Id, logger); err != nil {
+		logger.Error().Err(err).Msg("failed to enqueue welcome email job")
+	} else {
+		logger.Info().Msg("successfully enqueued welcome email job")
 	}
-	err = s.authTaskService.EnqueueTask(c.Request().Context(), task, userData.Id, logger, jobs.JobTypeWELCOMEEMAIL)
-	if err != nil {
-		logger.Error().Err(err).Msg("failed to Enqueue the Welcome Email Job")
-	}
-	logger.Info().Msg("SuccessFully Enqueued Welcome Email Job")
 	return userData, nil
 }
 

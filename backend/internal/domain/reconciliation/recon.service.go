@@ -11,7 +11,6 @@ import (
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/errs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/handler"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/middleware"
@@ -186,9 +185,7 @@ func (s *ReconService) ParseAndProcessStatement(c echo.Context, payload *ParseEx
 				UserID:                  payload.UserId,
 				ReconciliationThreshold: threshold,
 			}
-			if task, err := s.taskService.NewBankReconciliationTask(jobPayload); err != nil {
-				log.Error().Err(err).Msg("Failed to create reconciliation task")
-			} else if err := s.taskService.EnqueueTask(ctx, task, payload.UserId, log, jobs.JobTypeBANKRECONCILIATION); err != nil {
+			if err := s.taskService.EnqueueBankReconciliation(ctx, jobPayload, log); err != nil {
 				log.Error().Err(err).Msg("Failed to enqueue reconciliation task")
 			}
 		}

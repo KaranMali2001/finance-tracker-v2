@@ -1,2 +1,10 @@
 # macOS
 .DS_Store
+
+# Frontend env
+finance-tracker-web/.env
+finance-tracker-web/.env.local
+finance-tracker-web/.env.*.local
+
+# Backend docker-compose dev (contains secrets inline via env_file)
+backend/docker-compose.dev.yml
