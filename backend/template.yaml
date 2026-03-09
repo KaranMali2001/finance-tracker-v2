@@ -3,6 +3,22 @@ Transform: AWS::Serverless-2016-10-31
 Description: Finance Tracker Backend — HTTP + Worker Lambdas
 
 Globals:
+  HttpApi:
+    CorsConfiguration:
+      AllowOrigins:
+        - !Ref FrontendUrl
+      AllowHeaders:
+        - Content-Type
+        - Authorization
+        - X-Request-ID
+      AllowMethods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      AllowCredentials: false
   Function:
     Architectures:
       - arm64

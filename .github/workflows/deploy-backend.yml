@@ -1,0 +1,58 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'backend/**'
+      - 'template.yaml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-south-1
+
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: SAM build
+        working-directory: backend
+        run: sam build --template template.yaml
+
+      - name: SAM deploy
+        working-directory: backend
+        run: |
+          sam deploy \
+            --template-file .aws-sam/build/template.yaml \
+            --stack-name finance-tracker-prod \
+            --resolve-image-repos \
+            --resolve-s3 \
+            --no-confirm-changeset \
+            --no-fail-on-empty-changeset \
+            --region ap-south-1 \
+            --capabilities CAPABILITY_IAM \
+            --parameter-overrides \
+              NeonDbHost="${{ secrets.NEON_DB_HOST }}" \
+              NeonDbUser="${{ secrets.NEON_DB_USER }}" \
+              NeonDbName="${{ secrets.NEON_DB_NAME }}" \
+              NeonDbPassword="${{ secrets.NEON_DB_PASSWORD }}" \
+              ClerkSecretKey="${{ secrets.CLERK_SECRET_KEY }}" \
+              ClerkWebhookKey="${{ secrets.CLERK_WEBHOOK_KEY }}" \
+              ResendApiKey="${{ secrets.RESEND_API_KEY }}" \
+              ResendFromEmail="${{ secrets.RESEND_FROM_EMAIL }}" \
+              GeminiApiKey="${{ secrets.GEMINI_API_KEY }}" \
+              StorageRegion="${{ secrets.STORAGE_REGION }}" \
+              StorageBucket="${{ secrets.STORAGE_BUCKET }}" \
+              StorageEndpoint="${{ secrets.STORAGE_ENDPOINT }}" \
+              StorageAccessKey="${{ secrets.STORAGE_ACCESS_KEY }}" \
+              StorageSecretKey="${{ secrets.STORAGE_SECRET_KEY }}" \
+              NewRelicLicenseKey="${{ secrets.NEW_RELIC_LICENSE_KEY }}" \
+              FrontendUrl="${{ secrets.FRONTEND_URL }}"
