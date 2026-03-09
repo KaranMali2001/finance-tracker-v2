@@ -96,38 +96,6 @@ func (h *SystemHandler) CheckHealth(c echo.Context) error {
 
 	// Database connection metrics are automatically captured by New Relic nrpgx5 integration
 
-	// Check Redis connectivity
-	if h.server.Redis != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		redisStart := time.Now()
-		if err := h.server.Redis.Ping(ctx).Err(); err != nil {
-			checks["redis"] = map[string]interface{}{
-				"status":        "unhealthy",
-				"response_time": time.Since(redisStart).String(),
-				"error":         err.Error(),
-			}
-			logger.Error().Err(err).Dur("response_time", time.Since(redisStart)).Msg("redis health check failed")
-			if h.server.LoggerService != nil && h.server.LoggerService.GetApplication() != nil {
-				h.server.LoggerService.GetApplication().RecordCustomEvent(
-					"HealthCheckError", map[string]interface{}{
-						"check_type":       "redis",
-						"operation":        "health_check",
-						"error_type":       "redis_unhealthy",
-						"response_time_ms": time.Since(redisStart).Milliseconds(),
-						"error_message":    err.Error(),
-					})
-			}
-		} else {
-			checks["redis"] = map[string]interface{}{
-				"status":        "healthy",
-				"response_time": time.Since(redisStart).String(),
-			}
-			logger.Info().Dur("response_time", time.Since(redisStart)).Msg("redis health check passed")
-		}
-	}
-
 	// Set overall status
 	if !isHealthy {
 		response["status"] = "unhealthy"

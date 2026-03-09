@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -101,14 +100,10 @@ func (s *InvestmentService) EnqueueAutoLinkCtx(ctx context.Context, clerkID stri
 }
 
 func (s *InvestmentService) enqueueAutoLinkCtx(ctx context.Context, clerkID string, txnIDs []uuid.UUID, log *zerolog.Logger) error {
-	task, err := s.taskService.NewInvestmentAutoLinkTask(tasks.InvestmentAutoLinkPayload{
+	return s.taskService.EnqueueInvestmentAutoLink(ctx, tasks.InvestmentAutoLinkPayload{
 		UserID:         clerkID,
 		TransactionIDs: txnIDs,
-	})
-	if err != nil {
-		return err
-	}
-	return s.taskService.EnqueueTask(ctx, task, clerkID, log, jobs.JobTypeINVESTMENTAUTOLINK)
+	}, log)
 }
 
 // RunAutoLinkJob is called by the Asynq worker handler.

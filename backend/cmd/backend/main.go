@@ -25,6 +25,7 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/migrate"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/dispatcher"
 	docs "github.com/KaranMali2001/finance-tracker-v2-backend/internal/docs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/account"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/auth"
@@ -38,13 +39,11 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/transaction"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/user"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/logger"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/queue"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/router"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/server"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/services"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
 	"github.com/clerk/clerk-sdk-go/v2"
-	"github.com/hibiken/asynq"
 )
 
 const DefaultContextTimeout = 30
@@ -61,41 +60,56 @@ func main() {
 
 	clerk.SetKey(cfg.Auth.SecretKey)
 	log.Info().Msg("Clerk SDK initialized")
-	server, err := server.New(cfg, log, loggerService)
+	srv, err := server.New(cfg, log, loggerService)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create server")
 	}
 
-	db, err := database.New(cfg, log, loggerService)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create database")
-	}
-
-	defer db.Close()
-	queries := generated.New(server.DB.Pool)
+	queries := generated.New(srv.DB.Pool)
 	globalSvcs, err := services.NewServices(cfg, log)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to start global services")
 	}
+
 	jobModule := jobs.NewModule(jobs.Deps{
 		Queries: queries,
 	})
-	qClient := asynq.NewClient(asynq.RedisClientOpt{
-		Addr: cfg.Redis.Address,
-	})
-	taskService := tasks.NewTaskService(globalSvcs, jobModule.GetJobRepository(), qClient)
 
-	databaseTxnManager := database.NewTxManager(server.DB.Pool)
+	endpointURL := ""
+	lambdaName := cfg.Worker.LambdaName
+	if cfg.Primary.Env == "local" {
+		endpointURL = "http://localhost:3001"
+		lambdaName = "function"
+	}
+	disp, err := dispatcher.NewLambdaDispatcher(lambdaName, endpointURL)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create Lambda dispatcher")
+	}
+
+	taskService := tasks.NewTaskService(globalSvcs, jobModule.GetJobRepository(), disp)
+
+	if cfg.Primary.Env == "local" {
+		if err := disp.Dispatch(context.Background(), dispatcher.JobPayload{
+			Type:    string(tasks.TaskPing),
+			Payload: []byte(`{}`),
+		}); err != nil {
+			log.Warn().Err(err).Msg("worker ping failed — is the SAM container running?")
+		} else {
+			log.Info().Msg("worker ping dispatched — check SAM container logs for pong")
+		}
+	}
+
+	databaseTxnManager := database.NewTxManager(srv.DB.Pool)
 	balanceUpdater := account.NewBalanceUpdater(queries)
 
 	userModule := user.NewModule(user.Deps{
-		Server:     server,
+		Server:     srv,
 		Queries:    queries,
 		TxnManager: databaseTxnManager,
 	})
 
 	reconciliationModule := reconciliation.NewReconiliationModule(reconciliation.Deps{
-		Server:         server,
+		Server:         srv,
 		Queries:        queries,
 		TxnManager:     databaseTxnManager,
 		TaskService:    taskService,
@@ -104,7 +118,7 @@ func main() {
 	})
 
 	investmentModule := investment.NewInvestmentModule(investment.Deps{
-		Server:      server,
+		Server:      srv,
 		Queries:     queries,
 		Tm:          databaseTxnManager,
 		TaskService: taskService,
@@ -114,22 +128,22 @@ func main() {
 		log.Fatal().Err(err).Msg("failed to migrate database")
 	}
 
-	systemModule := system.NewModule(system.Dependencies{Server: server})
+	systemModule := system.NewModule(system.Dependencies{Server: srv})
 	authModule := auth.NewModule(auth.Dependencies{
-		Server:      server,
+		Server:      srv,
 		Queries:     queries,
 		TaskService: taskService,
 	})
 	accountModule := account.NewAccountModule(account.Deps{
-		Server:  server,
+		Server:  srv,
 		Queries: queries,
 	})
 	staticModule := static.NewModule(static.Dependencies{
-		Server:  server,
+		Server:  srv,
 		Queries: queries,
 	})
 	transactionModule := transaction.NewTxnModule(transaction.Deps{
-		Server:         server,
+		Server:         srv,
 		Queries:        queries,
 		UserRepo:       userModule.GetUserRepository(),
 		GeminiSvc:      globalSvcs.GeminiService,
@@ -140,24 +154,15 @@ func main() {
 	})
 
 	dashboardModule := dashboard.NewDashboardModule(dashboard.Deps{
-		Server:  server,
+		Server:  srv,
 		Queries: queries,
 	})
 
-	smsLlmService := sms.NewSmsLlmService(queries, globalSvcs.GeminiService, transactionModule.GetService())
-
-	q := queue.NewJobService(log, cfg, taskService, qClient, jobModule.GetJobRepository(), reconciliationModule.GetService(), investmentModule.GetService(), smsLlmService)
-
-	if err := q.Start(); err != nil {
-		log.Error().Err(err).Msg("failed to start Queue services")
-	}
-
 	smsModule := sms.NewSmsModule(sms.Deps{
-		Server:     server,
+		Server:     srv,
 		Queries:    queries,
 		AccQueries: queries,
 		UserSvc:    userModule.GetUserService(),
-
 		TxnSvc:     transactionModule.GetService(),
 		LlmTaskSvc: taskService,
 	})
@@ -165,7 +170,7 @@ func main() {
 	log.Info().
 		Strs("cors_origins", cfg.Server.CORSAllowedOrigins).
 		Msg("CORS configuration loaded")
-	r := router.NewRouter(server,
+	r := router.NewRouter(srv,
 		[]router.RouteRegistrar{systemModule},
 		[]router.RouteRegistrar{authModule, userModule, accountModule, staticModule, transactionModule, smsModule, investmentModule, reconciliationModule, dashboardModule},
 	)
@@ -179,11 +184,12 @@ func main() {
 		Str("swagger_ui", fmt.Sprintf("http://localhost:%s/swagger/index.html", cfg.Server.Port)).
 		Str("swagger_json", fmt.Sprintf("http://localhost:%s/swagger/doc.json", cfg.Server.Port)).
 		Msg("Swagger docs available")
-	server.SetupHTTPServer(r)
+
+	srv.SetupHTTPServer(r)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 
 	go func() {
-		if err = server.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err = srv.Start(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatal().Err(err).Msg("failed to start server")
 		}
 	}()
@@ -191,7 +197,7 @@ func main() {
 	<-ctx.Done()
 	ctx, cancel := context.WithTimeout(context.Background(), DefaultContextTimeout*time.Second)
 
-	if err = server.Shutdown(ctx, qClient); err != nil {
+	if err = srv.Shutdown(ctx); err != nil {
 		log.Fatal().Err(err).Msg("server forced to shutdown")
 	}
 	stop()

@@ -1,0 +1,138 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Finance Tracker Backend — HTTP + Worker Lambdas
+
+Globals:
+  Function:
+    Architectures:
+      - arm64
+    Environment:
+      Variables:
+        ENV_FILE: ""
+        BACKEND__PRIMARY__ENV: production
+        BACKEND__DATABASE__HOST: !Ref NeonDbHost
+        BACKEND__DATABASE__PORT: "5432"
+        BACKEND__DATABASE__USER: !Ref NeonDbUser
+        BACKEND__DATABASE__PASSWORD: !Ref NeonDbPassword
+        BACKEND__DATABASE__NAME: !Ref NeonDbName
+        BACKEND__DATABASE__SSL_MODE: require
+        BACKEND__DATABASE__MAX_OPEN_CONNS: "3"
+        BACKEND__DATABASE__MAX_IDLE_CONNS: "2"
+        BACKEND__DATABASE__CONN_MAX_LIFETIME: "300"
+        BACKEND__DATABASE__CONN_MAX_IDLE_TIME: "60"
+        BACKEND__AUTH__SECRET_KEY: !Ref ClerkSecretKey
+        BACKEND__AUTH__WEBHOOK_KEY: !Ref ClerkWebhookKey
+        BACKEND__INTEGRATION__RESEND_API_KEY: !Ref ResendApiKey
+        BACKEND__INTEGRATION__RESEND_EMAIL: !Ref ResendFromEmail
+        BACKEND__AI__GEMINI_API_KEY: !Ref GeminiApiKey
+        BACKEND__SEVALLA__REGION: !Ref StorageRegion
+        BACKEND__SEVALLA__BUCKET: !Ref StorageBucket
+        BACKEND__SEVALLA__ACCESS_KEY: !Ref StorageAccessKey
+        BACKEND__SEVALLA__SECRET_KEY: !Ref StorageSecretKey
+        BACKEND__SEVALLA__ENDPOINT: !Ref StorageEndpoint
+        BACKEND__OBSERVABILITY__ENVIRONMENT: production
+        BACKEND__OBSERVABILITY__LOGGING__LEVEL: info
+        BACKEND__OBSERVABILITY__LOGGING__FORMAT: json
+        BACKEND__OBSERVABILITY__LOGGING__SLOW_QUERY_THRESHOLD: 100ms
+        BACKEND__OBSERVABILITY__NEW_RELIC__LICENSE_KEY: !Ref NewRelicLicenseKey
+        BACKEND__OBSERVABILITY__NEW_RELIC__APP_LOG_FORWARDING_ENABLED: "true"
+        BACKEND__OBSERVABILITY__NEW_RELIC__DISTRIBUTED_TRACING_ENABLED: "true"
+        BACKEND__OBSERVABILITY__NEW_RELIC__DEBUG_LOGGING: "false"
+        BACKEND__OBSERVABILITY__HEALTH_CHECKS__ENABLED: "true"
+        BACKEND__OBSERVABILITY__HEALTH_CHECKS__INTERVAL: "30s"
+        BACKEND__OBSERVABILITY__HEALTH_CHECKS__TIMEOUT: "5s"
+        BACKEND__OBSERVABILITY__HEALTH_CHECKS__CHECKS: database
+
+Parameters:
+  NeonDbHost:
+    Type: String
+  NeonDbUser:
+    Type: String
+  NeonDbPassword:
+    Type: String
+    NoEcho: true
+  NeonDbName:
+    Type: String
+  ClerkSecretKey:
+    Type: String
+    NoEcho: true
+  ClerkWebhookKey:
+    Type: String
+    NoEcho: true
+  ResendApiKey:
+    Type: String
+    NoEcho: true
+  ResendFromEmail:
+    Type: String
+  GeminiApiKey:
+    Type: String
+    NoEcho: true
+  StorageRegion:
+    Type: String
+  StorageBucket:
+    Type: String
+  StorageAccessKey:
+    Type: String
+    NoEcho: true
+  StorageSecretKey:
+    Type: String
+    NoEcho: true
+  StorageEndpoint:
+    Type: String
+  NewRelicLicenseKey:
+    Type: String
+    NoEcho: true
+  FrontendUrl:
+    Type: String
+
+Resources:
+  WorkerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Timeout: 300
+      MemorySize: 512
+      Environment:
+        Variables:
+          BACKEND__OBSERVABILITY__SERVICE_NAME: finance-tracker-worker
+    Metadata:
+      DockerTag: worker
+      DockerContext: .
+      Dockerfile: Dockerfile.worker
+
+  HttpFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          BACKEND__SERVER__PORT: "8081"
+          BACKEND__SERVER__READ_TIMEOUT: "30"
+          BACKEND__SERVER__WRITE_TIMEOUT: "30"
+          BACKEND__SERVER__IDLE_TIMEOUT: "120"
+          BACKEND__SERVER__CORS_ALLOWED_ORIGINS: !Ref FrontendUrl
+          BACKEND__WORKER__LAMBDA_NAME: !Ref WorkerFunction
+          BACKEND__OBSERVABILITY__SERVICE_NAME: finance-tracker-backend
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref WorkerFunction
+      Events:
+        ApiProxy:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+    Metadata:
+      DockerTag: http
+      DockerContext: .
+      Dockerfile: Dockerfile
+
+Outputs:
+  HttpApiUrl:
+    Description: "HTTP API Gateway URL"
+    Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  WorkerFunctionArn:
+    Description: "Worker Lambda ARN"
+    Value: !GetAtt WorkerFunction.Arn

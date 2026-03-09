@@ -24,9 +24,12 @@ import {
   FileSpreadsheet,
   Landmark,
   LayoutDashboard,
+  LayoutList,
   LogOut,
   MessageSquare,
   Receipt,
+  Target,
+  TrendingUp,
   User,
   Wallet,
 } from 'lucide-react';
@@ -60,6 +63,23 @@ export function DashboardSidebar() {
       title: 'Transactions',
       url: '/dashboard/transactions',
       icon: Receipt,
+    },
+    {
+      title: 'Investments',
+      url: '/dashboard/investments',
+      icon: TrendingUp,
+      children: [
+        {
+          title: 'Goals',
+          url: '/dashboard/investments',
+          icon: Target,
+        },
+        {
+          title: 'Rules',
+          url: '/dashboard/investments/rules',
+          icon: LayoutList,
+        },
+      ],
     },
     {
       title: 'Reconciliation',

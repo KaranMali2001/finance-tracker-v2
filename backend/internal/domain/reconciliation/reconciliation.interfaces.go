@@ -5,10 +5,8 @@ import (
 	"time"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
 	"github.com/google/uuid"
-	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog"
@@ -64,10 +62,8 @@ type reconRepository interface {
 }
 
 // reconTaskService is the narrow interface ReconService needs from tasks.TaskService.
-// Only the two methods actually called are listed.
 type reconTaskService interface {
-	NewBankReconciliationTask(payload tasks.BankReconciliationPayload) (*asynq.Task, error)
-	EnqueueTask(ctx context.Context, task *asynq.Task, userId string, logger *zerolog.Logger, jobType jobs.JobType) error
+	EnqueueBankReconciliation(ctx context.Context, payload tasks.BankReconciliationPayload, logger *zerolog.Logger) error
 }
 
 // balanceApplier is the narrow interface ReconService needs from shared.BalanceUpdater.

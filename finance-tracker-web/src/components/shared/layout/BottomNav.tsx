@@ -1,14 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import {
-  FileSpreadsheet,
-  LayoutDashboard,
-  MessageSquare,
-  Receipt,
-  User,
-  Wallet,
-} from 'lucide-react';
+import { LayoutDashboard, MessageSquare, Receipt, TrendingUp, User, Wallet } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -16,7 +9,7 @@ const NAV_ITEMS = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
   { title: 'Accounts', url: '/dashboard/accounts', icon: Wallet },
   { title: 'Transactions', url: '/dashboard/transactions', icon: Receipt },
-  { title: 'Reconciliation', url: '/dashboard/reconciliation', icon: FileSpreadsheet },
+  { title: 'Investments', url: '/dashboard/investments', icon: TrendingUp },
   { title: 'SMS', url: '/dashboard/sms', icon: MessageSquare },
   { title: 'Profile', url: '/dashboard/profile', icon: User },
 ];

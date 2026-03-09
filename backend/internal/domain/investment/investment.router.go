@@ -9,6 +9,7 @@ import (
 
 type Module struct {
 	handler *InvestmentHandler
+	service *InvestmentService
 }
 
 type Deps struct {
@@ -22,11 +23,11 @@ func NewInvestmentModule(deps Deps) *Module {
 	repo := NewInvestMentRepository(deps.Queries, deps.Tm)
 	service := NewInvestMentService(repo, deps.TaskService)
 	h := NewInvestmentHandler(deps.Server, service)
-	return &Module{handler: h}
+	return &Module{handler: h, service: service}
 }
 
 func (m *Module) GetService() *InvestmentService {
-	return m.handler.service
+	return m.service
 }
 
 func (m *Module) RegisterRoutes(g *echo.Group) {

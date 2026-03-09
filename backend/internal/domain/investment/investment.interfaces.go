@@ -4,10 +4,8 @@ import (
 	"context"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
-	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/jobs"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
 	"github.com/google/uuid"
-	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/rs/zerolog"
@@ -61,8 +59,7 @@ type investmentRepository interface {
 
 // investmentTaskService is the narrow interface InvestmentService needs from tasks.TaskService.
 type investmentTaskService interface {
-	NewInvestmentAutoLinkTask(payload tasks.InvestmentAutoLinkPayload) (*asynq.Task, error)
-	EnqueueTask(ctx context.Context, task *asynq.Task, userId string, logger *zerolog.Logger, jobType jobs.JobType) error
+	EnqueueInvestmentAutoLink(ctx context.Context, payload tasks.InvestmentAutoLinkPayload, logger *zerolog.Logger) error
 }
 
 // Compile-time check: *generated.Queries must satisfy investmentQuerier.

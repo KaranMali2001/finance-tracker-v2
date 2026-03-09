@@ -16,11 +16,16 @@ type Config struct {
 	Server        ServerConfig         `koanf:"server" validate:"required"`
 	Database      DatabaseConfig       `koanf:"database" validate:"required"`
 	Auth          AuthConfig           `koanf:"auth" validate:"required"`
-	Redis         RedisConfig          `koanf:"redis" validate:"required"`
 	Integration   IntegrationConfig    `koanf:"integration" validate:"required"`
 	AIConfig      AIConfig             `koanf:"ai" validate:"required"`
 	Observability *ObservabilityConfig `koanf:"observability"`
 	ObjectStorage ObjectStorage        `koanf:"sevalla"`
+	Worker        WorkerConfig         `koanf:"worker"`
+}
+
+type WorkerConfig struct {
+	LambdaName string `koanf:"lambda_name"`
+	Endpoint   string `koanf:"endpoint"`
 }
 
 type Primary struct {
@@ -47,10 +52,6 @@ type DatabaseConfig struct {
 	ConnMaxLifetime int    `koanf:"conn_max_lifetime" validate:"required"`
 	ConnMaxIdleTime int    `koanf:"conn_max_idle_time" validate:"required"`
 }
-type RedisConfig struct {
-	Address string `koanf:"address" validate:"required"`
-}
-
 type IntegrationConfig struct {
 	ResendAPIKey string `koanf:"resend_api_key" validate:"required"`
 	ResendEmail  string `koanf:"resend_email" validate:"omitempty,email"`
@@ -86,8 +87,11 @@ func LoadConfig() (*Config, error) {
 
 	k := koanf.New(".")
 
-	err := k.Load(env.Provider("BACKEND_", ".", func(s string) string {
-		return strings.ToLower(strings.TrimPrefix(s, "BACKEND_"))
+	err := k.Load(env.Provider("BACKEND__", ".", func(s string) string {
+		s = strings.TrimPrefix(s, "BACKEND__")
+		s = strings.ToLower(s)
+		s = strings.ReplaceAll(s, "__", ".")
+		return s
 	}), nil)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("could not load initial env variables")
