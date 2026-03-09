@@ -15,7 +15,7 @@
     "generate:api": "npx openapi-typescript-codegen --input ../backend/internal/docs/swagger.json --output ./src/generated/api --client axios"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.35.5",
+    "@clerk/nextjs": "^6.39.0",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -55,7 +55,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.0",
-    "@clerk/types": "^4.101.3",
+    "@clerk/types": "^4.101.20",
     "@tailwindcss/postcss": "^4",
     "@tanstack/react-query-devtools": "^5.91.1",
     "@types/node": "^20",
