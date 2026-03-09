@@ -21,7 +21,7 @@ Globals:
       AllowCredentials: false
   Function:
     Architectures:
-      - arm64
+      - x86_64
     Environment:
       Variables:
         ENV_FILE: ""
