@@ -208,12 +208,20 @@ export default function ReconciliationUploadDetailPage() {
               <p className="mt-1 text-card-foreground">{upload.file_name ?? '—'}</p>
             </div>
             <div>
-              <span className="text-sm font-medium text-muted-foreground">Upload status</span>
-              <p className="mt-1 text-card-foreground">{upload.upload_status ?? '—'}</p>
-            </div>
-            <div>
               <span className="text-sm font-medium text-muted-foreground">Processing status</span>
-              <p className="mt-1 text-card-foreground">{upload.processing_status ?? '—'}</p>
+              <p className="mt-1">
+                <span
+                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    upload.processing_status === 'COMPLETED'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : upload.processing_status === 'FAILED'
+                        ? 'bg-rose-100 text-rose-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                  }`}
+                >
+                  {upload.processing_status ?? '—'}
+                </span>
+              </p>
             </div>
             {upload.account_id && (
               <div>

@@ -24,7 +24,6 @@ type reconRunner interface {
 
 type investRunner interface {
 	RunAutoLinkJob(ctx context.Context, payload investment.InvestmentAutoLinkPayload, logger *zerolog.Logger) (*investment.InvestmentAutoLinkResult, error)
-	EnqueueAutoLinkCtx(ctx context.Context, clerkID string, txnIDs []uuid.UUID, log *zerolog.Logger) error
 }
 
 type smsLlmRunner interface {
@@ -164,8 +163,11 @@ func (w *Worker) handleBankReconciliation(ctx context.Context, raw json.RawMessa
 	w.markCompleted(ctx, job, fmt.Sprintf("Reconciliation completed for upload %s", payload.UploadID.String()))
 
 	if len(createdIDs) > 0 {
-		if err := w.investService.EnqueueAutoLinkCtx(ctx, payload.UserID, createdIDs, w.logger); err != nil {
-			w.logger.Error().Err(err).Str("upload_id", payload.UploadID.String()).Msg("[recon] failed to enqueue auto-link")
+		if _, err := w.investService.RunAutoLinkJob(ctx, investment.InvestmentAutoLinkPayload{
+			UserID:         payload.UserID,
+			TransactionIDs: createdIDs,
+		}, w.logger); err != nil {
+			w.logger.Error().Err(err).Str("upload_id", payload.UploadID.String()).Msg("[recon] auto-link failed")
 		}
 	}
 
