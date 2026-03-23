@@ -18,5 +18,5 @@ type BankReconciliationPayload struct {
 }
 
 func (ts *TaskService) EnqueueBankReconciliation(ctx context.Context, payload BankReconciliationPayload, logger *zerolog.Logger) error {
-	return ts.EnqueueTask(ctx, jobs.JobTypeBANKRECONCILIATION, payload, payload.UserID, logger)
+	return ts.EnqueueTask(ctx, jobs.JobTypeBANKRECONCILIATION, TaskBankReconciliation, payload, payload.UserID, logger)
 }

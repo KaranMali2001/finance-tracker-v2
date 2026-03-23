@@ -18,5 +18,5 @@ type InvestmentAutoLinkPayload struct {
 }
 
 func (ts *TaskService) EnqueueInvestmentAutoLink(ctx context.Context, payload InvestmentAutoLinkPayload, logger *zerolog.Logger) error {
-	return ts.EnqueueTask(ctx, jobs.JobTypeINVESTMENTAUTOLINK, payload, payload.UserID, logger)
+	return ts.EnqueueTask(ctx, jobs.JobTypeINVESTMENTAUTOLINK, TaskInvestmentAutoLink, payload, payload.UserID, logger)
 }

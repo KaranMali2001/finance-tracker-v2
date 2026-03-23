@@ -34,7 +34,7 @@ func NewTaskService(svcs *services.Services, jobRepository *jobs.JobRepository, 
 	}
 }
 
-func (ts *TaskService) EnqueueTask(ctx context.Context, jobType jobs.JobType, payload any, userId string, logger *zerolog.Logger) error {
+func (ts *TaskService) EnqueueTask(ctx context.Context, jobType jobs.JobType, dispatchType TaskType, payload any, userId string, logger *zerolog.Logger) error {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("failed to marshal task payload: %w", err)
@@ -64,7 +64,7 @@ func (ts *TaskService) EnqueueTask(ctx context.Context, jobType jobs.JobType, pa
 	logger.Info().Str("job_id", jobID).Str("job_type", string(jobType)).Msg("job created, dispatching")
 
 	return ts.dispatcher.Dispatch(ctx, dispatcher.JobPayload{
-		Type:    string(jobType),
+		Type:    string(dispatchType),
 		Payload: payloadWithID,
 	})
 }

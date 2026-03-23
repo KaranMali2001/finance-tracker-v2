@@ -13,5 +13,5 @@ type WelcomeEmailPayload struct {
 }
 
 func (ts *TaskService) EnqueueWelcomeEmail(ctx context.Context, userEmail string, userId string, logger *zerolog.Logger) error {
-	return ts.EnqueueTask(ctx, jobs.JobTypeWELCOMEEMAIL, WelcomeEmailPayload{UserEmail: userEmail}, userId, logger)
+	return ts.EnqueueTask(ctx, jobs.JobTypeWELCOMEEMAIL, TaskWelcomeEmail, WelcomeEmailPayload{UserEmail: userEmail}, userId, logger)
 }

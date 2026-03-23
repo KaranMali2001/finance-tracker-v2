@@ -17,5 +17,5 @@ type LlmSmsParsePayload struct {
 
 func (ts *TaskService) EnqueueLlmSmsParse(ctx context.Context, smsID uuid.UUID, clerkID string) error {
 	log := zerolog.Ctx(ctx)
-	return ts.EnqueueTask(ctx, jobs.JobTypeLLMSMSPARSE, LlmSmsParsePayload{SmsID: smsID, UserID: clerkID}, clerkID, log)
+	return ts.EnqueueTask(ctx, jobs.JobTypeLLMSMSPARSE, TaskLlmSmsParse, LlmSmsParsePayload{SmsID: smsID, UserID: clerkID}, clerkID, log)
 }
