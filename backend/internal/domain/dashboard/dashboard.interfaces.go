@@ -16,7 +16,7 @@ type dashboardQuerier interface {
 }
 
 type dashboardRepository interface {
-	StreamDashboard(ctx context.Context, clerkID string, dateFrom, dateTo string, events chan<- DashboardEvent)
+	GetDashboard(ctx context.Context, clerkID string, dateFrom, dateTo string) (*DashboardRes, error)
 }
 
 var _ dashboardQuerier = (*generated.Queries)(nil)

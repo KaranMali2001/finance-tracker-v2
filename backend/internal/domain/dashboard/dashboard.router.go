@@ -24,5 +24,5 @@ func NewDashboardModule(deps Deps) *Module {
 
 func (m *Module) RegisterRoutes(g *echo.Group) {
 	authMiddleware := middleware.NewAuthMiddleware(m.handler.server).RequireAuth
-	g.GET("/dashboard/stream", m.handler.StreamDashboard, authMiddleware)
+	g.GET("/dashboard/stream", m.handler.GetDashboard, authMiddleware)
 }

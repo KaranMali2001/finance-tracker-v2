@@ -1,7 +1,7 @@
 'use client';
 
 import { DateRangePicker } from '@/components/shared/form/DateRangePicker';
-import { useDashboardStream } from '@/components/shared/hooks/useDashboard';
+import { useDashboard } from '@/components/shared/hooks/useDashboard';
 import type { BudgetHealthData, GoalProgressItem } from '@/components/shared/hooks/useDashboard';
 import { useAuth } from '@clerk/nextjs';
 import { formatRupees } from '@/components/shared/utils';
@@ -454,16 +454,14 @@ export default function DashboardA() {
     }
   }
 
-  const streamState = useDashboardStream(fromStr, toStr, clerkLoaded);
+  const { data: dashData, isLoading: isDashLoading } = useDashboard(fromStr, toStr, clerkLoaded);
 
-  const { loading } = streamState;
-
-  const netWorthTrend = streamState.net_worth_trend ?? [];
-  const rawCategories = streamState.spend_by_category ?? [];
-  const budget = streamState.budget_health;
-  const goals = streamState.goal_progress ?? [];
-  const accounts = streamState.account_balances ?? [];
-  const portfolio = streamState.portfolio_mix ?? [];
+  const netWorthTrend = dashData?.net_worth_trend ?? [];
+  const rawCategories = dashData?.spend_by_category ?? [];
+  const budget = dashData?.budget_health ?? null;
+  const goals = dashData?.goal_progress ?? [];
+  const accounts = dashData?.account_balances ?? [];
+  const portfolio = dashData?.portfolio_mix ?? [];
 
   const categories = useMemo(() => {
     const total = rawCategories.reduce((s, c) => s + (c.total_amount ?? 0), 0);
@@ -487,12 +485,12 @@ export default function DashboardA() {
   const totalExpense = accounts.reduce((s, a) => s + (a.period_expense ?? 0), 0);
   const totalCategorySpend = categories.reduce((s, c) => s + (c.total_amount ?? 0), 0);
 
-  const isNetWorthLoading = loading.has('net_worth_trend');
-  const isCategoryLoading = loading.has('spend_by_category');
-  const isBudgetLoading = loading.has('budget_health');
-  const isGoalsLoading = loading.has('goal_progress');
-  const isAccountsLoading = loading.has('account_balances');
-  const isPortfolioLoading = loading.has('portfolio_mix');
+  const isNetWorthLoading = isDashLoading;
+  const isCategoryLoading = isDashLoading;
+  const isBudgetLoading = isDashLoading;
+  const isGoalsLoading = isDashLoading;
+  const isAccountsLoading = isDashLoading;
+  const isPortfolioLoading = isDashLoading;
 
   const animatedNetWorth = useAnimatedCount(currentNetWorth);
   const animatedIncome = useAnimatedCount(totalIncome);
@@ -504,7 +502,7 @@ export default function DashboardA() {
       ? `${format(from, 'MMM d')} – ${format(to, 'MMM d, yyyy')}`
       : (PRESETS.find((p) => p.id === activePreset)?.label ?? '');
 
-  const anyLoading = loading.size > 0;
+  const anyLoading = isDashLoading;
 
   return (
     <div className="min-h-screen bg-stone-50/60 p-6 space-y-6">
@@ -1091,7 +1089,7 @@ export default function DashboardA() {
       >
         <Activity className="h-3 w-3" />
         {anyLoading
-          ? `Loading ${loading.size} card${loading.size > 1 ? 's' : ''}…`
+          ? 'Loading…'
           : `Showing ${fromStr} → ${toStr} · ${accounts.length} accounts · ${goals.length} goals`}
       </motion.div>
     </div>

@@ -10,6 +10,6 @@ func NewDashboardService(repo dashboardRepository) *DashboardService {
 	return &DashboardService{repo: repo}
 }
 
-func (s *DashboardService) StreamDashboard(ctx context.Context, clerkID, dateFrom, dateTo string, events chan<- DashboardEvent) {
-	s.repo.StreamDashboard(ctx, clerkID, dateFrom, dateTo, events)
+func (s *DashboardService) GetDashboard(ctx context.Context, clerkID, dateFrom, dateTo string) (*DashboardRes, error) {
+	return s.repo.GetDashboard(ctx, clerkID, dateFrom, dateTo)
 }

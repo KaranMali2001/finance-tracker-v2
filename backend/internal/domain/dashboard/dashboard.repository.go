@@ -18,30 +18,33 @@ func NewDashboardRepository(q dashboardQuerier) *DashboardRepository {
 	return &DashboardRepository{queries: q}
 }
 
-func send(events chan<- DashboardEvent, card string, data any, err error) {
-	ev := DashboardEvent{Card: card, Data: data}
-	if err != nil {
-		ev.Error = err.Error()
-	}
-	events <- ev
-}
-
-func (r *DashboardRepository) StreamDashboard(ctx context.Context, clerkID string, dateFrom, dateTo string, events chan<- DashboardEvent) {
+func (r *DashboardRepository) GetDashboard(ctx context.Context, clerkID string, dateFrom, dateTo string) (*DashboardRes, error) {
 	fromTs, err := time.Parse("2006-01-02", dateFrom)
 	if err != nil {
-		send(events, "error", nil, fmt.Errorf("invalid date_from: %w", err))
-		return
+		return nil, fmt.Errorf("invalid date_from: %w", err)
 	}
 	toTs, err := time.Parse("2006-01-02", dateTo)
 	if err != nil {
-		send(events, "error", nil, fmt.Errorf("invalid date_to: %w", err))
-		return
+		return nil, fmt.Errorf("invalid date_to: %w", err)
 	}
 
 	from := utils.TimestampToPgtype(fromTs)
 	to := utils.TimestampToPgtype(toTs)
 
-	var wg sync.WaitGroup
+	var (
+		wg       sync.WaitGroup
+		mu       sync.Mutex
+		firstErr error
+		res      DashboardRes
+	)
+
+	setErr := func(err error) {
+		mu.Lock()
+		if firstErr == nil {
+			firstErr = err
+		}
+		mu.Unlock()
+	}
 
 	wg.Add(1)
 	go func() {
@@ -50,7 +53,7 @@ func (r *DashboardRepository) StreamDashboard(ctx context.Context, clerkID strin
 			UserID: clerkID, TransactionDate: from, TransactionDate_2: to,
 		})
 		if err != nil {
-			send(events, "net_worth_trend", nil, err)
+			setErr(err)
 			return
 		}
 		points := make([]NetWorthPoint, 0, len(rows))
@@ -61,7 +64,9 @@ func (r *DashboardRepository) StreamDashboard(ctx context.Context, clerkID strin
 			}
 			points = append(points, NetWorthPoint{Month: monthStr, RunningNetWorth: utils.NumericToFloat64(row.RunningNetWorth)})
 		}
-		send(events, "net_worth_trend", points, nil)
+		mu.Lock()
+		res.NetWorthTrend = points
+		mu.Unlock()
 	}()
 
 	wg.Add(1)
@@ -71,14 +76,16 @@ func (r *DashboardRepository) StreamDashboard(ctx context.Context, clerkID strin
 			UserID: clerkID, TransactionDate: from, TransactionDate_2: to,
 		})
 		if err != nil {
-			send(events, "spend_by_category", nil, err)
+			setErr(err)
 			return
 		}
 		cats := make([]CategorySpend, 0, len(rows))
 		for _, row := range rows {
 			cats = append(cats, CategorySpend{CategoryName: row.CategoryName, TotalAmount: utils.NumericToFloat64(row.TotalAmount)})
 		}
-		send(events, "spend_by_category", cats, nil)
+		mu.Lock()
+		res.SpendByCategory = cats
+		mu.Unlock()
 	}()
 
 	wg.Add(1)
@@ -88,7 +95,7 @@ func (r *DashboardRepository) StreamDashboard(ctx context.Context, clerkID strin
 			ClerkID: clerkID, TransactionDate: from, TransactionDate_2: to,
 		})
 		if err != nil {
-			send(events, "budget_health", nil, err)
+			setErr(err)
 			return
 		}
 		monthlyBudget := utils.NumericToFloat64(row.MonthlyBudget)
@@ -96,13 +103,15 @@ func (r *DashboardRepository) StreamDashboard(ctx context.Context, clerkID strin
 		if row.MonthsInRange > 0 {
 			months = row.MonthsInRange
 		}
-		send(events, "budget_health", BudgetHealthData{
+		mu.Lock()
+		res.BudgetHealth = BudgetHealthData{
 			TotalSpent:       utils.NumericToFloat64(row.TotalSpent),
 			TransactionCount: row.TransactionCount,
 			MonthsInRange:    row.MonthsInRange,
 			MonthlyBudget:    monthlyBudget,
 			ScaledBudget:     monthlyBudget * float64(months),
-		}, nil)
+		}
+		mu.Unlock()
 	}()
 
 	wg.Add(1)
@@ -112,7 +121,7 @@ func (r *DashboardRepository) StreamDashboard(ctx context.Context, clerkID strin
 			UserID: clerkID, TransactionDate: from, TransactionDate_2: to,
 		})
 		if err != nil {
-			send(events, "goal_progress", nil, err)
+			setErr(err)
 			return
 		}
 		items := make([]GoalProgressItem, 0, len(rows))
@@ -136,7 +145,9 @@ func (r *DashboardRepository) StreamDashboard(ctx context.Context, clerkID strin
 				InvestedInPeriod: utils.NumericToFloat64(g.InvestedInPeriod),
 			})
 		}
-		send(events, "goal_progress", items, nil)
+		mu.Lock()
+		res.GoalProgress = items
+		mu.Unlock()
 	}()
 
 	wg.Add(1)
@@ -146,7 +157,7 @@ func (r *DashboardRepository) StreamDashboard(ctx context.Context, clerkID strin
 			UserID: clerkID, TransactionDate: from, TransactionDate_2: to,
 		})
 		if err != nil {
-			send(events, "account_balances", nil, err)
+			setErr(err)
 			return
 		}
 		items := make([]AccountBalance, 0, len(rows))
@@ -164,7 +175,9 @@ func (r *DashboardRepository) StreamDashboard(ctx context.Context, clerkID strin
 				PeriodExpense:  utils.NumericToFloat64(a.PeriodExpense),
 			})
 		}
-		send(events, "account_balances", items, nil)
+		mu.Lock()
+		res.AccountBalances = items
+		mu.Unlock()
 	}()
 
 	wg.Add(1)
@@ -172,15 +185,22 @@ func (r *DashboardRepository) StreamDashboard(ctx context.Context, clerkID strin
 		defer wg.Done()
 		rows, err := r.queries.GetPortfolioMix(ctx, clerkID)
 		if err != nil {
-			send(events, "portfolio_mix", nil, err)
+			setErr(err)
 			return
 		}
 		items := make([]PortfolioItem, 0, len(rows))
 		for _, p := range rows {
 			items = append(items, PortfolioItem{InvestmentType: p.InvestmentType, TotalValue: utils.NumericToFloat64(p.TotalValue)})
 		}
-		send(events, "portfolio_mix", items, nil)
+		mu.Lock()
+		res.PortfolioMix = items
+		mu.Unlock()
 	}()
 
 	wg.Wait()
+
+	if firstErr != nil {
+		return nil, firstErr
+	}
+	return &res, nil
 }
