@@ -13,7 +13,7 @@ import (
 
 type Config struct {
 	Primary       Primary              `koanf:"primary" validate:"required"`
-	Server        ServerConfig         `koanf:"server" validate:"required"`
+	Server        ServerConfig         `koanf:"server"`
 	Database      DatabaseConfig       `koanf:"database" validate:"required"`
 	Auth          AuthConfig           `koanf:"auth" validate:"required"`
 	Integration   IntegrationConfig    `koanf:"integration" validate:"required"`
@@ -33,11 +33,11 @@ type Primary struct {
 }
 
 type ServerConfig struct {
-	Port               string   `koanf:"port" validate:"required"`
-	ReadTimeout        int      `koanf:"read_timeout" validate:"required"`
-	WriteTimeout       int      `koanf:"write_timeout" validate:"required"`
-	IdleTimeout        int      `koanf:"idle_timeout" validate:"required"`
-	CORSAllowedOrigins []string `koanf:"cors_allowed_origins" validate:"required"`
+	Port               string   `koanf:"port"`
+	ReadTimeout        int      `koanf:"read_timeout"`
+	WriteTimeout       int      `koanf:"write_timeout"`
+	IdleTimeout        int      `koanf:"idle_timeout"`
+	CORSAllowedOrigins []string `koanf:"cors_allowed_origins"`
 }
 
 type DatabaseConfig struct {
