@@ -10,6 +10,25 @@ const path = require("path");
 function withSmsBroadcastReceiver(config) {
   return withAndroidManifest(config, (mod) => {
     const manifest = mod.modResults;
+
+    if (!manifest.manifest["uses-permission"]) {
+      manifest.manifest["uses-permission"] = [];
+    }
+
+    const smsPermissions = [
+      "android.permission.READ_SMS",
+      "android.permission.RECEIVE_SMS",
+    ];
+
+    for (const perm of smsPermissions) {
+      const exists = manifest.manifest["uses-permission"].some(
+        (p) => p.$?.["android:name"] === perm
+      );
+      if (!exists) {
+        manifest.manifest["uses-permission"].push({ $: { "android:name": perm } });
+      }
+    }
+
     const app = manifest.manifest.application[0];
 
     if (!app.receiver) {
