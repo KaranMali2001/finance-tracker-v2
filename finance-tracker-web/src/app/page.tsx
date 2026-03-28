@@ -21,7 +21,7 @@ import Link from 'next/link';
 import { useRef } from 'react';
 
 const APK_URL =
-  'https://github.com/KaranMali2001/finance-tracker-v2/releases/download/v1.1.0/Wealth-Reserve-v1.1.0.apk';
+  'https://github.com/KaranMali2001/finance-tracker-v2/releases/download/v1.2.0/Wealth-Reserve-v1.2.0.apk';
 
 function useScrollReveal() {
   const ref = useRef(null);
