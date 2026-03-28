@@ -21,7 +21,7 @@ import Link from 'next/link';
 import { useRef } from 'react';
 
 const APK_URL =
-  'https://github.com/KaranMali2001/finance-tracker-v2/releases/download/v1.0.0/app-arm64-v8a-release.apk';
+  'https://github.com/KaranMali2001/finance-tracker-v2/releases/download/v1.0.0/app-release.apk';
 
 function useScrollReveal() {
   const ref = useRef(null);
