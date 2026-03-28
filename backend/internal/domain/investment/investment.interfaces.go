@@ -34,6 +34,7 @@ type investmentQuerier interface {
 	DeleteGoalTransaction(ctx context.Context, id pgtype.UUID) error
 	SumGoalTransactionsByInvestment(ctx context.Context, investmentID pgtype.UUID) (pgtype.Numeric, error)
 	SumGoalTransactionsByGoal(ctx context.Context, goalID pgtype.UUID) (pgtype.Numeric, error)
+	GetTxnsByIds(ctx context.Context, dollar1 []pgtype.UUID) ([]generated.GetTxnsByIdsRow, error)
 }
 
 // investmentRepository is the interface InvestmentService depends on.

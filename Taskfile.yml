@@ -111,10 +111,10 @@ tasks:
       - pnpm start
     interrupt: true
 
-  # ── Dev services (postgres + worker Lambda + chartdb) ─────────────────────
+  # ── Dev services (postgres + worker Lambda) ───────────────────────────────
 
   services:up:
-    desc: Start postgres, SAM local Lambda, and chartdb for local Air dev
+    desc: Start postgres and SAM local Lambda for local Air dev
     dir: "{{.BACKEND_DIR}}"
     cmds:
       - docker compose -f {{.DEV_COMPOSE}} up -d --build

@@ -155,6 +155,40 @@ func (q *Queries) GetMaxAppTransactionDate(ctx context.Context, accountID pgtype
 	return max, err
 }
 
+const getTxnsByIds = `-- name: GetTxnsByIds :many
+SELECT t.id, t.description, COALESCE(m.name, '') AS merchant_name
+FROM transactions t
+LEFT JOIN merchants m ON m.id = t.merchant_id
+WHERE t.id = ANY($1::uuid[])
+  AND t.deleted_at IS NULL
+`
+
+type GetTxnsByIdsRow struct {
+	ID           pgtype.UUID
+	Description  pgtype.Text
+	MerchantName string
+}
+
+func (q *Queries) GetTxnsByIds(ctx context.Context, dollar_1 []pgtype.UUID) ([]GetTxnsByIdsRow, error) {
+	rows, err := q.db.Query(ctx, getTxnsByIds, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetTxnsByIdsRow
+	for rows.Next() {
+		var i GetTxnsByIdsRow
+		if err := rows.Scan(&i.ID, &i.Description, &i.MerchantName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTxnsWithFilters = `-- name: GetTxnsWithFilters :many
 SELECT 
 t.id AS id,

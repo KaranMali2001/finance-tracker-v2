@@ -10,6 +10,7 @@ import (
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/utils"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const (
@@ -475,13 +476,32 @@ func (r *InvestmentRepository) AutoLinkTransactions(ctx context.Context, clerkID
 		return nil, fmt.Errorf("failed to load SIP rules: %w", err)
 	}
 
+	pgIDs := make([]pgtype.UUID, len(txnIDs))
+	for i, id := range txnIDs {
+		pgIDs[i] = utils.UUIDToPgtype(id)
+	}
+	txnRows, err := r.queries.GetTxnsByIds(ctx, pgIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch transactions for scoring: %w", err)
+	}
+
+	type txnMeta struct{ merchantName, description string }
+	txnMap := make(map[uuid.UUID]txnMeta, len(txnRows))
+	for _, row := range txnRows {
+		txnMap[utils.UUIDToUUID(row.ID)] = txnMeta{
+			merchantName: row.MerchantName,
+			description:  utils.TextToString(row.Description),
+		}
+	}
+
 	result := &InvestmentAutoLinkResult{
 		TotalProcessed: len(txnIDs),
 		Items:          make([]InvestmentAutoLinkItemResult, 0, len(txnIDs)),
 	}
 
 	for _, txnID := range txnIDs {
-		item := r.matchAndLink(ctx, clerkID, txnID, rules)
+		meta := txnMap[txnID]
+		item := r.matchAndLink(ctx, clerkID, txnID, rules, meta.merchantName, meta.description)
 		switch item.Status {
 		case "matched":
 			result.Matched++
@@ -502,6 +522,7 @@ func (r *InvestmentRepository) matchAndLink(
 	clerkID string,
 	txnID uuid.UUID,
 	rules []generated.GetActiveSipRulesByUserRow,
+	merchantName, description string,
 ) InvestmentAutoLinkItemResult {
 	txnIDStr := txnID.String()
 	item := InvestmentAutoLinkItemResult{
@@ -518,7 +539,7 @@ func (r *InvestmentRepository) matchAndLink(
 
 	for i := range rules {
 		rule := &rules[i]
-		score := scoreSIPRule(rule)
+		score := scoreSIPRule(rule, merchantName, description)
 		if score > bestScore {
 			bestScore = score
 			bestRule = rule
@@ -574,13 +595,33 @@ func (r *InvestmentRepository) matchAndLink(
 	return item
 }
 
-// scoreSIPRule returns a date-proximity score for a SIP rule against today.
-// Scores 0 if outside the ±15 day window, otherwise linearly from 0→1.
-func scoreSIPRule(rule *generated.GetActiveSipRulesByUserRow) float64 {
+// scoreSIPRule scores a transaction against a SIP rule using date proximity and
+// optional merchant/description pattern matching.
+// If the rule has no patterns → score = dateScore only (no regression).
+// If patterns exist → 0.5*dateScore + 0.3*merchantScore + 0.2*descScore.
+func scoreSIPRule(rule *generated.GetActiveSipRulesByUserRow, merchantName, description string) float64 {
 	due := utils.DateToTime(rule.NextDueDate)
 	daysDiff := math.Abs(time.Since(due).Hours() / 24)
 	if daysDiff > sipDateWindowDays {
 		return 0
 	}
-	return 1.0 - (daysDiff / sipDateWindowDays)
+	dateScore := 1.0 - (daysDiff / sipDateWindowDays)
+
+	merchantPattern := utils.TextToString(rule.MerchantNamePattern)
+	descPattern := utils.TextToString(rule.DescriptionPattern)
+
+	if merchantPattern == "" && descPattern == "" {
+		return dateScore
+	}
+
+	merchantScore := 0.0
+	if merchantPattern != "" {
+		merchantScore = utils.TokenJaccard(merchantPattern, merchantName)
+	}
+	descScore := 0.0
+	if descPattern != "" {
+		descScore = utils.TokenJaccard(descPattern, description)
+	}
+
+	return 0.5*dateScore + 0.3*merchantScore + 0.2*descScore
 }

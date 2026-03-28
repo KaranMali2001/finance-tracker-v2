@@ -105,6 +105,13 @@ INSERT INTO transactions(
 )
 RETURNING id, transaction_date, amount, type, description;
 
+-- name: GetTxnsByIds :many
+SELECT t.id, t.description, COALESCE(m.name, '') AS merchant_name
+FROM transactions t
+LEFT JOIN merchants m ON m.id = t.merchant_id
+WHERE t.id = ANY($1::uuid[])
+  AND t.deleted_at IS NULL;
+
 -- name: MarkTransactionAutoVerified :exec
 UPDATE transactions
 SET reconciliation_status = 'AUTO_VERIFIED',

@@ -18,6 +18,7 @@ import {
   useInvestmentRuleById,
   useRuleTransactions,
 } from '@/components/shared/hooks/useInvestment';
+import { useTransactions } from '@/components/shared/hooks/useTransaction';
 import { ErrorState, LoadingState, PageShell } from '@/components/shared/layout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -53,6 +54,8 @@ export default function RuleDetailPage({ params }: { params: Promise<{ ruleId: s
   const { data: rule, isLoading, error, refetch } = useInvestmentRuleById(ruleId);
   const { data: transactions, isLoading: txnLoading } = useRuleTransactions(ruleId);
   const deleteRule = useDeleteInvestmentRule();
+  const { data: accountTxns } = useTransactions({ accountId: rule?.account_id?.toString() });
+  const accountTxnIds = (accountTxns ?? []).map((t) => t.id as string);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
 
@@ -193,7 +196,7 @@ export default function RuleDetailPage({ params }: { params: Promise<{ ruleId: s
               Linked Transactions ({transactions?.length ?? 0})
             </h2>
             <div className="flex gap-2">
-              <AutoLinkButton size="sm" label="Auto-Link" />
+              <AutoLinkButton size="sm" label="Auto-Link" transactionIds={accountTxnIds} />
               <Button size="sm" onClick={() => setIsLinkDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-1" />
                 Link
@@ -232,6 +235,7 @@ export default function RuleDetailPage({ params }: { params: Promise<{ ruleId: s
           </DialogHeader>
           <LinkTransactionForm
             ruleId={ruleId}
+            accountId={rule.account_id?.toString() ?? ''}
             onSuccess={() => setIsLinkDialogOpen(false)}
             onCancel={() => setIsLinkDialogOpen(false)}
           />
