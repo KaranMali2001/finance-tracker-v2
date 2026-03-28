@@ -2,6 +2,7 @@ const {
   withAndroidManifest,
   withAppBuildGradle,
   withProjectBuildGradle,
+  withGradleProperties,
 } = require("expo/config-plugins");
 const fs = require("fs");
 const path = require("path");
@@ -66,6 +67,57 @@ function withExpoProguardRules(config) {
   });
 }
 
+// Inject release signing config via gradle.properties
+function withReleaseSigning(config) {
+  return withGradleProperties(config, (mod) => {
+    const props = mod.modResults;
+    const set = (key, val) => {
+      const existing = props.find((p) => p.type === "property" && p.key === key);
+      if (existing) existing.value = val;
+      else props.push({ type: "property", key, value: val });
+    };
+    set("MYAPP_UPLOAD_STORE_FILE", "../../wealth-reserve.keystore");
+    set("MYAPP_UPLOAD_KEY_ALIAS", "wealth-reserve");
+    set("MYAPP_UPLOAD_STORE_PASSWORD", "wealthreserve123");
+    set("MYAPP_UPLOAD_KEY_PASSWORD", "wealthreserve123");
+    return mod;
+  });
+}
+
+// Wire the release signing config into app/build.gradle
+function withReleaseSigningConfig(config) {
+  return withAppBuildGradle(config, (mod) => {
+    let contents = mod.modResults.contents;
+    if (contents.includes("MYAPP_UPLOAD_KEY_ALIAS")) return mod;
+
+    // 1. Add release signing block after the closing brace of the debug signing block
+    contents = contents.replace(
+      /(storeFile file\('debug\.keystore'\)[\s\S]*?keyPassword 'android'\s*\})/,
+      `$1
+        release {
+            storeFile file(MYAPP_UPLOAD_STORE_FILE)
+            storePassword MYAPP_UPLOAD_STORE_PASSWORD
+            keyAlias MYAPP_UPLOAD_KEY_ALIAS
+            keyPassword MYAPP_UPLOAD_KEY_PASSWORD
+        }`
+    );
+
+    // 2. In the buildTypes release block, replace signingConfig signingConfigs.debug
+    //    Find "buildTypes {" then find the "release {" inside it, then replace its signingConfig
+    const buildTypesIdx = contents.indexOf("buildTypes {");
+    const releaseBuildTypeIdx = contents.indexOf("release {", buildTypesIdx);
+    const before = contents.slice(0, releaseBuildTypeIdx);
+    const after = contents.slice(releaseBuildTypeIdx).replace(
+      "signingConfig signingConfigs.debug",
+      "signingConfig signingConfigs.release"
+    );
+    contents = before + after;
+
+    mod.modResults.contents = contents;
+    return mod;
+  });
+}
+
 // Replace jcenter() with mavenCentral() in project-level build.gradle
 function withFixJcenter(config) {
   return withProjectBuildGradle(config, (mod) => {
@@ -81,5 +133,7 @@ module.exports = function withWealthReservePlugins(config) {
   config = withSmsBroadcastReceiver(config);
   config = withExpoProguardRules(config);
   config = withFixJcenter(config);
+  config = withReleaseSigning(config);
+  config = withReleaseSigningConfig(config);
   return config;
 };
