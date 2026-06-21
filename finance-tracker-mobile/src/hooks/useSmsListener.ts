@@ -1,9 +1,11 @@
+import { requireOptionalNativeModule } from "expo-modules-core";
 import { useEffect, useRef } from "react";
-import { NativeEventEmitter, NativeModules, Platform } from "react-native";
+import { Platform } from "react-native";
 import { getTransactionInfo } from "transaction-sms-parser";
 import type { ParsedSms, RawSms } from "../types/sms";
+import { normalizeSmsBody } from "../utils/normalizeSmsBody";
 
-const { SmsReceiverModule } = NativeModules;
+const SmsReceiver = requireOptionalNativeModule("SmsReceiver");
 
 const BANK_SENDER_PATTERN =
   /^[A-Z]{2}-[A-Z0-9]{4,6}$|^VM-|^BW-|^AX-|^JD-|HDFC|ICICI|SBI|AXIS|KOTAK|BOB|PNB|INDUS|YES|PAYTM|GPAY|PHONEPE/i;
@@ -22,13 +24,11 @@ export function useSmsListener(onSms: (sms: ParsedSms) => void) {
   onSmsRef.current = onSms;
 
   useEffect(() => {
-    if (Platform.OS !== "android" || !SmsReceiverModule) return;
+    if (Platform.OS !== "android" || !SmsReceiver) return;
 
-    const emitter = new NativeEventEmitter(SmsReceiverModule);
+    SmsReceiver.startListening();
 
-    SmsReceiverModule.startListening();
-
-    const subscription = emitter.addListener(
+    const subscription = SmsReceiver.addListener(
       "onSmsReceived",
       (event: SmsEvent) => {
         const raw: RawSms = {
@@ -45,7 +45,7 @@ export function useSmsListener(onSms: (sms: ParsedSms) => void) {
 
         if (!isTransaction) return;
 
-        const parsed = getTransactionInfo(raw.body);
+        const parsed = getTransactionInfo(normalizeSmsBody(raw.body));
 
         onSmsRef.current({
           raw,
@@ -57,7 +57,7 @@ export function useSmsListener(onSms: (sms: ParsedSms) => void) {
 
     return () => {
       subscription.remove();
-      SmsReceiverModule.stopListening();
+      SmsReceiver.stopListening();
     };
   }, []);
 }

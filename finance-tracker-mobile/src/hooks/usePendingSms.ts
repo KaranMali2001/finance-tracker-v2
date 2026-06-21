@@ -1,10 +1,11 @@
+import { requireOptionalNativeModule } from "expo-modules-core";
 import { useEffect } from "react";
-import { NativeModules, Platform } from "react-native";
+import { Platform } from "react-native";
 import { getTransactionInfo } from "transaction-sms-parser";
 import type { ParsedSms, RawSms } from "../types/sms";
 import { normalizeSmsBody } from "../utils/normalizeSmsBody";
 
-const { SmsStoreModule } = NativeModules;
+const SmsStore = requireOptionalNativeModule("SmsStore");
 
 const BANK_SENDER_PATTERN =
   /^[A-Z]{2}-[A-Z0-9]{4,6}$|^VM-|^BW-|^AX-|^JD-|HDFC|ICICI|SBI|AXIS|KOTAK|BOB|PNB|INDUS|YES|PAYTM|GPAY|PHONEPE/i;
@@ -20,9 +21,9 @@ interface StoredSms {
 
 export function usePendingSms(onSms: (sms: ParsedSms) => void) {
   useEffect(() => {
-    if (Platform.OS !== "android" || !SmsStoreModule) return;
+    if (Platform.OS !== "android" || !SmsStore) return;
 
-    SmsStoreModule.drainPending()
+    SmsStore.drainPending()
       .then((items: StoredSms[]) => {
         for (const item of items) {
           const isTransaction =
