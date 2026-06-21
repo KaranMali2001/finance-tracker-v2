@@ -40,3 +40,8 @@ yarn-error.*
 /ios
 /android
 wealth-reserve.keystore
+
+# local module build outputs (source is tracked, build artifacts are not)
+modules/*/android/build/
+modules/*/android/.cxx/
+modules/*/android/.gradle/

@@ -1,0 +1,62 @@
+name: Release Mobile APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: finance-tracker-mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install Android NDK and CMake
+        run: sdkmanager "ndk;27.1.12297006" "cmake;3.22.1"
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Decode signing keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > wealth-reserve.keystore
+
+      - name: Expo prebuild (Android)
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
+        run: npx expo prebuild -p android --no-install
+
+      - name: Build signed release APK
+        working-directory: finance-tracker-mobile/android
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
+        run: ./gradlew app:assembleRelease --no-daemon
+
+      - name: Stage APK with release name
+        run: cp android/app/build/outputs/apk/release/app-release.apk "Wealth-Reserve-${GITHUB_REF_NAME}.apk"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: finance-tracker-mobile/Wealth-Reserve-${{ github.ref_name }}.apk
+          generate_release_notes: true

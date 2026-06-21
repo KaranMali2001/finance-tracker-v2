@@ -35,14 +35,16 @@ function withSmsBroadcastReceiver(config) {
       app.receiver = [];
     }
 
+    const RECEIVER_NAME = "expo.modules.wealthreservesms.SmsBroadcastReceiver";
+
     const alreadyAdded = app.receiver.some(
-      (r) => r.$?.["android:name"] === ".SmsBroadcastReceiver"
+      (r) => r.$?.["android:name"] === RECEIVER_NAME
     );
 
     if (!alreadyAdded) {
       app.receiver.push({
         $: {
-          "android:name": ".SmsBroadcastReceiver",
+          "android:name": RECEIVER_NAME,
           "android:exported": "true",
           "android:permission": "android.permission.BROADCAST_SMS",
         },

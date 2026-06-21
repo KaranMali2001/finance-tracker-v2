@@ -1,7 +1,10 @@
+import { requireOptionalNativeModule } from "expo-modules-core";
 import { useCallback, useState } from "react";
-import SmsAndroid from "react-native-get-sms-android";
 import { getTransactionInfo } from "transaction-sms-parser";
 import type { ParsedSms, RawSms } from "../types/sms";
+import { normalizeSmsBody } from "../utils/normalizeSmsBody";
+
+const SmsStore = requireOptionalNativeModule("SmsStore");
 
 const BANK_SENDER_PATTERN =
   /^[A-Z]{2}-[A-Z0-9]{4,6}$|^VM-|^BW-|^AX-|^JD-|HDFC|ICICI|SBI|AXIS|KOTAK|BOB|PNB|INDUS|YES|PAYTM|GPAY|PHONEPE/i;
@@ -20,48 +23,33 @@ export function useSms() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSms = useCallback(
-    (maxCount = 200) => {
-      setLoading(true);
-      setError(null);
+  const fetchSms = useCallback((maxCount = 200) => {
+    if (!SmsStore) {
+      setError("SMS module unavailable on this platform");
+      return;
+    }
 
-      const filter = {
-        box: "inbox",
-        maxCount,
-      };
+    setLoading(true);
+    setError(null);
 
-      SmsAndroid.list(
-        JSON.stringify(filter),
-        (err: string) => {
-          setLoading(false);
-          setError(`Failed to read SMS: ${err}`);
-        },
-        (_count: number, rawSmsList: string) => {
-          try {
-            const messages: RawSms[] = JSON.parse(rawSmsList);
-
-            const parsed: ParsedSms[] = messages.map((sms) => {
-              const parsedInfo = getTransactionInfo(sms.body);
-              const isTransaction = isTransactionSms(sms);
-              return {
-                raw: sms,
-                parsed: parsedInfo,
-                isTransaction,
-              };
-            });
-
-            const transactionOnly = parsed.filter((s) => s.isTransaction);
-            setSmsList(transactionOnly);
-          } catch (e) {
-            setError("Failed to parse SMS list");
-          } finally {
-            setLoading(false);
-          }
-        }
-      );
-    },
-    []
-  );
+    SmsStore.listInbox(maxCount)
+      .then((messages: RawSms[]) => {
+        const parsed: ParsedSms[] = messages.map((sms) => ({
+          raw: sms,
+          parsed: getTransactionInfo(normalizeSmsBody(sms.body)),
+          isTransaction: isTransactionSms(sms),
+        }));
+        setSmsList(parsed.filter((s) => s.isTransaction));
+      })
+      .catch((e: unknown) => {
+        setError(
+          `Failed to read SMS: ${e instanceof Error ? e.message : String(e)}`
+        );
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   return { smsList, loading, error, fetchSms };
 }

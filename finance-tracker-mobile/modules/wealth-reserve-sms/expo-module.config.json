@@ -1,0 +1,9 @@
+{
+  "platforms": ["android"],
+  "android": {
+    "modules": [
+      "expo.modules.wealthreservesms.SmsReceiverModule",
+      "expo.modules.wealthreservesms.SmsStoreModule"
+    ]
+  }
+}
