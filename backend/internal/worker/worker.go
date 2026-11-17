@@ -20,6 +20,7 @@ type emailSender interface {
 
 type reconRunner interface {
 	RunReconciliationJob(ctx context.Context, payload tasks.BankReconciliationPayload, log *zerolog.Logger) ([]uuid.UUID, error)
+	RunStatementParse(ctx context.Context, payload tasks.StatementParsePayload, log *zerolog.Logger) (string, error)
 }
 
 type investRunner interface {
@@ -72,6 +73,8 @@ func (w *Worker) Handle(ctx context.Context, event dispatcher.JobPayload) error 
 		return w.handleInvestmentAutoLink(ctx, event.Payload)
 	case string(tasks.TaskLlmSmsParse):
 		return w.handleLlmSmsParse(ctx, event.Payload)
+	case string(tasks.TaskStatementParse):
+		return w.handleStatementParse(ctx, event.Payload)
 	}
 	return fmt.Errorf("unknown job type: %s", event.Type)
 }
@@ -219,5 +222,30 @@ func (w *Worker) handleLlmSmsParse(ctx context.Context, raw json.RawMessage) err
 		w.logger.Error().Err(err).Str("sms_id", payload.SmsID.String()).Msg("[sms-llm] LLM parse failed")
 		return err
 	}
+	return nil
+}
+
+func (w *Worker) handleStatementParse(ctx context.Context, raw json.RawMessage) error {
+	var payload tasks.StatementParsePayload
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		return fmt.Errorf("failed to unmarshal statement parse payload: %w", err)
+	}
+
+	job := w.markProcessing(ctx, payload.JobID)
+
+	w.logger.Info().
+		Str("upload_id", payload.UploadID.String()).
+		Str("user_id", payload.UserID).
+		Msg("[stmt-parse] starting statement parse job")
+
+	result, err := w.reconService.RunStatementParse(ctx, payload, w.logger)
+	if err != nil {
+		w.markFailed(ctx, job, err.Error())
+		w.logger.Error().Err(err).Str("upload_id", payload.UploadID.String()).Msg("[stmt-parse] job failed")
+		return err
+	}
+
+	w.markCompleted(ctx, job, result)
+	w.logger.Info().Str("upload_id", payload.UploadID.String()).Msg("[stmt-parse] job completed")
 	return nil
 }

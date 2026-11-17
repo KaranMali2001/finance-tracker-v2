@@ -110,13 +110,20 @@ func main() {
 		TxnManager: databaseTxnManager,
 	})
 
+	staticModule := static.NewModule(static.Dependencies{
+		Server:  srv,
+		Queries: queries,
+	})
+
 	reconciliationModule := reconciliation.NewReconiliationModule(reconciliation.Deps{
-		Server:         srv,
-		Queries:        queries,
-		TxnManager:     databaseTxnManager,
-		TaskService:    taskService,
-		BalanceUpdater: balanceUpdater,
-		UserService:    userModule.GetUserService(),
+		Server:          srv,
+		Queries:         queries,
+		TxnManager:      databaseTxnManager,
+		TaskService:     taskService,
+		BalanceUpdater:  balanceUpdater,
+		UserService:     userModule.GetUserService(),
+		StatementParser: globalSvcs.GeminiService,
+		StaticRepo:      staticModule.GetRepository(),
 	})
 
 	investmentModule := investment.NewInvestmentModule(investment.Deps{
@@ -137,10 +144,6 @@ func main() {
 		TaskService: taskService,
 	})
 	accountModule := account.NewAccountModule(account.Deps{
-		Server:  srv,
-		Queries: queries,
-	})
-	staticModule := static.NewModule(static.Dependencies{
 		Server:  srv,
 		Queries: queries,
 	})

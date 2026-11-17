@@ -5,6 +5,21 @@ INSERT INTO bank_statement_uploads (
 ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 RETURNING id;
 
+-- name: SaveUploadFile :exec
+UPDATE bank_statement_uploads
+SET file_bytes = $2, file_mime = $3, updated_at = now()
+WHERE id = $1;
+
+-- name: GetUploadFile :one
+SELECT file_bytes, file_mime
+FROM bank_statement_uploads
+WHERE id = $1;
+
+-- name: ClearUploadFile :exec
+UPDATE bank_statement_uploads
+SET file_bytes = NULL, updated_at = now()
+WHERE id = $1;
+
 -- name: InsertStatementTransactionsBatch :batchone
 INSERT INTO statement_transactions (
     upload_id, account_id, transaction_date, description, amount, type,

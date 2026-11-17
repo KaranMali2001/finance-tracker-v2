@@ -63,6 +63,17 @@ func (q *Queries) BulkUpdateReconciliationResultStatus(ctx context.Context, arg 
 	return items, nil
 }
 
+const clearUploadFile = `-- name: ClearUploadFile :exec
+UPDATE bank_statement_uploads
+SET file_bytes = NULL, updated_at = now()
+WHERE id = $1
+`
+
+func (q *Queries) ClearUploadFile(ctx context.Context, id pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, clearUploadFile, id)
+	return err
+}
+
 const countReconciliationResultsByUploadID = `-- name: CountReconciliationResultsByUploadID :one
 SELECT COUNT(*) FROM transaction_reconciliation tr
 JOIN statement_transactions st ON st.id = tr.statement_transaction_id AND st.deleted_at IS NULL
@@ -348,6 +359,24 @@ func (q *Queries) GetStatementTransactionsForProcessing(ctx context.Context, upl
 	return items, nil
 }
 
+const getUploadFile = `-- name: GetUploadFile :one
+SELECT file_bytes, file_mime
+FROM bank_statement_uploads
+WHERE id = $1
+`
+
+type GetUploadFileRow struct {
+	FileBytes []byte
+	FileMime  pgtype.Text
+}
+
+func (q *Queries) GetUploadFile(ctx context.Context, id pgtype.UUID) (GetUploadFileRow, error) {
+	row := q.db.QueryRow(ctx, getUploadFile, id)
+	var i GetUploadFileRow
+	err := row.Scan(&i.FileBytes, &i.FileMime)
+	return i, err
+}
+
 const getUploadWithSummary = `-- name: GetUploadWithSummary :one
 SELECT id, user_id, account_id, file_name, upload_status, processing_status,
        statement_period_start, statement_period_end,
@@ -512,6 +541,23 @@ func (q *Queries) ListStatementTransactionsByUploadID(ctx context.Context, arg L
 		return nil, err
 	}
 	return items, nil
+}
+
+const saveUploadFile = `-- name: SaveUploadFile :exec
+UPDATE bank_statement_uploads
+SET file_bytes = $2, file_mime = $3, updated_at = now()
+WHERE id = $1
+`
+
+type SaveUploadFileParams struct {
+	ID        pgtype.UUID
+	FileBytes []byte
+	FileMime  pgtype.Text
+}
+
+func (q *Queries) SaveUploadFile(ctx context.Context, arg SaveUploadFileParams) error {
+	_, err := q.db.Exec(ctx, saveUploadFile, arg.ID, arg.FileBytes, arg.FileMime)
+	return err
 }
 
 const softDeleteStatementTransactionsByUploadID = `-- name: SoftDeleteStatementTransactionsByUploadID :exec

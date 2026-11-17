@@ -74,10 +74,12 @@ func main() {
 	})
 
 	reconModule := reconciliation.NewReconiliationModule(reconciliation.Deps{
-		Queries:        queries,
-		TxnManager:     txnManager,
-		BalanceUpdater: balanceUpdater,
-		UserService:    userModule.GetUserService(),
+		Queries:         queries,
+		TxnManager:      txnManager,
+		BalanceUpdater:  balanceUpdater,
+		UserService:     userModule.GetUserService(),
+		StatementParser: globalSvcs.GeminiService,
+		StaticRepo:      staticModule.GetRepository(),
 	})
 
 	smsLlmService := sms.NewSmsLlmService(queries, globalSvcs.GeminiService, transactionModule.GetService())

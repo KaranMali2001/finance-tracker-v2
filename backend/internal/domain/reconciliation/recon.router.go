@@ -13,17 +13,19 @@ type Module struct {
 }
 
 type Deps struct {
-	Server         *server.Server
-	Queries        reconQuerier
-	TxnManager     *database.TxManager
-	TaskService    reconTaskService
-	BalanceUpdater balanceApplier
-	UserService    userThresholdProvider
+	Server          *server.Server
+	Queries         reconQuerier
+	TxnManager      *database.TxManager
+	TaskService     reconTaskService
+	BalanceUpdater  balanceApplier
+	UserService     userThresholdProvider
+	StatementParser statementParser
+	StaticRepo      statementStaticProvider
 }
 
 func NewReconiliationModule(deps Deps) *Module {
 	repo := NewReconRepository(deps.Queries, deps.TxnManager)
-	service := NewReconService(repo, deps.TxnManager, deps.TaskService, deps.BalanceUpdater, deps.UserService)
+	service := NewReconService(repo, deps.TxnManager, deps.TaskService, deps.BalanceUpdater, deps.UserService, deps.StatementParser, deps.StaticRepo)
 	handler := NewReconHandler(deps.Server, service)
 
 	return &Module{

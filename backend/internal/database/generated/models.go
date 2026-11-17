@@ -431,6 +431,10 @@ type BankStatementUpload struct {
 	// Array of parsing errors: [{"row": 23, "error": "Invalid date", "data": {...}}]
 	ParsingErrors []byte
 	JobID         pgtype.UUID
+	// Transient raw upload bytes; set NULL after the reconciliation job completes
+	FileBytes []byte
+	// MIME type of the uploaded file (application/pdf, text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet)
+	FileMime pgtype.Text
 }
 
 type Category struct {

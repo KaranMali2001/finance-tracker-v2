@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/database/generated"
+	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/domain/static"
+	aiservices "github.com/KaranMali2001/finance-tracker-v2-backend/internal/services/aiServices"
 	"github.com/KaranMali2001/finance-tracker-v2-backend/internal/tasks"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -38,6 +40,9 @@ type reconQuerier interface {
 	CountReconciliationResultsByUploadID(ctx context.Context, uploadID pgtype.UUID) (int64, error)
 	GetReconciliationResultsByUploadID(ctx context.Context, arg generated.GetReconciliationResultsByUploadIDParams) ([]generated.GetReconciliationResultsByUploadIDRow, error)
 	BulkUpdateReconciliationResultStatus(ctx context.Context, arg generated.BulkUpdateReconciliationResultStatusParams) ([]generated.BulkUpdateReconciliationResultStatusRow, error)
+	SaveUploadFile(ctx context.Context, arg generated.SaveUploadFileParams) error
+	GetUploadFile(ctx context.Context, id pgtype.UUID) (generated.GetUploadFileRow, error)
+	ClearUploadFile(ctx context.Context, id pgtype.UUID) error
 }
 
 // reconRepository is the interface ReconService depends on.
@@ -59,6 +64,22 @@ type reconRepository interface {
 	MarkTransactionAutoVerified(ctx context.Context, txnID, stmtTxnID uuid.UUID) error
 	GetResultsByUploadID(ctx context.Context, uploadID uuid.UUID, limit, offset int32) (*PaginatedReconciliationResults, error)
 	BulkUpdateResultStatus(ctx context.Context, resultIDs []uuid.UUID, userAction string, clerkID string, uploadID uuid.UUID) ([]UpdateResultStatusRes, error)
+	SaveUploadFile(ctx context.Context, uploadID uuid.UUID, data []byte, mime string) error
+	GetUploadFile(ctx context.Context, uploadID uuid.UUID) (data []byte, mime string, err error)
+	ClearUploadFile(ctx context.Context, uploadID uuid.UUID) error
+}
+
+// statementParser is the narrow slice of *aiservices.GeminiService that ReconService
+// needs to run the LLM extraction gate.
+type statementParser interface {
+	ParseStatement(ctx context.Context, data []byte, mimeType string, categories, merchants map[string]string, log *zerolog.Logger) (*aiservices.StatementLLMResult, error)
+}
+
+// statementStaticProvider is the cross-module dependency for category/merchant lookups.
+// *static.StaticRepository satisfies this implicitly.
+type statementStaticProvider interface {
+	GetCategories(ctx context.Context) ([]static.Categories, error)
+	GetMerchants(ctx context.Context) ([]static.Merchants, error)
 }
 
 // reconTaskService is the narrow interface ReconService needs from tasks.TaskService.

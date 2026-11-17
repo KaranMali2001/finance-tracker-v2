@@ -36,16 +36,91 @@ type ReconService struct {
 	taskService    reconTaskService
 	balanceUpdater balanceApplier
 	userService    userThresholdProvider
+	parser         statementParser
+	staticRepo     statementStaticProvider
 }
 
-func NewReconService(repo reconRepository, tm *database.TxManager, taskService reconTaskService, balanceUpdater balanceApplier, userService userThresholdProvider) *ReconService {
+func NewReconService(repo reconRepository, tm *database.TxManager, taskService reconTaskService, balanceUpdater balanceApplier, userService userThresholdProvider, parser statementParser, staticRepo statementStaticProvider) *ReconService {
 	return &ReconService{
 		repo:           repo,
 		tm:             tm,
 		taskService:    taskService,
 		balanceUpdater: balanceUpdater,
 		userService:    userService,
+		parser:         parser,
+		staticRepo:     staticRepo,
 	}
+}
+
+// RunStatementParse is the STATEMENT_PARSE job body: it loads the stored file, runs
+// the LLM extraction (PDF native, Excel flattened to CSV), refines DEBIT/CREDIT and
+// flags rows via the balance-continuity check, and returns the result JSON for jobs.result.
+func (s *ReconService) RunStatementParse(ctx context.Context, payload tasks.StatementParsePayload, log *zerolog.Logger) (string, error) {
+	data, mime, err := s.repo.GetUploadFile(ctx, payload.UploadID)
+	if err != nil {
+		return "", fmt.Errorf("failed to load upload file: %w", err)
+	}
+	if len(data) == 0 {
+		return "", fmt.Errorf("no file bytes stored for upload %s", payload.UploadID)
+	}
+
+	if mime == "application/pdf" && isEncryptedPDF(data) {
+		return marshalResult(StatementParseJobResult{
+			Status:  ParseStatusEncryptedPDF,
+			Message: "This PDF is password-protected. Please upload an unlocked statement.",
+			Rows:    []DraftRow{},
+		})
+	}
+
+	parseData, parseMime := data, mime
+	if isExcelMime(mime) {
+		csv, err := ExcelToCSV(data)
+		if err != nil {
+			return "", fmt.Errorf("failed to read excel workbook: %w", err)
+		}
+		parseData, parseMime = []byte(csv), "text/csv"
+	}
+
+	categories, merchants, err := s.fetchCatMerchantMaps(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	llm, err := s.parser.ParseStatement(ctx, parseData, parseMime, categories, merchants, log)
+	if err != nil {
+		return "", fmt.Errorf("statement LLM parse failed: %w", err)
+	}
+	if !llm.IsStatement {
+		return marshalResult(StatementParseJobResult{
+			Status:  ParseStatusNotStatement,
+			Message: "The uploaded file does not appear to be a bank statement.",
+			Rows:    []DraftRow{},
+		})
+	}
+
+	result := AssembleDraftResult(llm)
+	result.Status = ParseStatusCompleted
+	return marshalResult(result)
+}
+
+func (s *ReconService) fetchCatMerchantMaps(ctx context.Context) (map[string]string, map[string]string, error) {
+	cats, err := s.staticRepo.GetCategories(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load categories: %w", err)
+	}
+	merchants, err := s.staticRepo.GetMerchants(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to load merchants: %w", err)
+	}
+	categoryMap := make(map[string]string, len(cats))
+	for _, c := range cats {
+		categoryMap[c.Id] = c.Name
+	}
+	merchantMap := make(map[string]string, len(merchants))
+	for _, m := range merchants {
+		merchantMap[m.Id] = m.Name
+	}
+	return categoryMap, merchantMap, nil
 }
 
 func (s *ReconService) ListUploads(c echo.Context, payload *ListUploadsReq, clerkId string) ([]UploadListItem, error) {

@@ -16,6 +16,7 @@ const (
 	JobTypeREPORTS            JobType = "REPORTS"
 	JobTypeINVESTMENTAUTOLINK JobType = "INVESTMENT_AUTO_LINK"
 	JobTypeLLMSMSPARSE        JobType = "LLM_SMS_PARSE"
+	JobTypeSTATEMENTPARSE     JobType = "STATEMENT_PARSE"
 )
 
 type JobStatus string

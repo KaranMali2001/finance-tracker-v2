@@ -23,6 +23,42 @@ func NewReconRepository(queries reconQuerier, tm *database.TxManager) *ReconRepo
 	return &ReconRepository{queries: queries, tm: tm}
 }
 
+func (r *ReconRepository) SaveUploadFile(ctx context.Context, uploadID uuid.UUID, data []byte, mime string) error {
+	queries := r.queries
+	if tx := r.tm.GetTx(ctx); tx != nil {
+		queries = queries.WithTx(tx)
+	}
+	return queries.SaveUploadFile(ctx, generated.SaveUploadFileParams{
+		ID:        utils.UUIDToPgtype(uploadID),
+		FileBytes: data,
+		FileMime:  utils.StringToPgtypeText(mime),
+	})
+}
+
+func (r *ReconRepository) GetUploadFile(ctx context.Context, uploadID uuid.UUID) ([]byte, string, error) {
+	queries := r.queries
+	if tx := r.tm.GetTx(ctx); tx != nil {
+		queries = queries.WithTx(tx)
+	}
+	row, err := queries.GetUploadFile(ctx, utils.UUIDToPgtype(uploadID))
+	if err != nil {
+		return nil, "", err
+	}
+	mime := ""
+	if row.FileMime.Valid {
+		mime = row.FileMime.String
+	}
+	return row.FileBytes, mime, nil
+}
+
+func (r *ReconRepository) ClearUploadFile(ctx context.Context, uploadID uuid.UUID) error {
+	queries := r.queries
+	if tx := r.tm.GetTx(ctx); tx != nil {
+		queries = queries.WithTx(tx)
+	}
+	return queries.ClearUploadFile(ctx, utils.UUIDToPgtype(uploadID))
+}
+
 func (r *ReconRepository) CreateUpload(
 	ctx context.Context,
 	userID string,
